@@ -40,14 +40,14 @@
       var(--bg);
     background-attachment:fixed;color:var(--txt);
     font-family:var(--body);font-size:17px;font-weight:500;overscroll-behavior:none;}
-  .wrap{max-width:900px;margin:0 auto;padding:18px;}
-  h1{font-family:var(--display);font-size:26px;font-weight:900;margin:6px 0 18px;letter-spacing:1px;text-transform:uppercase;
+  .wrap{max-width:900px;margin:0 auto;padding:14px;}
+  h1{font-family:var(--display);font-size:24px;font-weight:900;margin:2px 0 10px;letter-spacing:1px;text-transform:uppercase;
      display:flex;align-items:center;gap:10px;}
   h1 .h1-text{background:linear-gradient(90deg,var(--blue),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent;
      filter:drop-shadow(0 0 10px rgba(79,124,255,.35));}
   h2{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 12px;color:var(--blue);text-transform:uppercase;letter-spacing:1.4px;}
   .card{position:relative;background:linear-gradient(160deg,rgba(40,33,95,.85),rgba(20,15,52,.92));
-     border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px;
+     border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:10px;
      box-shadow:0 6px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);}
   .row{display:flex;gap:10px;flex-wrap:wrap;}
   .grow{flex:1;}
@@ -90,9 +90,9 @@
        padding:10px;border-radius:11px;margin-bottom:10px;background:rgba(10,7,30,.5);border:1px solid var(--line);}
   .teamcol-head.head1{color:var(--blue);border-color:rgba(79,124,255,.4);box-shadow:0 0 14px rgba(79,124,255,.18);}
   .teamcol-head.head2{color:var(--yellow);border-color:rgba(255,212,0,.4);box-shadow:0 0 14px rgba(255,212,0,.18);}
-  .namelist{display:flex;flex-direction:column;gap:8px;}
-  .nameopt{padding:13px 8px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
-       text-align:center;cursor:pointer;font-weight:700;font-size:16px;word-break:break-word;transition:transform .05s;}
+  .namelist{display:flex;flex-direction:column;gap:6px;max-height:292px;overflow-y:auto;padding-right:4px;}
+  .nameopt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
+       cursor:pointer;font-weight:700;font-size:34px;word-break:break-word;transition:transform .05s;}
   .nameopt:active{transform:scale(.97);}
   .nameopt.sel1{border-color:var(--blue);background:rgba(79,124,255,.16);color:var(--blue);box-shadow:0 0 14px rgba(79,124,255,.3);}
   .nameopt.sel2{border-color:var(--yellow);background:rgba(255,212,0,.16);color:var(--yellow);box-shadow:0 0 14px rgba(255,212,0,.3);}
@@ -114,10 +114,10 @@
   .team2.active{border-color:var(--yellow);background:linear-gradient(160deg,rgba(255,212,0,.24),rgba(18,13,46,.92));
        box-shadow:0 0 34px rgba(255,212,0,.55),inset 0 0 28px rgba(255,212,0,.14);}
   .team2.active::before{background:var(--yellow);box-shadow:0 0 16px rgba(255,212,0,.9);}
-  .team .name{font-family:var(--display);font-size:28px;color:var(--txt);font-weight:800;letter-spacing:.5px;text-transform:uppercase;line-height:1.05;}
+  .team .name{font-family:var(--display);font-size:17px;color:var(--txt);font-weight:700;letter-spacing:.6px;text-transform:uppercase;line-height:1.05;}
   .team1 .name{color:var(--blue-lt);}
   .team2 .name{color:var(--yellow);}
-  .team .thrower{font-size:16px;color:var(--yellow);margin-top:5px;min-height:18px;font-weight:600;}
+  .team .thrower{font-family:var(--display);font-size:38px;color:var(--yellow);margin-top:4px;min-height:20px;font-weight:800;line-height:1.02;}
   .team1 .thrower{color:var(--blue-lt);}
   .team .big{font-family:var(--display);font-size:72px;font-weight:900;line-height:1;margin-top:12px;letter-spacing:1px;}
   .team1.active .big{color:var(--blue);text-shadow:0 0 18px rgba(79,124,255,.55);}
@@ -136,7 +136,7 @@
   .dart.bust{color:var(--danger);border-color:rgba(255,64,104,.5);box-shadow:0 0 12px rgba(255,64,104,.3);}
   .dart.nocount{color:var(--muted);text-decoration:line-through;}
   .boardwrap{display:flex;justify-content:center;position:relative;padding:6px 0;}
-  svg.board{width:100%;max-width:600px;height:auto;touch-action:manipulation;display:block;
+  svg.board{width:100%;max-width:540px;height:auto;touch-action:manipulation;display:block;
        filter:saturate(1.2) drop-shadow(0 0 24px rgba(79,124,255,.4));}
   .board path,.board circle{cursor:pointer;stroke:#080510;stroke-width:1;}
   .board path:active,.board circle:active{filter:brightness(1.7);}
@@ -157,7 +157,7 @@
   .cricket .chead .spine,.cricket .ptrow .spine{font-family:var(--display);font-size:12px;color:var(--muted);font-weight:700;
        text-transform:uppercase;letter-spacing:.6px;}
   .cricket .marks{font-size:28px;letter-spacing:4px;font-weight:800;color:var(--blue);text-shadow:0 0 10px rgba(79,124,255,.35);}
-  .cricket .marks.closed{color:var(--gold);text-shadow:0 0 10px rgba(255,214,74,.45);}
+  #game.cricket #cricketBoard .cricket .marks.closed{color:var(--gold);text-shadow:none;box-sizing:border-box;border:5px solid var(--gold);border-radius:50%;width:72px;height:72px;margin:0 auto;font-size:54px;box-shadow:0 0 12px rgba(255,214,74,.35);}
   .cricket .cric-pts{font-family:var(--display);font-size:26px;font-weight:900;}
   .cricket .activeside{background:rgba(255,255,255,.05);}
   .cricket .ptrow td{border-bottom:none;padding-top:14px;}
@@ -184,8 +184,8 @@
   #miniBoard{display:none;}
   #game.cricket #scoreboard{display:none;}
   #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:3px 6px;}
-  #game.cricket #cricketBoard .cricket .marks{font-size:51px;}
-  #game.cricket #cricketBoard .cricket .tgt{font-size:45px;}
+  #game.cricket #cricketBoard .cricket .marks{font-size:78px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;}
+  #game.cricket #cricketBoard .cricket .tgt{font-size:48px;}
   #game.cricket #cricketBoard .cricket .chead .mcell{font-size:22px;}
   #game.cricket #cricketBoard .cricket .cric-pts{font-size:60px;}
   .chead .thrower-line{font-size:30px;font-weight:800;min-height:34px;margin-top:6px;letter-spacing:.3px;}
@@ -216,13 +216,25 @@
   #game.cricket #cricketBoard .cricket .chead .head2.active .pname{text-shadow:none;}
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
 
-  #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:middle;}
-  .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1.05;word-break:break-word;}
-  #game.cricket #cricketBoard .cricket .smiley{font-size:44px;line-height:1;}
+  #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:bottom;padding-bottom:12px;}
+  .chead .pname{font-family:var(--display);font-size:66px;font-weight:800;line-height:1;word-break:break-word;}
+  .chead .tlabel{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
+  #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
 
   #cricketThrow{display:none;}
   #game.cricket:not(.board-open) #cricketThrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:8px 0 0;}
   #cricketMissBtn{grid-column:3;justify-self:start;align-self:center;margin-left:18px;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:.5px;padding:12px 22px;border-radius:12px;}
+
+  /* header dartboard between the player names */
+  .cricket .chead .hdrboard{vertical-align:middle;padding:6px 4px;}
+  .cricket .hdr-throw{cursor:pointer;display:inline-block;border:1px solid var(--line);border-radius:14px;padding:7px;background:rgba(10,7,30,.45);box-shadow:0 0 16px rgba(79,124,255,.18);}
+  .cricket .hdr-throw svg.board{max-width:100px;display:block;margin:0 auto;}
+  .cricket .hdr-label{font-family:var(--display);text-align:center;font-size:11px;color:var(--blue-lt);margin-top:5px;text-transform:uppercase;letter-spacing:.6px;}
+  #scoreActions #cricketMissBtn{margin-left:0;}
+
+  .librow .lname{flex:1;min-width:0;}
+  .librow .teamsel{flex:0 0 auto;max-width:44%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-family:var(--body);font-size:15px;font-weight:600;}
+  .nameopt .nopt-team{font-size:19px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -282,15 +294,29 @@
       <div id="libList"></div>
       <p class="small" style="margin-top:6px;">Names are saved on this device.</p>
     </div>
+    <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:17px;padding:15px;">Done</button>
+  </div>
+
+  <!-- ================= TEAM LIBRARY ================= -->
+  <div id="teamLibrary" class="hidden">
+    <div class="card">
+      <h2>Team Library</h2>
+      <div class="row" style="margin-bottom:14px;">
+        <input type="text" id="newTeam" class="grow" placeholder="Add a team name…" autocomplete="off">
+        <button class="accent" id="addTeam">Add</button>
+      </div>
+      <div id="teamList"></div>
+      <p class="small" style="margin-top:6px;">Teams are saved on this device. Assign players to teams in “Manage Players”.</p>
+    </div>
+    <button class="primary" id="teamDoneBtn" style="width:100%;font-size:17px;padding:15px;">Done</button>
   </div>
 
   <!-- ================= GAME ================= -->
   <div id="game" class="hidden">
     <div class="scoreboard" id="scoreboard"></div>
     <div id="cricketBoard"></div>
-    <div id="cricketThrow"><div id="miniBoard"></div><button id="cricketMissBtn" class="ghost">Miss</button></div>
-    <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button></div>
+    <div id="scoreActions"><button id="cricketMissBtn" class="ghost">Miss</button><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button></div>
 
     <div class="card" id="playArea" style="padding:12px;">
       <button id="backBtn" class="ghost">← Back</button>
@@ -329,12 +355,17 @@
 <script>
 //============================ STATE ============================
 const LS_PLAYERS='darts_players_v1';
+const LS_TEAMS='darts_teams_v1';
+const LS_PTEAMS='darts_player_teams_v1';
 let roster=loadRoster();            // array of names
+let teamLib=loadTeams();             // array of team names
+let playerTeams=loadPlayerTeams();   // { playerName: teamName }
 let config={game:'501',mode:'2p'};  // selection
 let teamSel=[[],[]];                 // [Team 1 names, Team 2 names]
 let G=null;                          // active game object
 let history=[];
-let redoStack=[];                      // undo snapshots
+let redoStack=[];
+let BOARD_SVG='';                      // undo snapshots
 
 const NUMBERS=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
 const CRICKET_TARGETS=[20,19,18,17,16,15,25]; // 25 = bull
@@ -342,6 +373,11 @@ const CRICKET_TARGETS=[20,19,18,17,16,15,25]; // 25 = bull
 //============================ ROSTER ============================
 function loadRoster(){try{return JSON.parse(localStorage.getItem(LS_PLAYERS))||[];}catch(e){return [];}}
 function saveRoster(){localStorage.setItem(LS_PLAYERS,JSON.stringify(roster));}
+function loadTeams(){try{return JSON.parse(localStorage.getItem(LS_TEAMS))||[];}catch(e){return [];}}
+function saveTeams(){localStorage.setItem(LS_TEAMS,JSON.stringify(teamLib));}
+function loadPlayerTeams(){try{return JSON.parse(localStorage.getItem(LS_PTEAMS))||{};}catch(e){return {};}}
+function savePlayerTeams(){localStorage.setItem(LS_PTEAMS,JSON.stringify(playerTeams));}
+function teamOfPlayer(n){return playerTeams[n]||'';}
 
 function teamOf(name){
   if(teamSel[0].includes(name))return 0;
@@ -367,7 +403,10 @@ function renderColumns(){
       else if(inOther) cls+=' disabled';     // picked by the other team → grayed, un-pressable
       else if(full) cls+=' full';            // this team is already full
       div.className=cls;
-      div.textContent=name;
+      const tm=teamOfPlayer(name);
+      div.innerHTML='<span class="nopt-name"></span>'+(tm?'<span class="nopt-team"></span>':'');
+      div.querySelector('.nopt-name').textContent=name;
+      if(tm) div.querySelector('.nopt-team').textContent=tm;
       if(!inOther) div.onclick=()=>toggleName(name,t);
       el.appendChild(div);
     });
@@ -383,11 +422,41 @@ function renderLibrary(){
   roster.forEach(name=>{
     const row=document.createElement('div');
     row.className='librow';
-    row.innerHTML=`<span class="lname"></span><button class="warn">Delete</button>`;
+    const opts=['<option value="">— no team —</option>']
+      .concat(teamLib.map(tm=>`<option value="${esc(tm)}"${teamOfPlayer(name)===tm?' selected':''}>${esc(tm)}</option>`)).join('');
+    row.innerHTML=`<span class="lname"></span><select class="teamsel">${opts}</select><button class="warn">Delete</button>`;
     row.querySelector('.lname').textContent=name;
+    row.querySelector('.teamsel').onchange=(e)=>setPlayerTeam(name,e.target.value);
     row.querySelector('button').onclick=()=>{ if(confirm(`Delete "${name}"?`)) removePlayer(name); };
     el.appendChild(row);
   });
+}
+function renderTeamLibrary(){
+  const el=document.getElementById('teamList');
+  el.innerHTML='';
+  if(teamLib.length===0){ el.innerHTML='<p class="small">No teams yet. Add one above.</p>'; return; }
+  teamLib.forEach(tm=>{
+    const row=document.createElement('div');
+    row.className='librow';
+    row.innerHTML='<span class="lname"></span><button class="warn">Delete</button>';
+    row.querySelector('.lname').textContent=tm;
+    row.querySelector('button').onclick=()=>{ if(confirm(`Delete team "${tm}"?`)) removeTeam(tm); };
+    el.appendChild(row);
+  });
+}
+function addTeam(name){
+  name=name.trim(); if(!name)return;
+  if(teamLib.some(t=>t.toLowerCase()===name.toLowerCase()))return;
+  teamLib.push(name);saveTeams();renderTeamLibrary();
+}
+function removeTeam(name){
+  teamLib=teamLib.filter(t=>t!==name);
+  Object.keys(playerTeams).forEach(p=>{ if(playerTeams[p]===name) delete playerTeams[p]; });
+  saveTeams();savePlayerTeams();renderTeamLibrary();renderLibrary();
+}
+function setPlayerTeam(name,team){
+  if(team) playerTeams[name]=team; else delete playerTeams[name];
+  savePlayerTeams();
 }
 function addPlayer(name){
   name=name.trim();
@@ -397,6 +466,7 @@ function addPlayer(name){
 }
 function removePlayer(name){
   roster=roster.filter(p=>p!==name);
+  delete playerTeams[name]; savePlayerTeams();
   teamSel=teamSel.map(arr=>arr.filter(n=>n!==name));
   saveRoster();renderColumns();renderLibrary();renderLineup();updateStart();
 }
@@ -484,6 +554,24 @@ document.getElementById('libDoneBtn').onclick=()=>{
 document.getElementById('newPlayer').addEventListener('keydown',e=>{
   if(e.key==='Enter'){addPlayer(e.target.value);e.target.value='';}
 });
+document.getElementById('manageTeamsBtn').onclick=()=>{
+  document.getElementById('library').classList.add('hidden');
+  document.getElementById('teamLibrary').classList.remove('hidden');
+  renderTeamLibrary();
+  document.getElementById('newTeam').focus();
+};
+document.getElementById('teamDoneBtn').onclick=()=>{
+  document.getElementById('teamLibrary').classList.add('hidden');
+  document.getElementById('library').classList.remove('hidden');
+  renderLibrary();
+};
+let lastAddTeam=0;
+const addTeamFromInput=()=>{ const inp=document.getElementById('newTeam'); addTeam(inp.value); inp.value=''; inp.focus(); };
+const fireAddTeam=(e)=>{ if(e)e.preventDefault(); const now=(e&&e.timeStamp)||0; if(now&&now-lastAddTeam<350)return; lastAddTeam=now; addTeamFromInput(); };
+const _addTeamBtn=document.getElementById('addTeam');
+_addTeamBtn.addEventListener('pointerdown',fireAddTeam);
+_addTeamBtn.addEventListener('click',fireAddTeam);
+document.getElementById('newTeam').addEventListener('keydown',e=>{ if(e.key==='Enter'){addTeam(e.target.value);e.target.value='';} });
 document.getElementById('startBtn').onclick=startGame;
 
 //============================ GAME SETUP ============================
@@ -723,7 +811,11 @@ function renderScoreboard(){
     const active=i===G.cur && !G.over;
     const d=document.createElement('div');
     d.className='team team'+(i+1)+(active?' active':'');
-    const throwerName=t.members.length>1?t.members[t.memberIdx]:'';
+    const _player=t.members[t.memberIdx];
+    const _teamName=teamOfPlayer(_player);
+    const _nameDisplay=_teamName || (config.mode==='2p'?t.members[0]:t.name);
+    const showThrower=(t.members.length>1)||(config.mode==='2p'&&!!_teamName);
+    const throwerName=showThrower?_player:'';
     const big=G.isCricket?t.pts:t.score;
     const needsIn=G.requireDoubleIn && !t.opened;
     let sub=G.isCricket?'points':'remaining';
@@ -739,10 +831,10 @@ function renderScoreboard(){
     }
     d.innerHTML=`
       <div class="team-main">
-        <div class="name">${esc(config.mode==='2p'?t.members[0]:t.name)}</div>
+        <div class="name">${esc(_nameDisplay)}</div>
         <div class="thrower">${active&&throwerName?'▸ '+esc(throwerName):(throwerName?esc(throwerName):'')}</div>
         <div class="big">${big}</div>
-        <div class="small"${needsIn?' style="color:var(--gold)"':''}>${sub}</div>
+        <div class="small"${needsIn?' style="color:var(--gold)"':''}>${needsIn?'⚠ needs double to start':''}</div>
       </div>
       ${histHtml}`;
     el.appendChild(d);
@@ -774,6 +866,7 @@ function renderCricket(){
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
   const pname=t=>esc(t.members[t.memberIdx]);
+  const tlabel=i=>{ const t=G.teams[i]; const tm=teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
     if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(t.members[t.memberIdx])}</div>`;
     return active ? `<div class="thrower-line">▸ throwing</div>` : `<div class="thrower-line"></div>`; };
@@ -785,9 +878,9 @@ function renderCricket(){
     return `<td class="mcell${active}">${inner}</td>`;
   };
   let html='<div class="card"><table class="cricket">'
-    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}"><div class="pname">${pname(t1)}</div></th>`
-    +'<th class="spine">Target</th>'
-    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}"><div class="pname">${pname(t2)}</div></th></tr>`;
+    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}"><div class="tlabel">${tlabel(0)}</div><div class="pname">${pname(t1)}</div></th>`
+    +'<th class="spine hdrboard"><div class="hdr-throw">'+BOARD_SVG+'<div class="hdr-label">▸ Tap</div></div></th>'
+    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}"><div class="tlabel">${tlabel(1)}</div><div class="pname">${pname(t2)}</div></th></tr>`;
   CRICKET_TARGETS.forEach(n=>{
     const lbl=n===25?'Bull':n;
     const dead=t1.marks[n]>=3 && t2.marks[n]>=3;   // both closed → no longer scorable
@@ -798,12 +891,13 @@ function renderCricket(){
       +`<td class="cric-pts">${t2.pts}</td></tr>`;
   html+='</table></div>';
   el.innerHTML=html;
+  const _hb=el.querySelector('.hdr-throw'); if(_hb) _hb.addEventListener('click',openBoard);
 }
 function markStr(m){ // 0 -> '', 1 -> '/', 2 -> 'X', 3+ -> Ⓧ (closed)
-  if(m<=0)return '·';
+  if(m<=0)return '';
   if(m===1)return '/';
   if(m===2)return 'X';
-  return 'Ⓧ';
+  return 'X';
 }
 
 //============================ DARTBOARD (SVG) ============================
@@ -843,6 +937,7 @@ function buildBoard(){
   const svg=`<svg class="board" viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
      <circle cx="${cx}" cy="${cy}" r="248" fill="#0a0d12"/>
      ${paths}${labels}</svg>`;
+  BOARD_SVG=svg;
   const wrap=document.getElementById('boardwrap');
   wrap.innerHTML=svg;
   wrap.querySelector('svg').addEventListener('click',e=>{
@@ -915,6 +1010,11 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;',
 //============================ INIT ============================
 resetSelection();
 renderColumns();renderLineup();updateStart();
+(function(){
+  const c1=document.getElementById('col1'), c2=document.getElementById('col2'); let s=false;
+  const sync=(a,b)=>a.addEventListener('scroll',()=>{ if(s)return; s=true; b.scrollTop=a.scrollTop; s=false; });
+  if(c1&&c2){ sync(c1,c2); sync(c2,c1); }
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
