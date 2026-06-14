@@ -183,17 +183,17 @@
   /* ===== Cricket: scores-first, pop-up board ===== */
   #miniBoard{display:none;}
   #game.cricket #scoreboard{display:none;}
-  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:9px 6px;}
-  #game.cricket #cricketBoard .cricket .marks{font-size:32px;}
-  #game.cricket #cricketBoard .cricket .tgt{font-size:28px;}
+  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:3px 6px;}
+  #game.cricket #cricketBoard .cricket .marks{font-size:51px;}
+  #game.cricket #cricketBoard .cricket .tgt{font-size:45px;}
   #game.cricket #cricketBoard .cricket .chead .mcell{font-size:22px;}
   #game.cricket #cricketBoard .cricket .cric-pts{font-size:60px;}
   .chead .thrower-line{font-size:30px;font-weight:800;min-height:34px;margin-top:6px;letter-spacing:.3px;}
   #game.cricket:not(.board-open) #playArea{display:none;}
-  #game.cricket #miniBoard{display:block;margin:10px auto 0;max-width:170px;cursor:pointer;}
+  #game.cricket #miniBoard{display:block;margin:0;max-width:112px;cursor:pointer;grid-column:2;justify-self:center;}
   #game.cricket #miniBoard .mini-inner{position:relative;border:1px solid var(--line);border-radius:16px;
        padding:10px;background:rgba(10,7,30,.45);box-shadow:0 0 18px rgba(58,107,255,.18);}
-  #game.cricket #miniBoard svg.board{max-width:150px;}
+  #game.cricket #miniBoard svg.board{max-width:92px;}
   #game.cricket #miniBoard .mini-label{font-family:var(--display);text-align:center;font-size:12px;
        color:var(--blue-lt);margin-top:6px;text-transform:uppercase;letter-spacing:.7px;}
   #game.cricket.board-open #cricketBoard,#game.cricket.board-open #miniBoard,#game.cricket.board-open>.gamebtns{display:none;}
@@ -211,8 +211,18 @@
   /* Cricket: active team's name box highlights like the 01 score boxes */
   #game.cricket #cricketBoard .cricket .chead .mcell{transition:background .2s,box-shadow .2s,opacity .2s;}
   #game.cricket #cricketBoard .cricket .chead .mcell:not(.active){opacity:.42;filter:saturate(.6);}
-  #game.cricket #cricketBoard .cricket .chead .head1.active{background:linear-gradient(160deg,rgba(79,124,255,.32),rgba(79,124,255,.05));box-shadow:inset 5px 0 0 var(--blue),inset 0 0 26px rgba(79,124,255,.20);}
+  #game.cricket #cricketBoard .cricket .chead .head1.active{background:linear-gradient(160deg,rgba(125,165,255,.45),rgba(79,124,255,.10));box-shadow:inset 6px 0 0 #7da5ff,inset 0 0 32px rgba(125,165,255,.34);}
+  #game.cricket #cricketBoard .cricket .chead .head1.active .pname{color:#2e8bff;-webkit-text-stroke:0.6px #ffffff;text-shadow:none;}
+  #game.cricket #cricketBoard .cricket .chead .head2.active .pname{text-shadow:none;}
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
+
+  #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:middle;}
+  .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1.05;word-break:break-word;}
+  #game.cricket #cricketBoard .cricket .smiley{font-size:44px;line-height:1;}
+
+  #cricketThrow{display:none;}
+  #game.cricket:not(.board-open) #cricketThrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:8px 0 0;}
+  #cricketMissBtn{grid-column:3;justify-self:start;align-self:center;margin-left:18px;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:.5px;padding:12px 22px;border-radius:12px;}
 </style>
 </head>
 <body>
@@ -279,7 +289,7 @@
   <div id="game" class="hidden">
     <div class="scoreboard" id="scoreboard"></div>
     <div id="cricketBoard"></div>
-    <div id="miniBoard"></div>
+    <div id="cricketThrow"><div id="miniBoard"></div><button id="cricketMissBtn" class="ghost">Miss</button></div>
     <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button></div>
 
     <div class="card" id="playArea" style="padding:12px;">
@@ -486,7 +496,7 @@ function buildTeams(){
   }
 }
 function mkTeam(name,members){
-  return {name,members,memberIdx:0,score:0,marks:{},pts:0,opened:false,history:[]};
+  return {name,members,memberIdx:0,score:0,marks:{},pts:0,opened:false,history:[],tripleClose:{}};
 }
 function startGame(){
   const teams=buildTeams();
@@ -616,9 +626,12 @@ function applyCricket(value,mult){
     return;
   }
   const hits=mult; // single=1,double=2,triple=3 ; bull: outer(×1)=1, inner(×2)=2
+  const was0=t.marks[num]===0;
   const need=Math.max(0,3-t.marks[num]);
   const used=Math.min(need,hits);
   t.marks[num]+=used;
+  if(was0 && mult===3 && num!==25) t.tripleClose[num]=true;  // closed in one triple on first hit
+  else if(was0===false){} // (no-op) keep flag once set
   const overflow=hits-used;
   if(overflow>0){
     // score points only if an opponent has NOT closed this number
@@ -760,18 +773,21 @@ function renderCricket(){
   const el=document.getElementById('cricketBoard');
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
+  const pname=t=>esc(t.members[t.memberIdx]);
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
     if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(t.members[t.memberIdx])}</div>`;
     return active ? `<div class="thrower-line">▸ throwing</div>` : `<div class="thrower-line"></div>`; };
   const cell=(t,idx,n,dead)=>{
     const m=t.marks[n];
     const active=(!dead && G.cur===idx && !G.over)?' activeside':'';
-    return `<td class="mcell${active}"><span class="marks${m>=3?' closed':''}">${markStr(m)}</span></td>`;
+    const tripIn=t.tripleClose && t.tripleClose[n] && m>=3;
+    const inner=tripIn ? '<span class="smiley">😁</span>' : `<span class="marks${m>=3?' closed':''}">${markStr(m)}</span>`;
+    return `<td class="mcell${active}">${inner}</td>`;
   };
   let html='<div class="card"><table class="cricket">'
-    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}">${nm(t1)}${thr(t1,0)}</th>`
+    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}"><div class="pname">${pname(t1)}</div></th>`
     +'<th class="spine">Target</th>'
-    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}">${nm(t2)}${thr(t2,1)}</th></tr>`;
+    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}"><div class="pname">${pname(t2)}</div></th></tr>`;
   CRICKET_TARGETS.forEach(n=>{
     const lbl=n===25?'Bull':n;
     const dead=t1.marks[n]>=3 && t2.marks[n]>=3;   // both closed → no longer scorable
@@ -872,6 +888,7 @@ document.getElementById('backBtn').onclick=backBoard;
 document.getElementById('scoreUndoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
 document.getElementById('scoreRedoBtn').onclick=redo;
+document.getElementById('cricketMissBtn').onclick=endTurnManual;
 document.getElementById('missBtn').onclick=()=>throwDart(0,1);
 document.getElementById('endTurnBtn').onclick=endTurnManual;
 document.getElementById('quitBtn').onclick=toMenu;
