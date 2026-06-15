@@ -217,7 +217,7 @@
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
 
   #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:bottom;padding-bottom:12px;}
-  .chead .pname{font-family:var(--display);font-size:66px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;}
+  .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;}
   .chead .tlabel{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
   #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
 
@@ -865,7 +865,7 @@ function renderCricket(){
   const el=document.getElementById('cricketBoard');
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
-  const pname=t=>esc(t.members[t.memberIdx]);
+  const pname=t=>{ const n=t.members[t.memberIdx]; return esc(n.length>8 ? n.slice(0,7)+'.' : n); };
   const tlabel=i=>{ const t=G.teams[i]; const tm=teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
     if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(t.members[t.memberIdx])}</div>`;
@@ -892,10 +892,6 @@ function renderCricket(){
   html+='</table></div>';
   el.innerHTML=html;
   const _hb=el.querySelector('.hdr-throw'); if(_hb) _hb.addEventListener('click',openBoard);
-  el.querySelectorAll('.chead .pname').forEach(p=>{
-    let fs=66; p.style.fontSize=fs+'px';
-    while(p.scrollWidth>p.clientWidth && fs>22){ fs-=2; p.style.fontSize=fs+'px'; }
-  });
 }
 function markStr(m){ // 0 -> '', 1 -> '/', 2 -> 'X', 3+ -> Ⓧ (closed)
   if(m<=0)return '';
