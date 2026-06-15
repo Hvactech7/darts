@@ -146,12 +146,12 @@
   /* cricket */
   .cricket{width:100%;border-collapse:collapse;table-layout:fixed;}
   .cricket td,.cricket th{padding:12px 6px;text-align:center;border-bottom:1px solid var(--line);}
-  .cricket .mcell{width:38%;}
+  .cricket .mcell{width:28%;}
   .cricket .chead th{border-bottom:2px solid var(--line);padding-bottom:14px;}
   .cricket .chead .mcell{font-family:var(--display);font-weight:800;font-size:19px;color:var(--txt);text-transform:uppercase;letter-spacing:.5px;}
   .cricket .chead .head1{color:var(--blue);text-shadow:0 0 12px rgba(79,124,255,.4);}
   .cricket .chead .head2{color:var(--yellow);text-shadow:0 0 12px rgba(255,212,0,.4);}
-  .cricket .spine{width:24%;background:rgba(10,7,30,.5);border-left:1px solid var(--line);
+  .cricket .spine{width:44%;background:rgba(10,7,30,.5);border-left:1px solid var(--line);
        border-right:1px solid var(--line);font-weight:800;}
   .cricket .tgt{font-family:var(--display);font-size:24px;color:var(--txt);}
   .cricket .chead .spine,.cricket .ptrow .spine{font-family:var(--display);font-size:12px;color:var(--muted);font-weight:700;
@@ -185,7 +185,7 @@
   #game.cricket #scoreboard{display:none;}
   #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:3px 6px;}
   #game.cricket #cricketBoard .cricket .marks{font-size:78px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;}
-  #game.cricket #cricketBoard .cricket .tgt{font-size:48px;}
+  #game.cricket #cricketBoard .cricket .tgt{font-size:40px;}
   #game.cricket #cricketBoard .cricket .chead .mcell{font-size:22px;}
   #game.cricket #cricketBoard .cricket .cric-pts{font-size:60px;}
   .chead .thrower-line{font-size:30px;font-weight:800;min-height:34px;margin-top:6px;letter-spacing:.3px;}
@@ -205,7 +205,7 @@
   #backBtn{display:none;}
   #game.cricket.board-open #backBtn{display:block;position:absolute;top:16px;left:16px;z-index:1;}
   #scoreActions{display:none;}
-  #game.cricket:not(.board-open) #scoreActions{display:flex;gap:10px;justify-content:center;margin:12px auto 0;max-width:440px;}
+  #game.cricket:not(.board-open) #scoreActions{display:flex;gap:10px;justify-content:center;margin:12px auto 0;max-width:500px;}
   #scoreActions button{flex:1;}
 
   /* Cricket: active team's name box highlights like the 01 score boxes */
@@ -216,7 +216,7 @@
   #game.cricket #cricketBoard .cricket .chead .head2.active .pname{text-shadow:none;}
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
 
-  #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:bottom;padding-bottom:12px;}
+  #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:middle;padding-bottom:0;}
   .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;}
   .chead .tlabel{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
   #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
@@ -264,6 +264,14 @@
   #game:not(.cricket) .scoreboard .team1 .big,#game:not(.cricket) .scoreboard .team1 .name{right:18px;}
   #game:not(.cricket) .scoreboard .team2 .thrower,#game:not(.cricket) .scoreboard .team2 .team-hist{right:18px;}
   #game:not(.cricket) .scoreboard .team2 .big,#game:not(.cricket) .scoreboard .team2 .name{left:18px;}
+
+  /* Cricket direct-input: D | value | T tappable in the center spine */
+  #game.cricket #cricketBoard .cricket .tgtrow{display:flex;align-items:center;justify-content:space-between;gap:0;}
+  #game.cricket #cricketBoard .cricket td.spine.tgt{padding-left:20px;padding-right:20px;}
+  #game.cricket #cricketBoard .cricket .dt-v{cursor:pointer;padding:4px 6px;border-radius:9px;line-height:1;}
+  #game.cricket #cricketBoard .cricket .dt-d,#game.cricket #cricketBoard .cricket .dt-t{font-family:var(--display);font-size:40px;font-weight:800;color:var(--blue-lt);cursor:pointer;padding:6px 8px;border-radius:9px;line-height:1;}
+  #game.cricket #cricketBoard .cricket .dt-spacer{visibility:hidden;}
+  #game.cricket #cricketBoard .cricket .dt-v:active,#game.cricket #cricketBoard .cricket .dt-d:active,#game.cricket #cricketBoard .cricket .dt-t:active{background:rgba(79,124,255,.3);}
 </style>
 </head>
 <body>
@@ -345,7 +353,7 @@
   <div id="game" class="hidden">
     <div class="scoreboard" id="scoreboard"></div>
     <div id="cricketBoard"></div>
-    <div id="scoreActions"><button id="cricketMissBtn" class="ghost">Miss</button><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button></div>
+    <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button><button id="cricketConfirmBtn" class="confirm-btn">Confirm ▶</button></div>
 
     <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
@@ -826,6 +834,7 @@ function renderGame(){
   var _sub=document.getElementById('scoreUndoBtn'); if(_sub) _sub.disabled=history.length===0;
   var _r1=document.getElementById('redoBtn'); if(_r1) _r1.disabled=redoStack.length===0;
   var _r2=document.getElementById('scoreRedoBtn'); if(_r2) _r2.disabled=redoStack.length===0;
+  var _cc=document.getElementById('cricketConfirmBtn'); if(_cc) _cc.disabled=false;
   const confirmBtn=document.getElementById('endTurnBtn');
   confirmBtn.disabled=G.over;
   confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
@@ -912,7 +921,7 @@ function renderCricket(){
   CRICKET_TARGETS.forEach(n=>{
     const lbl=n===25?'Bull':n;
     const dead=t1.marks[n]>=3 && t2.marks[n]>=3;   // both closed → no longer scorable
-    html+=`<tr class="${dead?'deadrow':''}">`+cell(t1,0,n,dead)+`<td class="spine tgt">${lbl}</td>`+cell(t2,1,n,dead)+'</tr>';
+    html+=`<tr class="${dead?'deadrow':''}">`+cell(t1,0,n,dead)+`<td class="spine tgt"><div class="tgtrow"><span class="dt-d" data-v="${n}" data-m="2">D</span><span class="dt-v" data-v="${n}" data-m="1">${lbl}</span>${n!==25?`<span class="dt-t" data-v="${n}" data-m="3">T</span>`:`<span class="dt-t dt-spacer">T</span>`}</div></td>`+cell(t2,1,n,dead)+'</tr>';
   });
   html+=`<tr class="ptrow"><td class="cric-pts">${t1.pts}</td>`
       +'<td class="spine">Points</td>'
@@ -1011,7 +1020,7 @@ document.getElementById('backBtn').onclick=backBoard;
 document.getElementById('scoreUndoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
 document.getElementById('scoreRedoBtn').onclick=redo;
-document.getElementById('cricketMissBtn').onclick=endTurnManual;
+document.getElementById('cricketConfirmBtn').onclick=endTurnManual;
 document.getElementById('missBtn').onclick=()=>throwDart(0,1);
 document.getElementById('endTurnBtn').onclick=endTurnManual;
 document.getElementById('quitBtn').onclick=toMenu;
@@ -1042,6 +1051,20 @@ renderColumns();renderLineup();updateStart();
   const c1=document.getElementById('col1'), c2=document.getElementById('col2'); let s=false;
   const sync=(a,b)=>a.addEventListener('scroll',()=>{ if(s)return; s=true; b.scrollTop=a.scrollTop; s=false; });
   if(c1&&c2){ sync(c1,c2); sync(c2,c1); }
+})();
+</script>
+<script>
+(function(){
+  var cb=document.getElementById('cricketBoard');
+  if(!cb) return;
+  cb.addEventListener('click',function(e){
+    var el=e.target.closest('.tgtrow [data-v]');
+    if(!el) return;
+    if(!G || !G.isCricket || G.over) return;
+    if(document.getElementById('game').classList.contains('board-open')) return;
+    if(G.turnLocked) return;
+    throwDart(parseInt(el.dataset.v,10),parseInt(el.dataset.m,10));
+  });
 })();
 </script>
 <script>
