@@ -198,9 +198,9 @@
        color:var(--blue-lt);margin-top:6px;text-transform:uppercase;letter-spacing:.7px;}
   #game.cricket.board-open #cricketBoard,#game.cricket.board-open #miniBoard,#game.cricket.board-open>.gamebtns{display:none;}
   #game.cricket.board-open #playArea{position:fixed;inset:0;z-index:200;margin:0;border-radius:0;
-       display:flex;flex-direction:column;justify-content:center;gap:12px;padding:16px;
+       display:flex;flex-direction:column;justify-content:center;gap:12px;padding:14px;
        background:radial-gradient(circle at 50% 28%,#0d1430,#060a14);}
-  #game.cricket.board-open #playArea svg.board{max-width:min(560px,92vw);margin:0 auto;}
+  #game.cricket.board-open #playArea svg.board{max-width:calc(100vw - 28px);margin:0 auto;}
 
   #backBtn{display:none;}
   #game.cricket.board-open #backBtn{display:block;position:absolute;top:16px;left:16px;z-index:1;}
