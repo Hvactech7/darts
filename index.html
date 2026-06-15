@@ -235,6 +235,35 @@
   .librow .lname{flex:1;min-width:0;}
   .librow .teamsel{flex:0 0 auto;max-width:44%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font-family:var(--body);font-size:15px;font-weight:600;}
   .nameopt .nopt-team{font-size:19px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+
+  /* ===== 301/501 sketch: big round board, cards tucked behind its top corners ===== */
+  #game:not(.cricket){position:relative;margin-top:40px;}
+  #game:not(.cricket) #playArea{display:flex;flex-direction:column;gap:6px;background:none;border:none;box-shadow:none;padding:0;position:relative;z-index:2;}
+  #game:not(.cricket) #playArea .boardwrap{order:1;margin-top:40px;}
+  #game:not(.cricket) #playArea .turnbar{order:2;margin:0;align-items:center;position:relative;z-index:3;}
+  #game:not(.cricket) #playArea .gamebtns{order:3;margin-top:0;}
+  #game:not(.cricket) #playArea #undoBtn{order:-1;flex:0 0 auto;margin-top:-58px;border-radius:20px;}
+  #game:not(.cricket) #playArea #redoBtn{order:1;flex:0 0 auto;margin-top:-58px;border-radius:20px;}
+  #game:not(.cricket) svg.board{max-width:100%;}
+  /* score cards tuck behind the board's top corners (board on top draws the concave edge) */
+  #game:not(.cricket) .scoreboard{position:absolute;top:-50px;left:0;right:0;margin:0;z-index:1;display:flex;justify-content:space-between;gap:0;align-items:flex-start;}
+  #game:not(.cricket) .scoreboard .team{flex:0 0 auto;width:48%;padding:14px 18px;min-height:200px;flex-direction:column;gap:3px;}
+  #game:not(.cricket) .scoreboard .team1{align-items:flex-start;text-align:left;}
+  #game:not(.cricket) .scoreboard .team2{align-items:flex-end;text-align:right;}
+  #game:not(.cricket) .scoreboard .team .big{font-size:60px;}
+  #game:not(.cricket) .scoreboard .team .thrower{font-size:34px;}
+  #game:not(.cricket) .team-hist .histscore{min-width:46px;border-radius:999px;}
+
+  /* name and score in opposite top corners of each card */
+  #game:not(.cricket) .scoreboard .team{position:relative;}
+  #game:not(.cricket) .scoreboard .team .name{position:absolute;top:74px;font-size:15px;opacity:.85;}
+  #game:not(.cricket) .scoreboard .team .thrower{position:absolute;top:14px;font-size:34px;font-weight:800;min-height:0;}
+  #game:not(.cricket) .scoreboard .team .big{position:absolute;top:8px;margin:0;}
+  #game:not(.cricket) .scoreboard .team .team-hist{position:absolute;top:60px;}
+  #game:not(.cricket) .scoreboard .team1 .thrower,#game:not(.cricket) .scoreboard .team1 .team-hist{left:18px;}
+  #game:not(.cricket) .scoreboard .team1 .big,#game:not(.cricket) .scoreboard .team1 .name{right:18px;}
+  #game:not(.cricket) .scoreboard .team2 .thrower,#game:not(.cricket) .scoreboard .team2 .team-hist{right:18px;}
+  #game:not(.cricket) .scoreboard .team2 .big,#game:not(.cricket) .scoreboard .team2 .name{left:18px;}
 </style>
 </head>
 <body>
@@ -318,7 +347,7 @@
     <div id="cricketBoard"></div>
     <div id="scoreActions"><button id="cricketMissBtn" class="ghost">Miss</button><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button></div>
 
-    <div class="card" id="playArea" style="padding:12px;">
+    <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
       <div class="turnbar">
         <div class="darts" id="dartsRow"></div>
@@ -813,16 +842,15 @@ function renderScoreboard(){
     d.className='team team'+(i+1)+(active?' active':'');
     const _player=t.members[t.memberIdx];
     const _teamName=teamOfPlayer(_player);
-    const _nameDisplay=_teamName || (config.mode==='2p'?t.members[0]:t.name);
-    const showThrower=(t.members.length>1)||(config.mode==='2p'&&!!_teamName);
-    const throwerName=showThrower?_player:'';
+    const _teamLabel=_teamName || (config.mode==='2p'?'':('Team '+(i+1)));
+    const throwerName=_player;
     const big=G.isCricket?t.pts:t.score;
     const needsIn=G.requireDoubleIn && !t.opened;
     let sub=G.isCricket?'points':'remaining';
     if(needsIn) sub='⚠ needs double to start';
     let histHtml='';
     if(!G.isCricket){
-      const h=t.history.slice(-3);             // chronological: oldest top, newest bottom
+      const h=t.history.slice(-4);             // chronological: oldest top, newest bottom
       const last=h.length-1;
       histHtml='<div class="team-hist"><div class="histlbl">last</div>'
         + (h.length ? h.map((s,idx)=>`<span class="histscore${idx===last?' latest':''}">${s}</span>`).join('')
@@ -831,7 +859,7 @@ function renderScoreboard(){
     }
     d.innerHTML=`
       <div class="team-main">
-        <div class="name">${esc(_nameDisplay)}</div>
+        <div class="name">${esc(_teamLabel)}</div>
         <div class="thrower">${active&&throwerName?'▸ '+esc(throwerName):(throwerName?esc(throwerName):'')}</div>
         <div class="big">${big}</div>
         <div class="small"${needsIn?' style="color:var(--gold)"':''}>${needsIn?'⚠ needs double to start':''}</div>
