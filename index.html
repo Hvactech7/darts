@@ -44,7 +44,8 @@
     background-attachment:fixed;color:var(--txt);
     font-family:var(--body);font-size:17px;font-weight:500;overscroll-behavior:none;
     position:fixed;top:0;left:0;width:100%;height:100%;}
-  .wrap{max-width:900px;margin:0 auto;padding:14px;height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
+  .wrap{max-width:900px;margin:0 auto;padding:14px;height:100%;overflow:hidden;overscroll-behavior:none;}
+  #setup,#library,#teamLibrary{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
   h1{font-family:var(--display);font-size:24px;font-weight:900;margin:2px 0 10px;letter-spacing:1px;text-transform:uppercase;
      display:flex;align-items:center;gap:10px;}
   h1 .h1-text{background:linear-gradient(90deg,var(--blue),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -928,7 +929,21 @@ function renderGame(){
   confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
+  fitScreen();
 }
+function fitScreen(){
+  var g=document.getElementById('game');
+  if(!g) return;
+  if(g.classList.contains('hidden')||g.classList.contains('board-open')){ g.style.transform=''; return; }
+  g.style.transform='none'; g.style.transformOrigin='top center';
+  var wrap=document.querySelector('.wrap'), pad=28;
+  var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
+  var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
+  var s = need>0 ? Math.min(1, avail/need) : 1;
+  g.style.transform = s<0.999 ? 'scale('+s.toFixed(4)+')' : 'none';
+}
+window.addEventListener('resize', fitScreen);
+window.addEventListener('orientationchange', function(){ setTimeout(fitScreen,250); });
 
 function renderScoreboard(){
   const el=document.getElementById('scoreboard');
@@ -1076,8 +1091,8 @@ function buildBoard(){
     mini.querySelector('.mini-inner').addEventListener('click',openBoard);
   }
 }
-function openBoard(){ document.getElementById('game').classList.add('board-open'); }
-function closeBoard(){ document.getElementById('game').classList.remove('board-open'); }
+function openBoard(){ document.getElementById('game').style.transform=''; document.getElementById('game').classList.add('board-open'); }
+function closeBoard(){ document.getElementById('game').classList.remove('board-open'); fitScreen(); }
 function backBoard(){ while(G.darts.length>0) undo(); redoStack.length=0; closeBoard(); renderGame(); }
 function seg(cx,cy,ri,ro,a0,a1,fill,num,mult){
   const p=annular(cx,cy,ri,ro,a0,a1);
