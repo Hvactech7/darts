@@ -345,7 +345,7 @@
   <div id="piddle" class="hidden">
     <div class="card">
       <h2>🎯 Piddle for the Bull</h2>
-      <p class="small" style="margin-top:-4px;">One player from each team throws at the bullseye — closest goes first. Tap each team's thrower, in finishing order.</p>
+      <p class="small" id="pidHint" style="margin-top:-4px;">One player from each team throws at the bullseye — closest goes first.</p>
       <div class="teamcols" style="margin-top:14px;">
         <div class="teamcol">
           <div class="teamcol-head head1">Team 1</div>
@@ -679,12 +679,20 @@ function renderPiddle(){
     const nm=(teamSel[p.team]||[])[p.idx]||'';
     return `<div class="pid-slot filled">${lbl}<br><b>${esc(nm)}</b></div>`; };
   document.getElementById('pidOrder').innerHTML=slot(0)+slot(1);
+  var hint=document.getElementById('pidHint');
+  if(hint) hint.textContent = (config.mode==='2p')
+    ? 'Each player throws one dart at the bull — tap whoever was closest. They go first; the other player is automatically second.'
+    : 'One player from each team throws at the bull — closest goes first. Tap 1st place, then 2nd place (one per team).';
   document.getElementById('pidStartBtn').disabled = pidPicks.length<2;
 }
 function pidTap(team,idx){
-  const ex=pidPicks.find(p=>p.team===team);
-  if(ex){ ex.idx=idx; }                       // same team re-tapped -> swap that team's thrower
-  else if(pidPicks.length<2){ pidPicks.push({team,idx}); }
+  if(config.mode==='2p'){                      // 1v1: tapped player wins (1st); other auto 2nd
+    pidPicks=[{team:team, idx:idx},{team:1-team, idx:0}];
+  } else {
+    const ex=pidPicks.find(p=>p.team===team);
+    if(ex){ ex.idx=idx; }                       // same team re-tapped -> swap that team's thrower
+    else if(pidPicks.length<2){ pidPicks.push({team,idx}); }
+  }
   renderPiddle();
 }
 
