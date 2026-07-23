@@ -37,10 +37,11 @@
   html,body{margin:0;height:100%;overflow:hidden;}
   body{
     background:
-      radial-gradient(circle at 12% -5%, rgba(79,124,255,.16), transparent 38%),
-      radial-gradient(circle at 88% 4%, rgba(255,212,0,.16), transparent 40%),
-      radial-gradient(circle at 50% 120%, rgba(79,124,255,.20), transparent 48%),
-      var(--bg);
+      radial-gradient(120% 70% at 50% -12%, rgba(79,124,255,.22), transparent 55%),
+      radial-gradient(60% 40% at 90% 2%, rgba(255,212,0,.12), transparent 60%),
+      radial-gradient(70% 45% at 8% 6%, rgba(79,124,255,.10), transparent 60%),
+      radial-gradient(120% 80% at 50% 118%, rgba(79,124,255,.16), transparent 55%),
+      radial-gradient(140% 140% at 50% 45%, #0c1130 0%, var(--bg) 55%, #030409 100%);
     background-attachment:fixed;color:var(--txt);
     font-family:var(--body);font-size:17px;font-weight:500;overscroll-behavior:none;
     position:fixed;top:0;left:0;width:100%;height:100%;}
@@ -50,12 +51,14 @@
   #setup,#library,#teamLibrary,#piddle{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
   h1{font-family:var(--display);font-size:24px;font-weight:900;margin:2px 0 10px;letter-spacing:1px;text-transform:uppercase;
      display:flex;align-items:center;gap:10px;}
-  h1 .h1-text{background:linear-gradient(90deg,var(--blue),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent;
-     filter:drop-shadow(0 0 10px rgba(79,124,255,.35));}
+  h1 .h1-text{background:linear-gradient(90deg,#8fb0ff,var(--blue) 30%,#ffe993 70%,var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent;
+     filter:drop-shadow(0 2px 2px rgba(0,0,0,.7)) drop-shadow(0 0 12px rgba(79,124,255,.4));}
   h2{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 12px;color:var(--blue);text-transform:uppercase;letter-spacing:1.4px;}
-  .card{position:relative;background:linear-gradient(160deg,rgba(40,33,95,.85),rgba(20,15,52,.92));
-     border:1px solid var(--line);border-radius:18px;padding:13px;margin-bottom:10px;
-     box-shadow:0 6px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05);}
+  .card{position:relative;background:
+       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 26%),
+       linear-gradient(160deg,rgba(40,33,95,.88),rgba(20,15,52,.94));
+     border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:13px;margin-bottom:10px;
+     box-shadow:0 16px 34px rgba(0,0,0,.55),0 3px 8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.35);}
   .row{display:flex;gap:10px;flex-wrap:wrap;}
   .grow{flex:1;}
   label.field{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
@@ -63,12 +66,18 @@
        background:rgba(10,7,30,.6);color:var(--txt);font-family:var(--body);font-size:17px;font-weight:600;}
   input[type=text]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,124,255,.18);}
   button{font-family:var(--display);cursor:pointer;border:none;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:.5px;
-       padding:13px 16px;color:var(--txt);background:rgba(34,28,82,.8);border:1px solid var(--line);
+       padding:13px 16px;color:var(--txt);
+       background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),rgba(34,28,82,.85);
+       border:1px solid rgba(255,255,255,.10);
+       box-shadow:0 6px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.10),inset 0 -2px 4px rgba(0,0,0,.3);
        transition:transform .06s,box-shadow .15s,filter .15s;}
-  button:active{transform:scale(.96);}
-  button.primary{background:linear-gradient(135deg,var(--blue-lt),var(--blue));color:#fff;border:none;box-shadow:0 0 20px rgba(79,124,255,.5);}
-  button.accent{background:linear-gradient(135deg,var(--yellow-lt),var(--yellow));color:#241a00;border:none;box-shadow:0 0 20px rgba(255,212,0,.5);}
-  button.confirm-btn{background:linear-gradient(135deg,#ff5d72,#d92242);color:#fff;border:none;box-shadow:0 0 20px rgba(255,77,106,.5);}
+  button:active{transform:scale(.96) translateY(1px);box-shadow:0 2px 6px rgba(0,0,0,.4),inset 0 2px 6px rgba(0,0,0,.35);}
+  button.primary{background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0) 42%),linear-gradient(135deg,var(--blue-lt),#3a5fd8);color:#fff;border:1px solid rgba(200,215,255,.35);
+       box-shadow:0 8px 20px rgba(0,0,0,.45),0 0 22px rgba(79,124,255,.45),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -3px 6px rgba(0,0,30,.35);text-shadow:0 1px 2px rgba(0,0,40,.5);}
+  button.accent{background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 42%),linear-gradient(135deg,#ffe14d,#f0b900);color:#241a00;border:1px solid rgba(255,240,170,.6);
+       box-shadow:0 8px 20px rgba(0,0,0,.45),0 0 22px rgba(255,212,0,.4),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -3px 6px rgba(120,80,0,.35);text-shadow:0 1px 0 rgba(255,255,255,.35);}
+  button.confirm-btn{background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 42%),linear-gradient(135deg,#ff5d72,#c81c3c);color:#fff;border:1px solid rgba(255,170,185,.4);
+       box-shadow:0 8px 20px rgba(0,0,0,.45),0 0 22px rgba(255,77,106,.45),inset 0 1px 0 rgba(255,255,255,.35),inset 0 -3px 6px rgba(90,0,20,.4);text-shadow:0 1px 2px rgba(80,0,15,.5);}
   button.primary:active,button.accent:active,button.confirm-btn:active{filter:brightness(1.12);}
   button.ghost{background:rgba(255,255,255,.04);}
   button.warn{background:rgba(255,64,104,.08);border-color:rgba(255,64,104,.4);color:#ff90a6;}
@@ -108,9 +117,11 @@
   .hidden{display:none!important;}
   /* GAME */
   .scoreboard{display:flex;gap:12px;margin-bottom:14px;}
-  .team{flex:1;display:flex;gap:10px;background:linear-gradient(160deg,rgba(40,33,95,.7),rgba(18,13,46,.9));
-       border:1px solid var(--line);border-radius:16px;padding:14px 18px;position:relative;overflow:hidden;
-       box-shadow:0 6px 22px rgba(0,0,0,.4);transition:box-shadow .2s,border-color .2s;}
+  .team{flex:1;display:flex;gap:10px;background:
+       linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 30%),
+       linear-gradient(160deg,rgba(40,33,95,.75),rgba(18,13,46,.92));
+       border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:14px 18px;position:relative;overflow:hidden;
+       box-shadow:0 14px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);transition:box-shadow .2s,border-color .2s;}
   .team-main{flex:1;min-width:0;}
   .team.active{border-width:2px;}
   .team:not(.active){opacity:.45;filter:saturate(.6);}
@@ -127,18 +138,21 @@
   .team .thrower{font-family:var(--display);font-size:38px;color:var(--yellow);margin-top:4px;min-height:20px;font-weight:800;line-height:1.02;}
   .team1 .thrower{color:var(--blue-lt);}
   .team .big{font-family:var(--display);font-size:101px;font-weight:900;line-height:1;margin-top:12px;letter-spacing:1px;}
-  .team1.active .big{color:var(--blue);text-shadow:0 0 18px rgba(79,124,255,.55);}
-  .team2.active .big{color:var(--yellow);text-shadow:0 0 18px rgba(255,212,0,.55);}
+  .team1.active .big{color:var(--blue);text-shadow:0 2px 3px rgba(0,0,20,.7),0 0 12px rgba(79,124,255,.8),0 0 34px rgba(79,124,255,.45);}
+  .team2.active .big{color:var(--yellow);text-shadow:0 2px 3px rgba(20,10,0,.7),0 0 12px rgba(255,212,0,.75),0 0 34px rgba(255,212,0,.4);}
   .team-hist{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;flex-shrink:0;}
   .histlbl{font-family:var(--display);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:center;margin-bottom:1px;}
-  .histscore{font-family:var(--display);background:rgba(10,7,30,.55);border:1px solid var(--line);border-radius:9px;padding:5px 10px;
+  .histscore{font-family:var(--display);background:linear-gradient(180deg,rgba(0,0,10,.75),rgba(20,16,50,.55));border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:5px 10px;
+       box-shadow:inset 0 2px 5px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.05);
        font-size:21px;font-weight:700;color:var(--muted);text-align:center;min-width:60px;}
   .histscore.latest{color:var(--txt);border-color:var(--blue);box-shadow:0 0 12px rgba(79,124,255,.3);}
   .histempty{color:var(--muted);}
   .turnbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
   .darts{display:flex;gap:8px;flex:1;}
-  .dart{font-family:var(--display);flex:1;text-align:center;background:rgba(10,7,30,.55);border:1px solid var(--line);border-radius:11px;
-       padding:11px 4px;font-weight:700;font-size:24px;min-height:46px;}
+  .dart{font-family:var(--display);flex:1;text-align:center;background:linear-gradient(180deg,rgba(0,0,10,.78),rgba(20,16,50,.55));border:1px solid rgba(255,255,255,.08);border-radius:11px;
+       padding:11px 4px;font-weight:700;font-size:24px;min-height:46px;
+       box-shadow:inset 0 2px 6px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.05);}
+  .dart.long{font-size:15px;line-height:1.15;display:flex;align-items:center;justify-content:center;}
   .dart.empty{color:var(--muted);font-weight:500;}
   .dart.bust{color:var(--danger);border-color:rgba(255,64,104,.5);box-shadow:0 0 12px rgba(255,64,104,.3);}
   .dart.nocount{color:var(--muted);text-decoration:line-through;}
@@ -285,18 +299,24 @@
   #piddle.fat6 .teamcol:nth-child(2){display:none;}
   #fat6Board{display:none;}
   #game.fat6 #fat6Board{display:block;}
+  #game.fat6 .darts{display:none;}
   #game.fat6 #endTurnBtn{display:none;}
+  #game.fat6 #scoreboard{display:none;}
   #game.fat6{margin-top:6px;}
   #game.fat6 #playArea .boardwrap{margin-top:0;}
   .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px;}
-  .f6-p{border:2px solid var(--line);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;background:rgba(255,255,255,.03);}
+  .f6-p{border:2px solid rgba(255,255,255,.10);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%),rgba(20,16,50,.6);
+    box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);}
   .f6-p .nm{font-family:var(--display);font-weight:800;font-size:19px;}
-  .f6-p .lv{font-family:var(--num);font-size:17px;letter-spacing:2px;color:var(--danger);line-height:1.2;}
+  .f6-p .lv{font-family:var(--num);font-size:17px;letter-spacing:2px;color:#ff5d72;line-height:1.2;text-shadow:0 0 8px rgba(255,77,106,.8),0 1px 2px rgba(0,0,0,.6);}
   .f6-p.active{border-color:var(--blue);background:rgba(79,124,255,.14);box-shadow:0 0 16px rgba(79,124,255,.3);}
   .f6-p.out{opacity:.4;filter:grayscale(1);}
   .f6-target{text-align:center;margin:0 0 2px;}
   .f6-target .lbl{font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:3px;}
-  .f6-target .val{font-family:var(--num);font-size:72px;font-weight:700;line-height:1;color:var(--yellow);text-shadow:0 0 20px rgba(255,212,0,.45);}
+  .f6-target .val{font-family:var(--num);font-size:72px;font-weight:700;line-height:1;color:var(--yellow);
+    text-shadow:0 3px 4px rgba(20,10,0,.8),0 0 14px rgba(255,212,0,.8),0 0 44px rgba(255,212,0,.4);}
+  .f6-target .val.long{font-size:42px;line-height:1.1;padding-top:10px;}
   .f6-phase{text-align:center;font-family:var(--display);font-size:19px;font-weight:800;color:var(--blue-lt);margin:2px 0 4px;min-height:24px;}
   .f6-phase.set{color:var(--yellow);text-shadow:0 0 14px rgba(255,212,0,.4);}
 
@@ -305,11 +325,19 @@
   .pid-slot{flex:1;text-align:center;padding:12px 8px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.5px;line-height:1.5;}
   .pid-slot.filled{border-style:solid;border-color:var(--blue);color:var(--txt);}
   .pid-slot.filled b{font-size:20px;}
-  .pid-name{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;margin:8px 0;border:2px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);cursor:pointer;font-family:var(--display);font-weight:700;font-size:20px;color:var(--txt);transition:border-color .15s,background .15s;}
+  .pid-name{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;margin:8px 0;border:2px solid rgba(255,255,255,.10);border-radius:14px;
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%),rgba(20,16,50,.55);
+    box-shadow:0 6px 14px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);
+    cursor:pointer;font-family:var(--display);font-weight:700;font-size:20px;color:var(--txt);transition:border-color .15s,background .15s;}
   .pid-name:active{background:rgba(79,124,255,.2);}
   #pidCol1 .pid-name.picked{border-color:var(--blue);background:rgba(79,124,255,.16);box-shadow:0 0 16px rgba(79,124,255,.25);}
   #pidCol2 .pid-name.picked{border-color:var(--yellow);background:rgba(255,212,0,.12);box-shadow:0 0 16px rgba(255,212,0,.2);}
   .pid-badge{font-size:24px;min-width:1.2em;text-align:right;}
+  .pid-num{width:38px;height:38px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    font-family:var(--num);font-size:23px;font-weight:700;color:#241a00;
+    background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,0) 45%),linear-gradient(135deg,#ffe14d,#f0b900);
+    box-shadow:0 3px 8px rgba(0,0,0,.45),0 0 14px rgba(255,212,0,.35),inset 0 1px 0 rgba(255,255,255,.5);}
+  .pid-num.empty{background:none;box-shadow:none;border:2px dashed rgba(255,255,255,.22);}
   /* Numbers in Rajdhani (Orbitron's 7 disliked); names/labels stay Orbitron */
   .team .big,
   .histscore,
@@ -721,11 +749,11 @@ function renderPiddle(){
     document.getElementById('pidCol2').innerHTML='';
     document.getElementById('pidCol1').innerHTML = f6Sel.map((n,idx)=>{
       const pos=pidPicks.findIndex(p=>p.idx===idx);
-      return `<div class="pid-name${pos>=0?' picked':''}" data-team="0" data-idx="${idx}"><span>${esc(n)}</span><span class="pid-badge">${pos>=0?(pos+1):''}</span></div>`;
+      return `<div class="pid-name${pos>=0?' picked':''}" data-team="0" data-idx="${idx}"><span>${esc(n)}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
     }).join('');
     const done=pidPicks.length===f6Sel.length && f6Sel.length>0;
     document.getElementById('pidOrder').innerHTML = done
-      ? `<div class="pid-slot filled">Playing order<br><b>${pidPicks.map(p=>esc(f6Sel[p.idx])).join(' → ')}</b></div>`
+      ? `<div class="pid-slot filled">Playing order<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(f6Sel[p.idx])).join(' → ')}</b></div>`
       : `<div class="pid-slot">Tap names in bull order — closest first (${pidPicks.length}/${f6Sel.length})</div>`;
     var _fh=document.getElementById('pidHint');
     if(_fh) _fh.textContent='Everyone throws one dart at the bull. Tap the names closest-first — that becomes the playing order. Tap again to un-pick.';
@@ -827,7 +855,7 @@ function startFat6(order){
   const g=document.getElementById('game');
   g.classList.remove('cricket','board-open');
   g.classList.add('fat6');
-  document.getElementById('missBtn').textContent='Off the board';
+  document.getElementById('missBtn').textContent='\ud83d\udc94 Lose a life';
   buildBoard();
   renderGame();
 }
@@ -884,7 +912,7 @@ function throwDart(value,mult){
 
 function dartLabel(value,mult){
   if(value===0)return 'Miss';
-  if(value===25)return mult===2?'Bull':'25';
+  if(value===25)return mult===2?'Double Bullseye':'Single Bullseye';
   return (mult===2?'D':mult===3?'T':'')+value;
 }
 
@@ -981,6 +1009,7 @@ function commitTurn(){
 }
 
 function endTurnManual(){            // the "Confirm ▶" button
+  if(G && G.isFat6) return;          // Fat 6: turn passes only via target tap / elimination
   if(G.over)return;
   if(G.pendingWin){ declareWin(G.pendingWin.teamIdx,G.pendingWin.detail); closeBoard(); return; }
   pushHistory();
@@ -992,47 +1021,41 @@ function endTurnManual(){            // the "Confirm ▶" button
   closeBoard();
 }
 
-//------- Fat 6 logic -------
-// phase 'hunt': hit the current target (exact segment) within your 3 darts, else lose a life.
-// phase 'set' : first on-board dart becomes the new target and ends the turn.
-//   Off the board on your LAST dart in hand while setting = lose a life, then 3 fresh darts
-//   to keep setting (hit-with-3rd-dart alone = free overtime hand, no life lost).
+//------- Fat 6 logic (outcome-based input) -------
+// The app records turn OUTCOMES, not individual darts:
+//   tap a board segment  = the player set that as the new target -> next player
+//   "Lose a life" button = deduct a life, SAME player stays current (overtime may still set);
+//                          then either tap the target they set, or "Next player" (target stays)
+//   elimination (0 lives) advances automatically, target unchanged
 function applyFat6(value,mult){
-  const p=G.players[G.cur];
-  if(G.phase==='hunt'){
-    if(value===G.target.v && mult===G.target.m){
-      G.phase='set';
-      if(G.darts.length>=3){ G.darts=[]; flashToast('Safe! 3 more darts to set'); }
-      else flashToast('Safe! Next dart sets the target');
-    }else if(G.darts.length>=3){
-      f6LoseLife(p);
-      if(!G.over) f6NextPlayer();
-    }
-  }else{
-    if(value>0){
-      G.target={v:value,m:mult};
-      f6NextPlayer();
-      flashToast('New target: '+fat6TargetLabel());
-    }else if(G.darts.length>=3){
-      f6LoseLife(p);
-      if(G.over) return;
-      if(p.out){ f6NextPlayer(); }                 // eliminated mid-set — target stays as-is
-      else { G.darts=[]; flashToast('3 more darts to set'); }
-    }
-  }
+  if(value<=0) return;                     // no per-dart misses in outcome mode
+  G.target={v:value,m:mult};
+  const nm=fat6TargetLabel();
+  f6NextPlayer();
+  flashToast('New target: '+nm);
 }
-function f6LoseLife(p){
+function f6LifeBtn(){
+  if(!G || !G.isFat6 || G.over) return;
+  pushHistory();
+  const p=G.players[G.cur];
   p.lives--;
-  if(p.lives<=0){ p.lives=0; p.out=true; flashToast(p.name+' is OUT!'); }
-  else flashToast(p.name+' loses a life');
-  const alive=G.players.filter(q=>!q.out);
-  if(alive.length===1){
-    G.over=true;
-    document.getElementById('game').classList.add('hidden');
-    document.getElementById('winScreen').classList.remove('hidden');
-    document.getElementById('winName').textContent=alive[0].name;
-    document.getElementById('winDetail').textContent='Last one standing — Fat 6';
+  if(p.lives<=0){
+    p.lives=0; p.out=true;
+    const alive=G.players.filter(q=>!q.out);
+    if(alive.length===1){
+      G.over=true;
+      document.getElementById('game').classList.add('hidden');
+      document.getElementById('winScreen').classList.remove('hidden');
+      document.getElementById('winName').textContent=alive[0].name;
+      document.getElementById('winDetail').textContent='Last one standing — Fat 6';
+      return;
+    }
+    flashToast(p.name+' is OUT!');
+    f6NextPlayer();                        // target stays = last target set
+  }else{
+    flashToast(p.name+' loses a life — keep throwing');   // turn STAYS with them
   }
+  renderGame();
 }
 function f6NextPlayer(){
   let i=G.cur;
@@ -1041,7 +1064,7 @@ function f6NextPlayer(){
 }
 function fat6TargetLabel(){
   const t=G.target;
-  if(t.v===25) return t.m===2?'BULL':'25';
+  if(t.v===25) return t.m===2?'DOUBLE BULLSEYE':'SINGLE BULLSEYE';
   return t.m===1?'FAT '+t.v:(t.m===2?'D':'T')+t.v;
 }
 
@@ -1067,7 +1090,6 @@ function displayName(t){
 function renderGame(){
   if(G.isFat6){
     renderFat6();
-    renderDarts();
     document.getElementById('undoBtn').disabled=history.length===0;
     var _fr=document.getElementById('redoBtn'); if(_fr) _fr.disabled=redoStack.length===0;
     fitScreen();
@@ -1111,8 +1133,9 @@ function renderFat6(){
     const lv=q.out?'💀':'♥'.repeat(q.lives);
     return `<div class="f6-p${(i===G.cur&&!G.over)?' active':''}${q.out?' out':''}"><div class="nm">${esc(q.name)}</div><div class="lv">${lv}</div></div>`;
   }).join('')+'</div>';
-  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val">${fat6TargetLabel()}</div></div>`;
-  html+=`<div class="f6-phase${G.phase==='set'?' set':''}">${G.over?'':(G.phase==='set'?('▸ '+esc(p.name)+' — SET the new target!'):('▸ '+esc(p.name)+' — hit '+fat6TargetLabel()))}</div>`;
+  const _tl=fat6TargetLabel();
+  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val${_tl.length>7?' long':''}">${_tl}</div></div>`;
+  html+=`<div class="f6-phase">${G.over?'':('▸ '+esc(p.name)+' — throwing at '+fat6TargetLabel())}</div>`;
   el.innerHTML=html;
 }
 
@@ -1159,7 +1182,7 @@ function renderDarts(){
     const d=document.createElement('div');
     const dart=G.darts[i];
     if(dart){
-      d.className='dart'+(dart.bust?' bust':'')+(dart.noCount?' nocount':'');
+      d.className='dart'+(dart.bust?' bust':'')+(dart.noCount?' nocount':'')+(((dart.label||'').length>7 && !dart.bust)?' long':'');
       d.textContent=dart.bust?'BUST':dart.label;
       if(dart.noCount && !dart.bust) d.title='did not count';
     }else{
@@ -1213,9 +1236,9 @@ function markStr(m){ // 0 -> '', 1 -> '/', 2 -> 'X', 3+ -> Ⓧ (closed)
 
 //============================ DARTBOARD (SVG) ============================
 function buildBoard(){
-  const cx=260,cy=260;
+  const cx=268,cy=268;
   // wider double (16→22) and triple (12→22) bands = bigger tap targets
-  const rDoubleOut=238,rDoubleIn=216,rTripleOut=158,rTripleIn=136,rBullOut=40,rBull=18,rLabel=251;
+  const rDoubleOut=238,rDoubleIn=216,rTripleOut=158,rTripleIn=136,rBullOut=40,rBull=18,rLabel=248;
   const wedge=18;
   let paths='';
   for(let i=0;i<20;i++){
@@ -1223,8 +1246,8 @@ function buildBoard(){
     const a0=i*wedge-wedge/2;
     const a1=i*wedge+wedge/2;
     const dark=(i%2===0);
-    const single= dark?'#2c2c2c':'#e9d9b0';
-    const ring=  dark?'#c8302b':'#2f8f4e';
+    const single= dark?'url(#sisalDark)':'url(#sisalCream)';
+    const ring=  dark?'url(#ringRed)':'url(#ringGreen)';
     // single inner
     paths+=seg(cx,cy,rBullOut,rTripleIn,a0,a1,single,num,1);
     // triple
@@ -1235,8 +1258,9 @@ function buildBoard(){
     paths+=seg(cx,cy,rDoubleIn,rDoubleOut,a0,a1,ring,num,2);
   }
   // bull
-  paths+=`<circle cx="${cx}" cy="${cy}" r="${rBullOut}" fill="#2f8f4e" data-v="25" data-m="1"></circle>`;
-  paths+=`<circle cx="${cx}" cy="${cy}" r="${rBull}" fill="#c8302b" data-v="25" data-m="2"></circle>`;
+  paths+=`<circle cx="${cx}" cy="${cy}" r="${rBullOut}" fill="url(#bullG)" stroke="#b7bec8" stroke-width="1.4" data-v="25" data-m="1"></circle>`;
+  paths+=`<circle cx="${cx}" cy="${cy}" r="${rBull}" fill="url(#bullR)" stroke="#c4cad2" stroke-width="1.4" data-v="25" data-m="2"></circle>`;
+  paths+=`<ellipse cx="${cx-6}" cy="${cy-7}" rx="7" ry="4.5" fill="#fff" opacity=".22" pointer-events="none" transform="rotate(-32 ${cx-6} ${cy-7})"></ellipse>`;
   // labels
   let labels='';
   for(let i=0;i<20;i++){
@@ -1245,12 +1269,44 @@ function buildBoard(){
     const y=cy-rLabel*Math.cos(ang);
     labels+=`<text class="num" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${NUMBERS[i]}</text>`;
   }
-  const svg=`<svg class="board" viewBox="0 0 520 520" xmlns="http://www.w3.org/2000/svg">
-     <circle cx="${cx}" cy="${cy}" r="248" fill="#0a0d12"/>
-     ${paths}${labels}</svg>`;
-  BOARD_SVG=svg;
+  const defs=`<defs>
+    <radialGradient id="sisalCream" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
+      <stop offset="0" stop-color="#f6e9c8"/><stop offset=".55" stop-color="#ead9ae"/><stop offset="1" stop-color="#d0bc8e"/></radialGradient>
+    <radialGradient id="sisalDark" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
+      <stop offset="0" stop-color="#45454b"/><stop offset=".55" stop-color="#2d2d32"/><stop offset="1" stop-color="#1e1e23"/></radialGradient>
+    <radialGradient id="ringRed" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
+      <stop offset="0" stop-color="#e25a50"/><stop offset=".6" stop-color="#c02b24"/><stop offset="1" stop-color="#8f1f1b"/></radialGradient>
+    <radialGradient id="ringGreen" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
+      <stop offset="0" stop-color="#47ad6a"/><stop offset=".6" stop-color="#2c8049"/><stop offset="1" stop-color="#1c5a35"/></radialGradient>
+    <radialGradient id="bullG" cx=".38" cy=".34" r=".95">
+      <stop offset="0" stop-color="#55c07c"/><stop offset=".55" stop-color="#2c8049"/><stop offset="1" stop-color="#174c2c"/></radialGradient>
+    <radialGradient id="bullR" cx=".38" cy=".34" r=".95">
+      <stop offset="0" stop-color="#ef6a5e"/><stop offset=".55" stop-color="#c02b24"/><stop offset="1" stop-color="#801713"/></radialGradient>
+    <radialGradient id="surroundG" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy-40}" r="300">
+      <stop offset=".78" stop-color="#33363e"/><stop offset=".9" stop-color="#22252b"/><stop offset="1" stop-color="#121419"/></radialGradient>
+    <linearGradient id="rimG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c3ccd6"/><stop offset=".22" stop-color="#7d8894"/><stop offset=".5" stop-color="#454d57"/>
+      <stop offset=".78" stop-color="#69727d"/><stop offset="1" stop-color="#9aa4af"/></linearGradient>
+    <radialGradient id="boardLight" gradientUnits="userSpaceOnUse" cx="${cx-70}" cy="${cy-90}" r="430">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".16"/><stop offset=".38" stop-color="#ffffff" stop-opacity=".05"/>
+      <stop offset=".72" stop-color="#000000" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity=".32"/></radialGradient>
+    <radialGradient id="dropSh" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy+14}" r="264">
+      <stop offset=".82" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+  </defs>`;
+  const svg=`<svg class="board" viewBox="0 0 536 536" xmlns="http://www.w3.org/2000/svg">
+     ${defs}
+     <circle cx="${cx}" cy="${cy+11}" r="264" fill="url(#dropSh)" pointer-events="none"/>
+     <circle cx="${cx}" cy="${cy}" r="264" fill="url(#rimG)"/>
+     <circle cx="${cx}" cy="${cy}" r="258" fill="url(#surroundG)" stroke="#0c0e12" stroke-width="1"/>
+     <circle cx="${cx}" cy="${cy}" r="239.5" fill="#171514"/>
+     ${paths}${labels}
+     <circle cx="${cx}" cy="${cy}" r="238" fill="url(#boardLight)" pointer-events="none"/>
+     <circle cx="${cx}" cy="${cy}" r="258" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1.2" pointer-events="none"/>
+   </svg>`;
+  const ns=(s,p)=>s.split('id="').join('id="'+p).split('url(#').join('url(#'+p);
+  BOARD_SVG=ns(svg,'bc-');                    // cricket-header copy
   const wrap=document.getElementById('boardwrap');
-  wrap.innerHTML=svg;
+  wrap.innerHTML=ns(svg,'bm-');               // main play board
   wrap.querySelector('svg').addEventListener('click',e=>{
     const el=e.target.closest('[data-v]');
     if(!el)return;
@@ -1258,7 +1314,7 @@ function buildBoard(){
   });
   const mini=document.getElementById('miniBoard');
   if(mini){
-    mini.innerHTML='<div class="mini-inner">'+svg+'<div class="mini-label">\u25b8 Tap board to throw</div></div>';
+    mini.innerHTML='<div class="mini-inner">'+ns(svg,'bn-')+'<div class="mini-label">\u25b8 Tap board to throw</div></div>';
     mini.querySelector('.mini-inner').addEventListener('click',openBoard);
   }
 }
@@ -1267,7 +1323,7 @@ function closeBoard(){ document.getElementById('game').classList.remove('board-o
 function backBoard(){ while(G.darts.length>0) undo(); redoStack.length=0; closeBoard(); renderGame(); }
 function seg(cx,cy,ri,ro,a0,a1,fill,num,mult){
   const p=annular(cx,cy,ri,ro,a0,a1);
-  return `<path d="${p}" fill="${fill}" data-v="${num}" data-m="${mult}"></path>`;
+  return `<path d="${p}" fill="${fill}" stroke="#aab2bc" stroke-width="1.1" stroke-linejoin="round" data-v="${num}" data-m="${mult}"></path>`;
 }
 function annular(cx,cy,ri,ro,a0,a1){
   const pt=(r,a)=>{const rad=a*Math.PI/180;return [cx+r*Math.sin(rad),cy-r*Math.cos(rad)];};
@@ -1295,7 +1351,7 @@ document.getElementById('scoreUndoBtn').onclick=undo;
 document.getElementById('redoBtn').onclick=redo;
 document.getElementById('scoreRedoBtn').onclick=redo;
 document.getElementById('cricketConfirmBtn').onclick=endTurnManual;
-document.getElementById('missBtn').onclick=()=>throwDart(0,1);
+document.getElementById('missBtn').onclick=()=>{ if(G&&G.isFat6){f6LifeBtn();} else throwDart(0,1); };
 document.getElementById('endTurnBtn').onclick=endTurnManual;
 document.getElementById('quitBtn').onclick=toMenu;
 document.getElementById('newGameBtn').onclick=()=>{ if(confirm('Start a new game with the same line-up?')) showPiddle(); };
