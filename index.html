@@ -277,6 +277,27 @@
   #game.cricket #cricketBoard .cricket .dt-d,#game.cricket #cricketBoard .cricket .dt-t{font-family:var(--display);font-size:56px;font-weight:800;color:var(--blue-lt);cursor:pointer;padding:6px 8px;border-radius:9px;line-height:1;}
   #game.cricket #cricketBoard .cricket .dt-spacer{visibility:hidden;}
   #game.cricket #cricketBoard .cricket .dt-v:active,#game.cricket #cricketBoard .cricket .dt-d:active,#game.cricket #cricketBoard .cricket .dt-t:active{background:rgba(79,124,255,.3);}
+  /* ===== Fat 6 (free-for-all Big Six) ===== */
+  #setup.fat6 #modeCard,#setup.fat6 #lineupCard{display:none;}
+  #setup.fat6 .teamcol:nth-child(2){display:none;}
+  #piddle.fat6 .teamcol:nth-child(2){display:none;}
+  #fat6Board{display:none;}
+  #game.fat6 #fat6Board{display:block;}
+  #game.fat6 #endTurnBtn{display:none;}
+  #game.fat6{margin-top:6px;}
+  #game.fat6 #playArea .boardwrap{margin-top:0;}
+  .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px;}
+  .f6-p{border:2px solid var(--line);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;background:rgba(255,255,255,.03);}
+  .f6-p .nm{font-family:var(--display);font-weight:800;font-size:19px;}
+  .f6-p .lv{font-family:var(--num);font-size:17px;letter-spacing:2px;color:var(--danger);line-height:1.2;}
+  .f6-p.active{border-color:var(--blue);background:rgba(79,124,255,.14);box-shadow:0 0 16px rgba(79,124,255,.3);}
+  .f6-p.out{opacity:.4;filter:grayscale(1);}
+  .f6-target{text-align:center;margin:0 0 2px;}
+  .f6-target .lbl{font-family:var(--display);font-size:12px;color:var(--muted);letter-spacing:3px;}
+  .f6-target .val{font-family:var(--num);font-size:72px;font-weight:700;line-height:1;color:var(--yellow);text-shadow:0 0 20px rgba(255,212,0,.45);}
+  .f6-phase{text-align:center;font-family:var(--display);font-size:19px;font-weight:800;color:var(--blue-lt);margin:2px 0 4px;min-height:24px;}
+  .f6-phase.set{color:var(--yellow);text-shadow:0 0 14px rgba(255,212,0,.4);}
+
   /* Piddle screen */
   #pidOrder{margin-top:16px;display:flex;gap:12px;}
   .pid-slot{flex:1;text-align:center;padding:12px 8px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.5px;line-height:1.5;}
@@ -307,10 +328,11 @@
         <button data-game="301">301</button>
         <button data-game="501" class="on">501</button>
         <button data-game="cricket">Cricket</button>
+        <button data-game="fat6">Fat 6</button>
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="modeCard">
       <h2>Mode</h2>
       <div class="seg-toggle" id="modeSel">
         <button data-mode="2p" class="on">1 vs 1</button>
@@ -318,7 +340,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="lineupCard">
       <h2 id="slotsTitle">Line-up</h2>
       <div id="slots" class="row"></div>
       <p class="small center" id="lineupHint" style="margin-top:10px;"></p>
@@ -399,6 +421,7 @@
   <div id="game" class="hidden">
     <div class="scoreboard" id="scoreboard"></div>
     <div id="cricketBoard"></div>
+    <div id="fat6Board"></div>
     <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button><button id="cricketConfirmBtn" class="confirm-btn">Confirm ▶</button></div>
 
     <div class="card" id="playArea">
@@ -445,6 +468,7 @@ let teamLib=loadTeams();             // array of team names
 let playerTeams=loadPlayerTeams();   // { playerName: teamName }
 let config={game:'501',mode:'2p'};  // selection
 let teamSel=[[],[]];                 // [Team 1 names, Team 2 names]
+let f6Sel=[];                        // Fat 6: selected player names (unordered)
 let G=null;                          // active game object
 let history=[];
 let redoStack=[];
@@ -468,6 +492,24 @@ function teamOf(name){
   return -1;
 }
 function renderColumns(){
+  const _h1=document.querySelector('#setup .teamcol-head.head1');
+  if(config.game==='fat6'){
+    if(_h1) _h1.textContent='Players';
+    const el=document.getElementById('col1');
+    el.innerHTML='';
+    document.getElementById('col2').innerHTML='';
+    if(roster.length===0){ el.innerHTML='<span class="small">No players yet — use “Manage Players”.</span>'; return; }
+    roster.forEach(name=>{
+      const div=document.createElement('div');
+      div.className='nameopt'+(f6Sel.includes(name)?' sel1':'');
+      div.innerHTML='<span class="nopt-name"></span>';
+      div.querySelector('.nopt-name').textContent=name;
+      div.onclick=()=>{ const i=f6Sel.indexOf(name); if(i>=0)f6Sel.splice(i,1); else f6Sel.push(name); renderColumns();updateStart(); };
+      el.appendChild(div);
+    });
+    return;
+  }
+  if(_h1) _h1.textContent='Team 1';
   [0,1].forEach(t=>{
     const el=document.getElementById(t===0?'col1':'col2');
     el.innerHTML='';
@@ -551,6 +593,7 @@ function removePlayer(name){
   roster=roster.filter(p=>p!==name);
   delete playerTeams[name]; savePlayerTeams();
   teamSel=teamSel.map(arr=>arr.filter(n=>n!==name));
+  f6Sel=f6Sel.filter(n=>n!==name);
   saveRoster();renderColumns();renderLibrary();renderLineup();updateStart();
 }
 
@@ -585,6 +628,7 @@ function renderLineup(){
     config.mode==='2p'?'Pick one player per side.':'Pick two players per team — they alternate throwers each round.';
 }
 function updateStart(){
+  if(config.game==='fat6'){ document.getElementById('startBtn').disabled = f6Sel.length<2; return; }
   const req=reqPerTeam();
   const ready=teamSel[0].length===req && teamSel[1].length===req;
   document.getElementById('startBtn').disabled=!ready;
@@ -595,6 +639,8 @@ document.getElementById('gameSel').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   config.game=b.dataset.game;
   [...e.currentTarget.children].forEach(c=>c.classList.toggle('on',c===b));
+  document.getElementById('setup').classList.toggle('fat6',config.game==='fat6');
+  renderColumns();renderLineup();updateStart();
 });
 document.getElementById('modeSel').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
@@ -661,11 +707,30 @@ document.getElementById('startBtn').onclick=showPiddle;
 let pidPicks=[];   // ordered: pidPicks[0]=1st place, [1]=2nd ; each {team,idx}
 function showPiddle(){
   pidPicks=[];
+  document.getElementById('piddle').classList.toggle('fat6',config.game==='fat6');
   ['setup','game','winScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('piddle').classList.remove('hidden');
   renderPiddle();
 }
 function renderPiddle(){
+  const _ph1=document.querySelector('#piddle .teamcol-head.head1');
+  if(config.game==='fat6'){
+    if(_ph1) _ph1.textContent='Bull order';
+    document.getElementById('pidCol2').innerHTML='';
+    document.getElementById('pidCol1').innerHTML = f6Sel.map((n,idx)=>{
+      const pos=pidPicks.findIndex(p=>p.idx===idx);
+      return `<div class="pid-name${pos>=0?' picked':''}" data-team="0" data-idx="${idx}"><span>${esc(n)}</span><span class="pid-badge">${pos>=0?(pos+1):''}</span></div>`;
+    }).join('');
+    const done=pidPicks.length===f6Sel.length && f6Sel.length>0;
+    document.getElementById('pidOrder').innerHTML = done
+      ? `<div class="pid-slot filled">Playing order<br><b>${pidPicks.map(p=>esc(f6Sel[p.idx])).join(' → ')}</b></div>`
+      : `<div class="pid-slot">Tap names in bull order — closest first (${pidPicks.length}/${f6Sel.length})</div>`;
+    var _fh=document.getElementById('pidHint');
+    if(_fh) _fh.textContent='Everyone throws one dart at the bull. Tap the names closest-first — that becomes the playing order. Tap again to un-pick.';
+    document.getElementById('pidStartBtn').disabled = !done;
+    return;
+  }
+  if(_ph1) _ph1.textContent='Team 1';
   const cols=[document.getElementById('pidCol1'),document.getElementById('pidCol2')];
   [0,1].forEach(team=>{
     const names=teamSel[team]||[];
@@ -687,6 +752,11 @@ function renderPiddle(){
   document.getElementById('pidStartBtn').disabled = pidPicks.length<2;
 }
 function pidTap(team,idx){
+  if(config.game==='fat6'){
+    const ex=pidPicks.findIndex(p=>p.idx===idx);
+    if(ex>=0) pidPicks.splice(ex,1); else pidPicks.push({team:0,idx:idx});
+    renderPiddle(); return;
+  }
   if(config.mode==='2p'){                      // 1v1: tapped player wins (1st); other auto 2nd
     pidPicks=[{team:team, idx:idx},{team:1-team, idx:0}];
   } else {
@@ -734,7 +804,28 @@ function startGame(startTeam, leadoff){
   document.getElementById('game').classList.remove('hidden');
   document.getElementById('cricketBoard').classList.toggle('hidden',!isCricket);
   document.getElementById('game').classList.toggle('cricket', isCricket);
+  document.getElementById('game').classList.remove('fat6');
+  document.getElementById('missBtn').textContent='Miss / 0';
   document.getElementById('game').classList.remove('board-open');
+  buildBoard();
+  renderGame();
+}
+
+function startFat6(order){
+  G={game:'fat6', mode:'ffa', isCricket:false, isFat6:true,
+     players:order.map(n=>({name:n,lives:5,out:false})),
+     cur:0, darts:[], target:{v:6,m:1}, phase:'hunt',
+     teams:[], startTeam:0, turnStartScore:0, turnStartOpened:false,
+     turnLocked:false, pendingWin:null, round:1, over:false};
+  history=[]; redoStack.length=0;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('winScreen').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('cricketBoard').classList.add('hidden');
+  const g=document.getElementById('game');
+  g.classList.remove('cricket','board-open');
+  g.classList.add('fat6');
+  document.getElementById('missBtn').textContent='Off the board';
   buildBoard();
   renderGame();
 }
@@ -746,13 +837,15 @@ function thrower(){const t=curTeam();return t.members[t.memberIdx];}
 function snapshot(){
   return JSON.stringify({teams:G.teams,cur:G.cur,darts:G.darts,
     turnStartScore:G.turnStartScore,turnStartOpened:G.turnStartOpened,
-    turnLocked:G.turnLocked,pendingWin:G.pendingWin,round:G.round,over:G.over});
+    turnLocked:G.turnLocked,pendingWin:G.pendingWin,round:G.round,over:G.over,
+    players:G.players,target:G.target,phase:G.phase});
 }
 function pushHistory(){history.push(snapshot());redoStack.length=0;if(history.length>200)history.shift();}
 function applyState(s){
   G.teams=s.teams;G.cur=s.cur;G.darts=s.darts;
   G.turnStartScore=s.turnStartScore;G.turnStartOpened=s.turnStartOpened;
   G.turnLocked=s.turnLocked;G.pendingWin=s.pendingWin;G.round=s.round;G.over=s.over;
+  if(G.isFat6){G.players=s.players;G.target=s.target;G.phase=s.phase;}
   if(G.over){G.over=false;}
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
@@ -780,9 +873,10 @@ function throwDart(value,mult){
   G.darts.push({value,mult,score,label,bust:false,noCount:false});
 
   if(G.isCricket){ applyCricket(value,mult); }
+  else if(G.isFat6){ applyFat6(value,mult); }
   else{ applyX01(value,mult); }
 
-  if(G.darts.length>=3) G.turnLocked=true; // all 3 thrown — require Confirm
+  if(!G.isFat6 && G.darts.length>=3) G.turnLocked=true; // all 3 thrown — require Confirm (Fat 6 auto-resolves)
   renderGame();
 }
 
@@ -896,6 +990,59 @@ function endTurnManual(){            // the "Confirm ▶" button
   closeBoard();
 }
 
+//------- Fat 6 logic -------
+// phase 'hunt': hit the current target (exact segment) within your 3 darts, else lose a life.
+// phase 'set' : first on-board dart becomes the new target and ends the turn.
+//   Off the board on your LAST dart in hand while setting = lose a life, then 3 fresh darts
+//   to keep setting (hit-with-3rd-dart alone = free overtime hand, no life lost).
+function applyFat6(value,mult){
+  const p=G.players[G.cur];
+  if(G.phase==='hunt'){
+    if(value===G.target.v && mult===G.target.m){
+      G.phase='set';
+      if(G.darts.length>=3){ G.darts=[]; flashToast('Safe! 3 more darts to set'); }
+      else flashToast('Safe! Next dart sets the target');
+    }else if(G.darts.length>=3){
+      f6LoseLife(p);
+      if(!G.over) f6NextPlayer();
+    }
+  }else{
+    if(value>0){
+      G.target={v:value,m:mult};
+      f6NextPlayer();
+      flashToast('New target: '+fat6TargetLabel());
+    }else if(G.darts.length>=3){
+      f6LoseLife(p);
+      if(G.over) return;
+      if(p.out){ f6NextPlayer(); }                 // eliminated mid-set — target stays as-is
+      else { G.darts=[]; flashToast('3 more darts to set'); }
+    }
+  }
+}
+function f6LoseLife(p){
+  p.lives--;
+  if(p.lives<=0){ p.lives=0; p.out=true; flashToast(p.name+' is OUT!'); }
+  else flashToast(p.name+' loses a life');
+  const alive=G.players.filter(q=>!q.out);
+  if(alive.length===1){
+    G.over=true;
+    document.getElementById('game').classList.add('hidden');
+    document.getElementById('winScreen').classList.remove('hidden');
+    document.getElementById('winName').textContent=alive[0].name;
+    document.getElementById('winDetail').textContent='Last one standing — Fat 6';
+  }
+}
+function f6NextPlayer(){
+  let i=G.cur;
+  for(let k=0;k<G.players.length;k++){ i=(i+1)%G.players.length; if(!G.players[i].out) break; }
+  G.cur=i; G.darts=[]; G.phase='hunt';
+}
+function fat6TargetLabel(){
+  const t=G.target;
+  if(t.v===25) return t.m===2?'BULL':'25';
+  return t.m===1?'FAT '+t.v:(t.m===2?'D':'T')+t.v;
+}
+
 //============================ WIN ============================
 function pendWin(teamIdx,detail){          // winning dart thrown — wait for Confirm
   G.pendingWin={teamIdx,detail};
@@ -916,6 +1063,14 @@ function displayName(t){
 
 //============================ RENDER ============================
 function renderGame(){
+  if(G.isFat6){
+    renderFat6();
+    renderDarts();
+    document.getElementById('undoBtn').disabled=history.length===0;
+    var _fr=document.getElementById('redoBtn'); if(_fr) _fr.disabled=redoStack.length===0;
+    fitScreen();
+    return;
+  }
   renderScoreboard();
   if(G.isCricket)renderCricket();
   renderDarts();
@@ -944,6 +1099,18 @@ function fitScreen(){
 }
 window.addEventListener('resize', fitScreen);
 window.addEventListener('orientationchange', function(){ setTimeout(fitScreen,250); });
+
+function renderFat6(){
+  const el=document.getElementById('fat6Board');
+  const p=G.players[G.cur];
+  let html='<div class="f6-players">'+G.players.map((q,i)=>{
+    const lv=q.out?'💀':'♥'.repeat(q.lives);
+    return `<div class="f6-p${(i===G.cur&&!G.over)?' active':''}${q.out?' out':''}"><div class="nm">${esc(q.name)}</div><div class="lv">${lv}</div></div>`;
+  }).join('')+'</div>';
+  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val">${fat6TargetLabel()}</div></div>`;
+  html+=`<div class="f6-phase${G.phase==='set'?' set':''}">${G.over?'':(G.phase==='set'?('▸ '+esc(p.name)+' — SET the new target!'):('▸ '+esc(p.name)+' — hit '+fat6TargetLabel()))}</div>`;
+  el.innerHTML=html;
+}
 
 function renderScoreboard(){
   const el=document.getElementById('scoreboard');
@@ -1132,7 +1299,7 @@ document.getElementById('rematchBtn').onclick=showPiddle;
 document.getElementById('piddle').addEventListener('click',function(e){ const el=e.target.closest('.pid-name'); if(el) pidTap(parseInt(el.dataset.team,10), parseInt(el.dataset.idx,10)); });
 document.getElementById('pidResetBtn').onclick=function(){ pidPicks=[]; renderPiddle(); };
 document.getElementById('pidBackBtn').onclick=function(){ document.getElementById('piddle').classList.add('hidden'); document.getElementById('setup').classList.remove('hidden'); };
-document.getElementById('pidStartBtn').onclick=function(){ const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
+document.getElementById('pidStartBtn').onclick=function(){ if(config.game==='fat6'){ document.getElementById('piddle').classList.add('hidden'); startFat6(pidPicks.map(p=>f6Sel[p.idx])); return; } const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
 document.getElementById('winMenuBtn').onclick=toMenu;
 document.getElementById('winUndoBtn').onclick=()=>{
   // reopen the game in its pending-win state so the score can be corrected
