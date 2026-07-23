@@ -10,7 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Darts">
-<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" href="darts-icon-180.png">
 <link rel="manifest" href="manifest.json">
 <style>
   /* Fonts embedded for fully-offline use */
@@ -44,8 +44,10 @@
     background-attachment:fixed;color:var(--txt);
     font-family:var(--body);font-size:17px;font-weight:500;overscroll-behavior:none;
     position:fixed;top:0;left:0;width:100%;height:100%;}
-  .wrap{max-width:900px;margin:0 auto;padding:14px;height:100%;overflow:hidden;overscroll-behavior:none;}
-  #setup,#library,#teamLibrary{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+  .wrap{max-width:900px;margin:0 auto;height:100%;overflow:hidden;overscroll-behavior:none;
+    padding:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px))
+            calc(14px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));}
+  #setup,#library,#teamLibrary,#piddle{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
   h1{font-family:var(--display);font-size:24px;font-weight:900;margin:2px 0 10px;letter-spacing:1px;text-transform:uppercase;
      display:flex;align-items:center;gap:10px;}
   h1 .h1-text{background:linear-gradient(90deg,var(--blue),var(--yellow));-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -1091,7 +1093,9 @@ function fitScreen(){
   if(!g) return;
   if(g.classList.contains('hidden')||g.classList.contains('board-open')){ g.style.transform=''; return; }
   g.style.transform='none'; g.style.transformOrigin='top center';
-  var wrap=document.querySelector('.wrap'), pad=28;
+  var wrap=document.querySelector('.wrap');
+  var _cs=getComputedStyle(wrap);
+  var pad=(parseFloat(_cs.paddingTop)||14)+(parseFloat(_cs.paddingBottom)||14);
   var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
   var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
   var s = need>0 ? Math.min(1, avail/need) : 1;
