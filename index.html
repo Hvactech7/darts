@@ -320,6 +320,13 @@
   .f6-phase{text-align:center;font-family:var(--display);font-size:19px;font-weight:800;color:var(--blue-lt);margin:2px 0 4px;min-height:24px;}
   .f6-phase.set{color:var(--yellow);text-shadow:0 0 14px rgba(255,212,0,.4);}
 
+  /* Groups + duo team names */
+  #groupChips{gap:8px;}
+  #groupChips:empty{display:none;}
+  .grpchip{flex:0 0 auto;font-size:14px;padding:9px 14px;}
+  .grpchip.del{border-color:rgba(255,64,104,.5);color:#ff90a6;background:rgba(255,64,104,.08);}
+  #duoCard input{min-width:0;}
+
   /* Piddle screen */
   #pidOrder{margin-top:16px;display:flex;gap:12px;}
   .pid-slot{flex:1;text-align:center;padding:12px 8px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.5px;line-height:1.5;}
@@ -362,11 +369,22 @@
       </div>
     </div>
 
+    <div class="card" id="groupCard">
+      <h2>👥 Groups</h2>
+      <div id="groupChips" class="row"></div>
+      <div class="row" style="margin-top:8px;">
+        <input type="text" id="groupName" class="grow" placeholder="Group name…" autocomplete="off">
+        <button class="accent" id="saveGroupBtn">Save</button>
+      </div>
+      <p class="small" id="groupHint" style="margin-top:6px;">Save the current line-up as a group, or tap a group to load it.</p>
+    </div>
+
     <div class="card" id="modeCard">
       <h2>Mode</h2>
       <div class="seg-toggle" id="modeSel">
         <button data-mode="2p" class="on">1 vs 1</button>
         <button data-mode="2t">2 vs 2</button>
+        <button data-mode="iron">Ironman</button>
       </div>
     </div>
 
@@ -389,6 +407,16 @@
         </div>
       </div>
       <button class="accent" id="manageBtn" style="width:100%;margin-top:14px;">⚙ Manage Players</button>
+    </div>
+
+    <div class="card hidden" id="duoCard">
+      <h2>Team Names</h2>
+      <div class="row">
+        <input type="text" id="duoName1" class="grow" placeholder="Team 1 name…" list="teamNameList" autocomplete="off">
+        <input type="text" id="duoName2" class="grow" placeholder="Team 2 name…" list="teamNameList" autocomplete="off">
+      </div>
+      <datalist id="teamNameList"></datalist>
+      <p class="small" style="margin-top:6px;">Names save automatically for this pair — next time these two team up, their name comes back.</p>
     </div>
 
     <button class="primary" id="startBtn" style="width:100%;font-size:18px;padding:16px;" disabled>Start Game</button>
@@ -499,6 +527,12 @@ let playerTeams=loadPlayerTeams();   // { playerName: teamName }
 let config={game:'501',mode:'2p'};  // selection
 let teamSel=[[],[]];                 // [Team 1 names, Team 2 names]
 let f6Sel=[];                        // Fat 6: selected player names (unordered)
+const LS_DUOS='darts_duoteams_v1';
+const LS_GROUPS='darts_groups_v1';
+let duoTeams=loadDuoTeams();         // { 'a|b' (sorted, lowercased names): team name }
+let groupLib=loadGroups();           // [{id,name,members:[names]}]
+let grpDelMode=false;
+if(duoTeams===null){ duoTeams=migrateDuosFromLegacy(); saveDuoTeams(); }  // one-time seed from per-player team labels
 let G=null;                          // active game object
 let history=[];
 let redoStack=[];
@@ -539,7 +573,9 @@ function renderColumns(){
     });
     return;
   }
-  if(_h1) _h1.textContent='Team 1';
+  if(_h1) _h1.textContent=config.mode==='iron'?'Team 1 · pick 2':'Team 1';
+  const _h2=document.querySelector('#setup .teamcol-head.head2');
+  if(_h2) _h2.textContent=config.mode==='iron'?'Ironman · pick 1':'Team 2';
   [0,1].forEach(t=>{
     const el=document.getElementById(t===0?'col1':'col2');
     el.innerHTML='';
@@ -547,7 +583,7 @@ function renderColumns(){
       el.innerHTML='<span class="small">No players yet — use “Manage Players”.</span>';
       return;
     }
-    const full=teamSel[t].length>=reqPerTeam();
+    const full=teamSel[t].length>=reqFor(t);
     roster.forEach(name=>{
       const owner=teamOf(name);
       const selHere=owner===t;
@@ -629,38 +665,40 @@ function removePlayer(name){
 
 //============================ TEAM SELECTION / LINEUP ============================
 function reqPerTeam(){return config.mode==='2p'?1:2;}
+function reqFor(t){ if(config.mode==='iron') return t===0?2:1; return reqPerTeam(); }
 function resetSelection(){teamSel=[[],[]];}
 function toggleName(name,team){
   const owner=teamOf(name);
   if(owner===team){                                  // tap again to deselect
     teamSel[team]=teamSel[team].filter(n=>n!==name);
   }else if(owner===-1){                               // free → add if room
-    if(teamSel[team].length<reqPerTeam()) teamSel[team].push(name);
+    if(teamSel[team].length<reqFor(team)) teamSel[team].push(name);
   } // owner===other team → un-pressable, ignore
   renderColumns();renderLineup();updateStart();
 }
 function renderLineup(){
-  const req=reqPerTeam();
-  document.getElementById('slotsTitle').textContent=config.mode==='2p'?'Match-up':'Teams';
+  document.getElementById('slotsTitle').textContent=config.mode==='2p'?'Match-up':(config.mode==='iron'?'Ironman Match':'Teams');
   const el=document.getElementById('slots');
   el.innerHTML='';
   [0,1].forEach(t=>{
     const names=teamSel[t];
-    const label='Team '+(t+1);
+    const label=(config.mode==='iron'&&t===1)?'🦾 Ironman':'Team '+(t+1);
     const d=document.createElement('div');
-    d.className='grow pickslot slot'+(t+1)+(names.length===req?' filled':'');
+    d.className='grow pickslot slot'+(t+1)+(names.length===reqFor(t)?' filled':'');
     d.style.minWidth='120px';
     const body=names.length?names.map(esc).join(' & '):'pick below';
     d.innerHTML=`<div class="center"><div class="small">${label}</div><div>${body}</div></div>`;
     el.appendChild(d);
   });
   document.getElementById('lineupHint').textContent=
-    config.mode==='2p'?'Pick one player per side.':'Pick two players per team — they alternate throwers each round.';
+    config.mode==='2p'?'Pick one player per side.'
+    :config.mode==='iron'?'Two on Team 1 — the Ironman stands alone. Everyone throws one at a time in bull order.'
+    :'Pick two players per team — they alternate throwers each round.';
 }
 function updateStart(){
+  refreshDuoCard();
   if(config.game==='fat6'){ document.getElementById('startBtn').disabled = f6Sel.length<2; return; }
-  const req=reqPerTeam();
-  const ready=teamSel[0].length===req && teamSel[1].length===req;
+  const ready=teamSel[0].length===reqFor(0) && teamSel[1].length===reqFor(1);
   document.getElementById('startBtn').disabled=!ready;
 }
 
@@ -732,18 +770,118 @@ _addTeamBtn.addEventListener('pointerdown',fireAddTeam);
 _addTeamBtn.addEventListener('click',fireAddTeam);
 document.getElementById('newTeam').addEventListener('keydown',e=>{ if(e.key==='Enter'){addTeam(e.target.value);e.target.value='';} });
 document.getElementById('startBtn').onclick=showPiddle;
+document.getElementById('saveGroupBtn').onclick=saveGroupFromLineup;
+document.getElementById('groupName').addEventListener('change',e=>{
+  const v=e.target.value.trim(); if(!v)return;
+  const g=groupLib.find(x=>x.name.toLowerCase()===v.toLowerCase());
+  if(g) loadGroup(g.id);
+});
+document.getElementById('groupChips').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  if(b.id==='grpDelToggle'){ grpDelMode=!grpDelMode; renderGroups(); return; }
+  const id=b.dataset.gid; if(!id)return;
+  if(grpDelMode){ groupLib=groupLib.filter(g=>g.id!==id); saveGroups(); renderGroups(); if(!groupLib.length){grpDelMode=false;renderGroups();} return; }
+  loadGroup(id);
+});
+document.getElementById('duoName1').addEventListener('input',e=>{ if(teamSel[0].length===2) setDuoTeamName(teamSel[0],e.target.value); });
+document.getElementById('duoName2').addEventListener('input',e=>{ if(teamSel[1].length===2) setDuoTeamName(teamSel[1],e.target.value); });
+renderGroups();refreshDuoCard();
+
+//============================ GROUPS + DUO TEAM NAMES ============================
+function loadDuoTeams(){ try{const v=JSON.parse(localStorage.getItem(LS_DUOS)); if(v&&typeof v==='object'&&!Array.isArray(v))return v;}catch(e){} return null; }
+function saveDuoTeams(){ localStorage.setItem(LS_DUOS,JSON.stringify(duoTeams)); }
+function loadGroups(){ try{const v=JSON.parse(localStorage.getItem(LS_GROUPS)); if(Array.isArray(v))return v;}catch(e){} return []; }
+function saveGroups(){ localStorage.setItem(LS_GROUPS,JSON.stringify(groupLib)); }
+function duoKey(a,b){ return JSON.stringify([String(a),String(b)].map(s=>s.trim().toLowerCase()).sort()); }  // JSON key: names with any characters can't collide
+function duoTeamName(members){ if(!members||members.length!==2)return ''; return duoTeams[duoKey(members[0],members[1])]||''; }
+function setDuoTeamName(members,name){
+  if(!members||members.length!==2)return;
+  const k=duoKey(members[0],members[1]);
+  if(name&&name.trim()) duoTeams[k]=name.trim(); else delete duoTeams[k];
+  saveDuoTeams();
+}
+function migrateDuosFromLegacy(){    // players sharing an old per-player team label, exactly 2 → seed the duo
+  const m={},byTeam={};
+  roster.forEach(n=>{ const t=playerTeams[n]; if(t){ (byTeam[t]=byTeam[t]||[]).push(n); } });
+  Object.keys(byTeam).forEach(t=>{ if(byTeam[t].length===2) m[duoKey(byTeam[t][0],byTeam[t][1])]=t; });
+  return m;
+}
+function renderGroups(){
+  const el=document.getElementById('groupChips'); if(!el)return;
+  let html=groupLib.map(g=>`<button type="button" class="grpchip${grpDelMode?' del':''}" data-gid="${g.id}">${grpDelMode?'✕ ':''}${esc(g.name)} · ${g.members.length}</button>`).join('');
+  if(groupLib.length) html+=`<button type="button" class="ghost grpchip" id="grpDelToggle">${grpDelMode?'Done':'🗑'}</button>`;
+  el.innerHTML=html;
+}
+function setGroupHint(msg){ const el=document.getElementById('groupHint'); if(el) el.textContent=msg; }
+function currentLineup(){ return config.game==='fat6' ? f6Sel.slice() : teamSel[0].concat(teamSel[1]); }
+function saveGroupFromLineup(){
+  const name=document.getElementById('groupName').value.trim();
+  if(!name){ setGroupHint('Type a group name first.'); return; }
+  const members=currentLineup();
+  if(members.length<2){ setGroupHint('Pick the players first, then save.'); return; }
+  const ex=groupLib.find(g=>g.name.toLowerCase()===name.toLowerCase());
+  if(ex){ ex.members=members; ex.name=name; }
+  else groupLib.push({id:'g'+Date.now()+Math.floor(Math.random()*1e4), name, members});
+  saveGroups(); renderGroups();
+  setGroupHint('Saved “'+name+'” ('+members.length+' players).');
+}
+function loadGroup(id){
+  const g=groupLib.find(x=>x.id===id); if(!g)return;
+  g.members.forEach(n=>{ if(!roster.includes(n)) roster.push(n); });   // resurrect missing players
+  saveRoster&&saveRoster();
+  document.getElementById('groupName').value=g.name;
+  const m=g.members;
+  if(config.game==='fat6'){ f6Sel=m.slice(); }
+  else if(m.length===2){ config.mode='2p'; teamSel=[[m[0]],[m[1]]]; }
+  else if(m.length===4){ config.mode='2t'; teamSel=[[m[0],m[1]],[m[2],m[3]]]; }
+  else if(m.length===3){ config.mode='iron'; teamSel=[[m[0],m[1]],[m[2]]]; }
+  else { setGroupHint('“'+g.name+'” has '+m.length+' players — use Fat 6 for that group.'); return; }
+  document.querySelectorAll('#modeSel button').forEach(b=>b.classList.toggle('on',b.dataset.mode===config.mode));
+  renderColumns();renderLineup();updateStart();
+  setGroupHint('Loaded “'+g.name+'”.');
+}
+function refreshDuoCard(){
+  const card=document.getElementById('duoCard'); if(!card)return;
+  const show = config.game!=='fat6' && ((config.mode==='2t' && teamSel[0].length===2 && teamSel[1].length===2) || (config.mode==='iron' && teamSel[0].length===2));
+  const i2v=document.getElementById('duoName2'); if(i2v) i2v.style.display=config.mode==='iron'?'none':'';
+  card.classList.toggle('hidden',!show);
+  if(!show)return;
+  const i1=document.getElementById('duoName1'), i2=document.getElementById('duoName2');
+  if(document.activeElement!==i1) i1.value=duoTeamName(teamSel[0]);
+  if(document.activeElement!==i2) i2.value=duoTeamName(teamSel[1]);
+  const names=[...new Set([...teamLib,...Object.values(duoTeams)])].filter(Boolean);
+  document.getElementById('teamNameList').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
+}
 
 //============================ PIDDLE (who throws first) ============================
 let pidPicks=[];   // ordered: pidPicks[0]=1st place, [1]=2nd ; each {team,idx}
 function showPiddle(){
   pidPicks=[];
-  document.getElementById('piddle').classList.toggle('fat6',config.game==='fat6');
+  document.getElementById('piddle').classList.toggle('fat6',config.game==='fat6'||config.mode==='iron');
   ['setup','game','winScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('piddle').classList.remove('hidden');
   renderPiddle();
 }
 function renderPiddle(){
   const _ph1=document.querySelector('#piddle .teamcol-head.head1');
+  if(config.game!=='fat6' && config.mode==='iron'){
+    if(_ph1) _ph1.textContent='Bull order';
+    const ironNames=[...teamSel[0],...teamSel[1]];
+    document.getElementById('pidCol2').innerHTML='';
+    document.getElementById('pidCol1').innerHTML = ironNames.map((n,idx)=>{
+      const pos=pidPicks.findIndex(p=>p.idx===idx);
+      const solo=idx===2?' 🦾':'';
+      return `<div class="pid-name${pos>=0?' picked':''}" data-team="9" data-idx="${idx}"><span>${esc(n)}${solo}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
+    }).join('');
+    const done=pidPicks.length===3;
+    document.getElementById('pidOrder').innerHTML = done
+      ? `<div class="pid-slot filled">Throwing order (repeats)<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(ironNames[p.idx])).join(' → ')}</b></div>`
+      : `<div class="pid-slot">All three throw at the bull — tap closest first (${pidPicks.length}/3)</div>`;
+    var _ih=document.getElementById('pidHint');
+    if(_ih) _ih.textContent='Ironman rules: everyone throws one at a time in this exact order, round after round. The Ironman 🦾 scores alone.';
+    document.getElementById('pidStartBtn').disabled=!done;
+    return;
+  }
   if(config.game==='fat6'){
     if(_ph1) _ph1.textContent='Bull order';
     document.getElementById('pidCol2').innerHTML='';
@@ -782,6 +920,11 @@ function renderPiddle(){
   document.getElementById('pidStartBtn').disabled = pidPicks.length<2;
 }
 function pidTap(team,idx){
+  if(config.game!=='fat6' && config.mode==='iron'){
+    const ex=pidPicks.findIndex(p=>p.idx===idx);
+    if(ex>=0) pidPicks.splice(ex,1); else if(pidPicks.length<3) pidPicks.push({team:9,idx:idx});
+    renderPiddle(); return;
+  }
   if(config.game==='fat6'){
     const ex=pidPicks.findIndex(p=>p.idx===idx);
     if(ex>=0) pidPicks.splice(ex,1); else pidPicks.push({team:0,idx:idx});
@@ -802,14 +945,16 @@ function buildTeams(){
   // returns array of team objects
   if(config.mode==='2p'){
     return [mkTeam(teamSel[0][0],[teamSel[0][0]]), mkTeam(teamSel[1][0],[teamSel[1][0]])];
+  }else if(config.mode==='iron'){
+    return [mkTeam(duoTeamName(teamSel[0])||'Team 1',teamSel[0].slice()), mkTeam(teamSel[1][0],teamSel[1].slice())];
   }else{
-    return [mkTeam('Team 1',teamSel[0].slice()), mkTeam('Team 2',teamSel[1].slice())];
+    return [mkTeam(duoTeamName(teamSel[0])||'Team 1',teamSel[0].slice()), mkTeam(duoTeamName(teamSel[1])||'Team 2',teamSel[1].slice())];
   }
 }
 function mkTeam(name,members){
   return {name,members,memberIdx:0,score:0,marks:{},pts:0,opened:false,history:[],tripleClose:{}};
 }
-function startGame(startTeam, leadoff){
+function startGame(startTeam, leadoff, ironOrder){
   startTeam = startTeam || 0;
   leadoff = leadoff || {};
   const teams=buildTeams();
@@ -818,6 +963,7 @@ function startGame(startTeam, leadoff){
   teams.forEach((t,i)=>{
     t.score=start;
     t.memberIdx = (leadoff[i]!==undefined) ? Math.min(leadoff[i], t.members.length-1) : 0;
+    if(ironOrder){ const first=ironOrder.find(o=>o.t===i); if(first) t.memberIdx=first.m; }
     if(isCricket){CRICKET_TARGETS.forEach(n=>t.marks[n]=0);t.pts=0;}
   });
   G={
@@ -825,6 +971,7 @@ function startGame(startTeam, leadoff){
     requireDoubleIn: config.game==='301',
     requireDoubleOut: !isCricket,
     teams, cur:startTeam, startTeam:startTeam, darts:[],
+    ironOrder:ironOrder||null, ironPos:0,
     turnStartScore:teams[startTeam].score, turnStartOpened:teams[startTeam].opened,
     turnLocked:false, pendingWin:null, round:1, over:false
   };
@@ -868,14 +1015,17 @@ function snapshot(){
   return JSON.stringify({teams:G.teams,cur:G.cur,darts:G.darts,
     turnStartScore:G.turnStartScore,turnStartOpened:G.turnStartOpened,
     turnLocked:G.turnLocked,pendingWin:G.pendingWin,round:G.round,over:G.over,
-    players:G.players,target:G.target,phase:G.phase});
+    players:G.players,target:G.target,phase:G.phase,ironOrder:G.ironOrder,ironPos:G.ironPos});
 }
 function pushHistory(){history.push(snapshot());redoStack.length=0;if(history.length>200)history.shift();}
 function applyState(s){
   G.teams=s.teams;G.cur=s.cur;G.darts=s.darts;
   G.turnStartScore=s.turnStartScore;G.turnStartOpened=s.turnStartOpened;
   G.turnLocked=s.turnLocked;G.pendingWin=s.pendingWin;G.round=s.round;G.over=s.over;
-  if(G.isFat6){G.players=s.players;G.target=s.target;G.phase=s.phase;}
+  if(G.isFat6){G.players=s.players;G.target=s.target;G.phase=s.phase;
+    if(G.players && G.players[G.cur] && G.players[G.cur].out){ f6NextPlayer(); }  // never leave an eliminated player as current
+  }
+  G.ironOrder=s.ironOrder||null;G.ironPos=s.ironPos||0;
   if(G.over){G.over=false;}
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
@@ -995,11 +1145,18 @@ function commitTurn(){
   const t=curTeam();
   // record this turn's points scored (0 on a bust) for 01 games
   if(!G.isCricket){ t.history.push(G.turnStartScore - t.score); }
-  // advance member within team (for teams of 2)
-  t.memberIdx=(t.memberIdx+1)%t.members.length;
-  // next team
-  G.cur=(G.cur+1)%G.teams.length;
-  if(G.cur===G.startTeam)G.round++;
+  if(G.ironOrder){                     // Ironman: fixed individual rotation (e.g. A → C → B)
+    G.ironPos=(G.ironPos+1)%G.ironOrder.length;
+    const nx=G.ironOrder[G.ironPos];
+    G.cur=nx.t; G.teams[nx.t].memberIdx=nx.m;
+    if(G.ironPos===0)G.round++;
+  }else{
+    // advance member within team (for teams of 2)
+    t.memberIdx=(t.memberIdx+1)%t.members.length;
+    // next team
+    G.cur=(G.cur+1)%G.teams.length;
+    if(G.cur===G.startTeam)G.round++;
+  }
   G.darts=[];
   G.turnLocked=false;
   G.pendingWin=null;
@@ -1083,7 +1240,8 @@ function declareWin(teamIdx,detail){
   document.getElementById('winDetail').textContent=detail||'';
 }
 function displayName(t){
-  return config.mode==='2p'?t.members[0]:`${t.name} (${t.members.join(' & ')})`;
+  if(config.mode==='2p'||t.members.length===1) return t.members[0];
+  return `${t.name} (${t.members.join(' & ')})`;
 }
 
 //============================ RENDER ============================
@@ -1147,7 +1305,7 @@ function renderScoreboard(){
     const d=document.createElement('div');
     d.className='team team'+(i+1)+(active?' active':'');
     const _player=t.members[t.memberIdx];
-    const _teamName=teamOfPlayer(_player);
+    const _teamName=(config.mode==='iron'&&t.members.length===1)?'\ud83e\uddbe Ironman':((t.members.length===2?duoTeamName(t.members):'')||teamOfPlayer(_player));
     const _teamLabel=_teamName || (config.mode==='2p'?'':('Team '+(i+1)));
     const throwerName=_player;
     const big=G.isCricket?t.pts:t.score;
@@ -1200,7 +1358,7 @@ function renderCricket(){
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
   const pname=t=>{ const n=t.members[t.memberIdx]; return esc(n.length>8 ? n.slice(0,7)+'.' : n); };
-  const tlabel=i=>{ const t=G.teams[i]; const tm=teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
+  const tlabel=i=>{ const t=G.teams[i]; if(config.mode==='iron'&&t.members.length===1) return '\ud83e\uddbe Ironman'; const duo=t.members.length===2?duoTeamName(t.members):''; const tm=duo||teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
     if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(t.members[t.memberIdx])}</div>`;
     return active ? `<div class="thrower-line">▸ throwing</div>` : `<div class="thrower-line"></div>`; };
@@ -1359,10 +1517,19 @@ document.getElementById('rematchBtn').onclick=showPiddle;
 document.getElementById('piddle').addEventListener('click',function(e){ const el=e.target.closest('.pid-name'); if(el) pidTap(parseInt(el.dataset.team,10), parseInt(el.dataset.idx,10)); });
 document.getElementById('pidResetBtn').onclick=function(){ pidPicks=[]; renderPiddle(); };
 document.getElementById('pidBackBtn').onclick=function(){ document.getElementById('piddle').classList.add('hidden'); document.getElementById('setup').classList.remove('hidden'); };
-document.getElementById('pidStartBtn').onclick=function(){ if(config.game==='fat6'){ document.getElementById('piddle').classList.add('hidden'); startFat6(pidPicks.map(p=>f6Sel[p.idx])); return; } const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
+document.getElementById('pidStartBtn').onclick=function(){
+  if(config.game==='fat6'){ document.getElementById('piddle').classList.add('hidden'); startFat6(pidPicks.map(p=>f6Sel[p.idx])); return; }
+  if(config.mode==='iron'){
+    const order=pidPicks.map(p=>p.idx<2?{t:0,m:p.idx}:{t:1,m:0});
+    document.getElementById('piddle').classList.add('hidden');
+    startGame(order[0].t, {}, order);
+    return;
+  }
+  const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
 document.getElementById('winMenuBtn').onclick=toMenu;
 document.getElementById('winUndoBtn').onclick=()=>{
-  // reopen the game in its pending-win state so the score can be corrected
+  if(G && G.isFat6){ undo(); return; }   // Fat 6: the final life-loss is already applied — really undo it
+  // x01/cricket: reopen the game in its pending-win state so the score can be corrected
   G.over=false;
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
