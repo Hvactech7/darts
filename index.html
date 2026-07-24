@@ -299,12 +299,12 @@
   /* ===== 301/501 sketch: big round board, cards tucked behind its top corners ===== */
   #game:not(.cricket){position:relative;margin-top:24px;}
   #game:not(.cricket) #playArea{display:flex;flex-direction:column;gap:6px;background:none;border:none;box-shadow:none;padding:0;position:relative;z-index:2;}
-  #game:not(.cricket) #playArea .boardwrap{order:1;margin-top:30px;margin-left:-6.5px;margin-right:-6.5px;}
+  #game:not(.cricket) #playArea .boardwrap{order:1;margin-top:8px;}
   #game:not(.cricket) #playArea .turnbar{order:2;margin:0;align-items:center;position:relative;z-index:3;}
   #game:not(.cricket) #playArea .gamebtns{order:3;margin-top:0;}
   #game:not(.cricket) #playArea #undoBtn{order:-1;flex:0 0 auto;margin-top:-58px;border-radius:20px;}
   #game:not(.cricket) #playArea #redoBtn{order:1;flex:0 0 auto;margin-top:-58px;border-radius:20px;}
-  #game:not(.cricket) svg.board{max-width:100%;}
+  #game:not(.cricket) svg.board{max-width:75%;}
   /* score cards tuck behind the board's top corners (board on top draws the concave edge) */
   #game:not(.cricket) .scoreboard{position:absolute;top:-50px;left:0;right:0;margin:0;z-index:1;display:flex;justify-content:space-between;gap:0;align-items:flex-start;}
   #game:not(.cricket) .scoreboard .team{flex:0 0 auto;width:48%;padding:14px 18px;min-height:220px;flex-direction:column;gap:3px;}
@@ -389,12 +389,15 @@
   #kpGrid button.kpop{font-size:70px;line-height:1;padding:0;}
   #kpOK{width:100%;font-size:26px;padding:13px;}
   /* kpmode: undo the tall-board sketch layout — normal flow, cards on top */
-  #game.kpmode:not(.cricket){margin-top:6px;}
-  #game.kpmode:not(.cricket) .scoreboard{position:static;margin:0 0 14px;}
-  #game.kpmode:not(.cricket) .scoreboard .team{min-height:172px;}
-  #game.kpmode:not(.cricket) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;max-width:742px;margin:0 auto 10px;}
-  #game.kpmode:not(.cricket) #playArea #undoBtn,#game.kpmode:not(.cricket) #playArea #redoBtn{margin-top:0;order:0;}
-  #game.kpmode:not(.cricket) #playArea #inputToggle{order:-1;}
+  #game:not(.cricket):not(.fat6){margin-top:6px;display:flex;flex-direction:column;min-height:calc(100vh - 96px);}
+  #game:not(.cricket):not(.fat6) #playArea{margin-top:auto;display:flex;flex-direction:column;}
+  #game:not(.cricket):not(.fat6) .scoreboard{position:static;top:auto;margin:0 0 14px;position:relative;z-index:1;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:322px;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:150px;font-size:21px;letter-spacing:2px;opacity:1;}
+  #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;top:124px;font-size:17px;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:742px;margin:0 auto 6px;order:2;}
+  #game:not(.cricket):not(.fat6) #playArea #undoBtn,#game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:0;}
+  #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:-1;}
 
   /* Groups + duo team names */
   #groupChips{gap:8px;}
@@ -497,6 +500,10 @@
   .team{ background:linear-gradient(180deg,#241a10f5,#191108fc);
     border:12px solid transparent; border-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%3E%3Crect%20x%3D%225%22%20y%3D%225%22%20width%3D%22110%22%20height%3D%22110%22%20rx%3D%2210%22%20fill%3D%22none%22%20stroke%3D%22%23171310%22%20stroke-width%3D%229%22%2F%3E%3Crect%20x%3D%226.5%22%20y%3D%226.5%22%20width%3D%22107%22%20height%3D%22107%22%20rx%3D%229%22%20fill%3D%22none%22%20stroke%3D%22%238a6b2b%22%20stroke-width%3D%224%22%2F%3E%3Crect%20x%3D%2211%22%20y%3D%2211%22%20width%3D%2298%22%20height%3D%2298%22%20rx%3D%226%22%20fill%3D%22none%22%20stroke%3D%22%23d9b45c%22%20stroke-width%3D%221.6%22%2F%3E%3Cg%20fill%3D%22%23d9b45c%22%20stroke%3D%22%235b430f%22%20stroke-width%3D%221%22%3E%3Cpath%20d%3D%22M14%202%20l7%2012%20-7%2012%20-7%20-12z%22%2F%3E%3Cpath%20d%3D%22M106%202%20l7%2012%20-7%2012%20-7%20-12z%22%2F%3E%3Cpath%20d%3D%22M14%2094%20l7%2012%20-7%2012%20-7%20-12z%22%2F%3E%3Cpath%20d%3D%22M106%2094%20l7%2012%20-7%2012%20-7%20-12z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23e8c876%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%227%22%20r%3D%223.4%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22113%22%20r%3D%223.4%22%2F%3E%3Ccircle%20cx%3D%227%22%20cy%3D%2260%22%20r%3D%223.4%22%2F%3E%3Ccircle%20cx%3D%22113%22%20cy%3D%2260%22%20r%3D%223.4%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 40 / 12px stretch; border-radius:0;
     box-shadow:0 14px 30px rgba(0,0,0,.75), inset 0 0 40px rgba(0,0,0,.5); }
+  .team:not(.active){ opacity:1; filter:saturate(.55) brightness(.75); }  /* dim without transparency — board must not bleed through */
+  .team1.active{ background:linear-gradient(160deg,#20355c,#101c33 70%,#0c1526); }
+  .team2.active{ background:linear-gradient(160deg,#3a1c0c,#241206 70%,#180b04); }
+  .team.active{ border-width:12px; }   /* keep the frame width identical to inactive — no content shift */
   .team.active::before{ display:none; }
   .team1.active{ box-shadow:0 0 30px rgba(74,168,255,.5), 0 14px 30px rgba(0,0,0,.75), inset 0 0 34px rgba(74,168,255,.12); }
   .team2.active{ box-shadow:0 0 30px rgba(255,122,46,.5), 0 14px 30px rgba(0,0,0,.75), inset 0 0 34px rgba(255,122,46,.14); }
@@ -1474,6 +1481,13 @@ function fitScreen(){
   var wrap=document.querySelector('.wrap');
   var _cs=getComputedStyle(wrap);
   var pad=(parseFloat(_cs.paddingTop)||14)+(parseFloat(_cs.paddingBottom)||14);
+  // 01 board mode: slide the board up behind the score cards as needed (cards keep full size)
+  var _bw=document.getElementById('boardwrap');
+  if(_bw && G && !G.isCricket && !G.isFat6 && !g.classList.contains('kpmode')){
+    _bw.style.marginTop='8px';
+    var _a0=wrap.clientHeight-pad-4, _n0=wrap.scrollHeight-pad, _over=_n0-_a0;
+    if(_over>0) _bw.style.marginTop=(8-Math.min(_over,330))+'px';
+  } else if(_bw){ _bw.style.marginTop=''; }
   var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
   var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
   var s = need>0 ? Math.min(1, avail/need) : 1;
@@ -1512,7 +1526,8 @@ function renderScoreboard(){
     if(needsIn) sub='⚠ needs double to start';
     let histHtml='';
     if(!G.isCricket){
-      const h=t.history.slice(-4);             // chronological: oldest top, newest bottom
+      const _hn=!G.isCricket?5:4;                            // tall 01 cards show 5
+      const h=t.history.slice(-_hn);             // chronological: oldest top, newest bottom
       const last=h.length-1;
       histHtml='<div class="team-hist"><div class="histlbl">last</div>'
         + (h.length ? h.map((s,idx)=>`<span class="histscore${idx===last?' latest':''}">${s}</span>`).join('')
