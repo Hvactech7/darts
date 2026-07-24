@@ -396,8 +396,9 @@
   #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:150px;font-size:21px;letter-spacing:2px;opacity:1;}
   #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;top:124px;font-size:17px;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:742px;margin:0 auto 6px;order:2;}
-  #game:not(.cricket):not(.fat6) #playArea #undoBtn,#game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:0;}
-  #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:-1;}
+  #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:1;}
+  #game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:3;}
+  #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:2;margin:0 10px;}
 
   /* Groups + duo team names */
   #groupChips{gap:8px;}
@@ -532,8 +533,23 @@
   .f6-phase{ color:#e8c876; }
   /* win screen */
   .winbanner .big{ font-family:'Cinzel',serif; color:#e8c876; text-shadow:0 2px 0 #000, 0 0 20px rgba(232,200,118,.45); }
+  /* floating dart calls in the side margins (01 games) */
+  #game:not(.cricket):not(.fat6) .darts{display:none;}
+  .dartfloat{position:absolute;top:44%;transform:translateY(-50%);width:120px;display:flex;flex-direction:column;gap:16px;align-items:center;pointer-events:none;z-index:3;}
+  #dartFloatL{left:0;}
+  #dartFloatR{right:0;}
+  .dartfloat span{font-family:var(--num);font-size:61px;font-weight:700;line-height:1;color:#8fc7ff;
+    text-shadow:0 2px 0 #000, 0 0 14px rgba(74,168,255,.85), 0 0 34px rgba(74,168,255,.4);}
+  #dartFloatR span{color:#ffae5a;text-shadow:0 2px 0 #000, 0 0 14px rgba(255,122,46,.85), 0 0 34px rgba(255,122,46,.4);}
+  .dartfloat span.long{font-size:35px;}
+  .dartfloat span.miss{color:#9a938a;text-shadow:0 2px 0 #000;}
+  .dartfloat span.bust{color:#ff6b6b;text-shadow:0 2px 0 #000, 0 0 14px rgba(255,59,59,.85);}
+  .dartfloat span:last-child{animation:dartpop .22s ease-out;}
+  @keyframes dartpop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.28);opacity:1}100%{transform:scale(1);opacity:1}}
+  #game.cricket .dartfloat,#game.fat6 .dartfloat,#game.kpmode .dartfloat{display:none;}
+
   /* prominent session controls */
-  #undoBtn,#redoBtn,#newGameBtn,#quitBtn{ font-size:20px; padding:18px 22px; }
+  #undoBtn,#redoBtn,#missBtn,#endTurnBtn{ font-size:20px; padding:18px 22px; }   /* per-turn controls big; session controls small */
 
 </style>
 </head>
@@ -673,6 +689,8 @@
         <button class="warn" id="undoBtn">↶ Undo</button><button class="warn" id="redoBtn">↷ Redo</button>
       </div>
       <div class="boardwrap" id="boardwrap"></div>
+      <div id="dartFloatL" class="dartfloat"></div>
+      <div id="dartFloatR" class="dartfloat"></div>
       <div id="kpWrap" class="hidden">
         <div class="kpSide" id="kpQuickL">
           <button data-q="41">41</button><button data-q="26">26</button><button data-q="45">45</button><button data-q="57">57</button>
@@ -1546,7 +1564,21 @@ function renderScoreboard(){
   });
 }
 
+function renderFloats(){
+  const fl=document.getElementById('dartFloatL'), fr=document.getElementById('dartFloatR');
+  if(!fl||!fr) return;
+  if(!G || G.isCricket || G.isFat6){ fl.innerHTML=''; fr.innerHTML=''; return; }
+  const compact=d=> d.bust?'BUST' : d.value===25?(d.mult===2?'D-BULL':'BULL') : d.label;
+  const html=G.darts.map(d=>{
+    const c=compact(d);
+    const cls=(d.bust?'bust ':'')+(d.value===0&&!d.bust?'miss ':'')+(String(c).length>4?'long':'');
+    return `<span class="${cls.trim()}">${c}</span>`;
+  }).join('');
+  fl.innerHTML = G.cur===0?html:'';
+  fr.innerHTML = G.cur===1?html:'';
+}
 function renderDarts(){
+  renderFloats();
   const el=document.getElementById('dartsRow');
   el.innerHTML='';
   for(let i=0;i<3;i++){
