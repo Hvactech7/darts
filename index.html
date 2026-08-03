@@ -1242,9 +1242,18 @@ var LS_STATS='darts_stats_v1';
 var statsLib=(function(){ try{const v=JSON.parse(localStorage.getItem(LS_STATS)); if(v&&typeof v==='object')return v;}catch(e){} return {}; })();
 function saveStats(){ localStorage.setItem(LS_STATS,JSON.stringify(statsLib)); bkQueue(); }
 function statFor(n){ const k=String(n); if(!statsLib[k]) statsLib[k]={g:0,w:0,byGame:{}}; const s=statsLib[k]; if(!s.byGame)s.byGame={}; return s; }
+var lastStatsUndo=null;                 // pre-record snapshot of the entries the last win touched (win-screen Undo restores it)
+function rollbackStats(){
+  if(!lastStatsUndo) return;
+  Object.keys(lastStatsUndo).forEach(k=>{ if(lastStatsUndo[k]===null) delete statsLib[k]; else statsLib[k]=lastStatsUndo[k]; });
+  lastStatsUndo=null; saveStats();
+}
 function recordGameResult(winnerNames, loserNames, gameType, extra){
   // per-player lifetime ledger: games + wins by game type (01 solo adds scoring detail)
   const all=[...winnerNames,...loserNames];
+  lastStatsUndo={};
+  [...all,...(extra?Object.keys(extra):[])].forEach(n=>{ const k=String(n);
+    if(!(k in lastStatsUndo)) lastStatsUndo[k]=statsLib[k]?JSON.parse(JSON.stringify(statsLib[k])):null; });
   all.forEach(n=>{ const s=statFor(n); s.g++; const bg=s.byGame[gameType]=s.byGame[gameType]||{g:0,w:0}; bg.g++; });
   winnerNames.forEach(n=>{ const s=statFor(n); s.w++; s.byGame[gameType].w++; });
   if(extra) Object.keys(extra).forEach(n=>{ const s=statFor(n), e=extra[n];
@@ -2305,6 +2314,7 @@ document.getElementById('pidStartBtn').onclick=function(){
   const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
 document.getElementById('winMenuBtn').onclick=toMenu;
 document.getElementById('winUndoBtn').onclick=()=>{
+  rollbackStats();                       // the win was already written to the ledger — take it back out
   if(G && G.isFat6){ undo(); return; }   // Fat 6: the final life-loss is already applied — really undo it
   // x01/cricket: reopen the game in its pending-win state so the score can be corrected
   G.over=false;
