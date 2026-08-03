@@ -408,6 +408,10 @@
   #duoCard input{min-width:0;}
 
   /* Piddle screen */
+  #pidTitle{font-size:34px;letter-spacing:2.5px;line-height:1.15;justify-content:center;text-align:center;
+    text-shadow:0 2px 0 #000, 0 0 24px rgba(232,200,118,.5);margin-bottom:14px;}
+  #pidTitle::before,#pidTitle::after{flex:0 1 34px;}
+
   #pidOrder{margin-top:16px;display:flex;gap:12px;}
   .pid-slot{flex:1;text-align:center;padding:12px 8px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:.5px;line-height:1.5;}
   .pid-slot.filled{border-style:solid;border-color:var(--blue);color:var(--txt);}
@@ -559,6 +563,7 @@
     .teamcol-head{font-size:12px;letter-spacing:1px;padding:8px 4px;}
     h2{font-size:12px;letter-spacing:2px;gap:8px;}
     .grpchip{font-size:12px;padding:8px 11px;}
+    #pidTitle{font-size:24px;letter-spacing:1.5px;}
     .pid-name{font-size:17px;padding:11px 12px;}
     .pid-num{width:30px;height:30px;font-size:18px;}
     /* 01 score cards */
@@ -684,7 +689,7 @@
   <!-- ================= PIDDLE (who throws first) ================= -->
   <div id="piddle" class="hidden">
     <div class="card">
-      <h2>🎯 Piddle for the Bull</h2>
+      <h2 id="pidTitle">🎯 Piddle for the Bull</h2>
       <p class="small" id="pidHint" style="margin-top:-4px;">One player from each team throws at the bullseye — closest goes first.</p>
       <div class="teamcols" style="margin-top:14px;">
         <div class="teamcol">
@@ -1151,11 +1156,11 @@ function renderPiddle(){
     document.getElementById('pidCol1').innerHTML = ironNames.map((n,idx)=>{
       const pos=pidPicks.findIndex(p=>p.idx===idx);
       const solo=idx===2?' 🦾':'';
-      return `<div class="pid-name${pos>=0?' picked':''}" data-team="9" data-idx="${idx}"><span>${esc(n)}${solo}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
+      return `<div class="pid-name${pos>=0?' picked':''}" data-team="9" data-idx="${idx}"><span>${esc(shortName(n))}${solo}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
     }).join('');
     const done=pidPicks.length===3;
     document.getElementById('pidOrder').innerHTML = done
-      ? `<div class="pid-slot filled">Throwing order (repeats)<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(ironNames[p.idx])).join(' → ')}</b></div>`
+      ? `<div class="pid-slot filled">Throwing order (repeats)<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(shortName(ironNames[p.idx]))).join(' → ')}</b></div>`
       : `<div class="pid-slot">All three throw at the bull — tap closest first (${pidPicks.length}/3)</div>`;
     var _ih=document.getElementById('pidHint');
     if(_ih) _ih.textContent='Ironman rules: everyone throws one at a time in this exact order, round after round. The Ironman 🦾 scores alone.';
@@ -1167,11 +1172,11 @@ function renderPiddle(){
     document.getElementById('pidCol2').innerHTML='';
     document.getElementById('pidCol1').innerHTML = f6Sel.map((n,idx)=>{
       const pos=pidPicks.findIndex(p=>p.idx===idx);
-      return `<div class="pid-name${pos>=0?' picked':''}" data-team="0" data-idx="${idx}"><span>${esc(n)}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
+      return `<div class="pid-name${pos>=0?' picked':''}" data-team="0" data-idx="${idx}"><span>${esc(shortName(n))}</span><span class="pid-num${pos>=0?'':' empty'}">${pos>=0?(pos+1):''}</span></div>`;
     }).join('');
     const done=pidPicks.length===f6Sel.length && f6Sel.length>0;
     document.getElementById('pidOrder').innerHTML = done
-      ? `<div class="pid-slot filled">Playing order<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(f6Sel[p.idx])).join(' → ')}</b></div>`
+      ? `<div class="pid-slot filled">Playing order<br><b>${pidPicks.map((p,i)=>(i+1)+'. '+esc(shortName(f6Sel[p.idx]))).join(' → ')}</b></div>`
       : `<div class="pid-slot">Tap names in bull order — closest first (${pidPicks.length}/${f6Sel.length})</div>`;
     var _fh=document.getElementById('pidHint');
     if(_fh) _fh.textContent='Everyone throws one dart at the bull. Tap the names closest-first — that becomes the playing order. Tap again to un-pick.';
@@ -1185,13 +1190,13 @@ function renderPiddle(){
     cols[team].innerHTML = names.map((n,idx)=>{
       const picked=pidPicks.find(p=>p.team===team && p.idx===idx);
       const badge=picked?(pidPicks.indexOf(picked)===0?'🥇':'🥈'):'';
-      return `<div class="pid-name${picked?' picked':''}" data-team="${team}" data-idx="${idx}"><span>${esc(n)}</span><span class="pid-badge">${badge}</span></div>`;
+      return `<div class="pid-name${picked?' picked':''}" data-team="${team}" data-idx="${idx}"><span>${esc(shortName(n))}</span><span class="pid-badge">${badge}</span></div>`;
     }).join('') || '<div class="small" style="padding:10px;">—</div>';
   });
   const slot=pl=>{ const p=pidPicks[pl]; const lbl=pl===0?'🥇 1st — throws first':'🥈 2nd';
     if(!p) return `<div class="pid-slot">${lbl}</div>`;
     const nm=(teamSel[p.team]||[])[p.idx]||'';
-    return `<div class="pid-slot filled">${lbl}<br><b>${esc(nm)}</b></div>`; };
+    return `<div class="pid-slot filled">${lbl}<br><b>${esc(shortName(nm))}</b></div>`; };
   document.getElementById('pidOrder').innerHTML=slot(0)+slot(1);
   var hint=document.getElementById('pidHint');
   if(hint) hint.textContent = (config.mode==='2p')
@@ -1488,10 +1493,10 @@ function f6LifeBtn(){
       document.getElementById('winDetail').textContent='Last one standing — Fat 6';
       return;
     }
-    flashToast(p.name+' is OUT!');
+    flashToast(shortName(p.name)+' is OUT!');
     f6NextPlayer();                        // target stays = last target set
   }else{
-    flashToast(p.name+' loses a life — keep throwing');   // turn STAYS with them
+    flashToast(shortName(p.name)+' loses a life — keep throwing');   // turn STAYS with them
   }
   renderGame();
 }
@@ -1579,11 +1584,11 @@ function renderFat6(){
   const p=G.players[G.cur];
   let html='<div class="f6-players">'+G.players.map((q,i)=>{
     const lv=q.out?'💀':'♥'.repeat(q.lives);
-    return `<div class="f6-p${(i===G.cur&&!G.over)?' active':''}${q.out?' out':''}"><div class="nm">${esc(q.name)}</div><div class="lv">${lv}</div></div>`;
+    return `<div class="f6-p${(i===G.cur&&!G.over)?' active':''}${q.out?' out':''}"><div class="nm">${esc(shortName(q.name))}</div><div class="lv">${lv}</div></div>`;
   }).join('')+'</div>';
   const _tl=fat6TargetLabel();
   html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val${_tl.length>7?' long':''}">${_tl}</div></div>`;
-  html+=`<div class="f6-phase">${G.over?'':('▸ '+esc(p.name)+' — throwing at '+fat6TargetLabel())}</div>`;
+  html+=`<div class="f6-phase">${G.over?'':('▸ '+esc(shortName(p.name))+' — throwing at '+fat6TargetLabel())}</div>`;
   el.innerHTML=html;
 }
 
@@ -1597,7 +1602,7 @@ function renderScoreboard(){
     const _player=t.members[t.memberIdx];
     const _teamName=(config.mode==='iron'&&t.members.length===1)?'\ud83e\uddbe Ironman':((t.members.length===2?duoTeamName(t.members):'')||teamOfPlayer(_player));
     const _teamLabel=_teamName || (config.mode==='2p'?'':('Team '+(i+1)));
-    const throwerName=_player;
+    const throwerName=shortName(_player);
     const big=G.isCricket?t.pts:t.score;
     const needsIn=G.requireDoubleIn && !t.opened;
     let sub=G.isCricket?'points':'remaining';
@@ -1662,10 +1667,12 @@ function renderCricket(){
   const el=document.getElementById('cricketBoard');
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
-  const pname=t=>{ const n=t.members[t.memberIdx]; return esc(n.length>8 ? n.slice(0,7)+'.' : n); };
+  const pname=t=>{ let n=shortName(t.members[t.memberIdx]);
+    if(n.length>10){ const p=t.members[t.memberIdx].trim().split(/\s+/); if(p.length>2) n=p[0]+' '+p[p.length-1][0].toUpperCase()+'.'; }
+    return esc(n.length>10 ? n.slice(0,9)+'.' : n); };
   const tlabel=i=>{ const t=G.teams[i]; if(config.mode==='iron'&&t.members.length===1) return '\ud83e\uddbe Ironman'; const duo=t.members.length===2?duoTeamName(t.members):''; const tm=duo||teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
-    if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(t.members[t.memberIdx])}</div>`;
+    if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(shortName(t.members[t.memberIdx]))}</div>`;
     return active ? `<div class="thrower-line">▸ throwing</div>` : `<div class="thrower-line"></div>`; };
   const cell=(t,idx,n,dead)=>{
     const m=t.marks[n];
@@ -1930,6 +1937,12 @@ function toMenu(){
 }
 
 //============================ UTIL ============================
+function shortName(n){
+  const p=String(n).trim().split(/\s+/).filter(Boolean);
+  if(p.length<2) return p[0]||'';
+  if(p.length===2) return p[0]+' '+p[1][0].toUpperCase()+'.';
+  return p[0]+' '+p[p.length-2][0].toUpperCase()+'. '+p[p.length-1][0].toUpperCase()+'.';
+}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 //============================ INIT ============================
