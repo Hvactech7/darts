@@ -3,9 +3,11 @@
 // fully offline), and in the background it fetches the latest from the network
 // and updates the cache, so a new version appears the next time it's opened
 // while online. Bump CACHE when the file list below changes.
-const CACHE = 'darts-v4';
+const CACHE = 'darts-v5';
 const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
   './dk-bg.jpg'
+,  './dk-side-blue.jpg',
+  './dk-side-red.jpg'
 ];
 
 self.addEventListener('install', (e) => {
