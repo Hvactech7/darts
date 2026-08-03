@@ -407,6 +407,30 @@
   .grpchip.del{border-color:rgba(255,64,104,.5);color:#ff90a6;background:rgba(255,64,104,.08);}
   #duoCard input{min-width:0;}
 
+  /* 01 board = temporary full-screen overlay; calculator is home */
+  #game.bdopen #playArea{position:fixed;inset:0;z-index:200;margin:0;border:none;border-radius:0;
+    background:linear-gradient(180deg,#1a120a,#0e0905 70%,#0a0603);display:flex;flex-direction:column;justify-content:center;padding:10px;}
+  #game.kpmode.bdopen #boardwrap{display:flex !important;margin:0 !important;justify-content:center;}
+  #game.bdopen svg.board{max-width:min(97vw,90vh) !important;width:min(97vw,90vh);}
+  #game.kpmode.bdopen #kpWrap{display:none !important;}
+  #game.bdopen .turnbar{display:none !important;}
+  #game.bdopen #playArea .gamebtns{display:flex;margin:8px auto 0;max-width:520px;width:100%;}
+  #game.bdopen #endTurnBtn{display:block !important;flex:1;font-size:22px;}
+  #game.bdopen #missBtn{display:none !important;}
+  #game:not(.bdopen):not(.cricket) #playArea .gamebtns #missBtn{display:none;}
+  #bdCalls{display:none;}
+  #game.bdopen #bdCalls{display:flex;position:absolute;top:12px;left:0;right:0;justify-content:center;gap:34px;z-index:1;pointer-events:none;min-height:64px;align-items:center;}
+  #bdCalls .bc{font-family:var(--num);font-size:58px;font-weight:700;line-height:1;}
+  #bdCalls .bc.t0{color:#8fc7ff;text-shadow:0 3px 0 #000,0 0 16px rgba(74,168,255,.85),0 0 40px rgba(74,168,255,.4);}
+  #bdCalls .bc.t1{color:#ffae5a;text-shadow:0 3px 0 #000,0 0 16px rgba(255,122,46,.8),0 0 40px rgba(255,122,46,.4);}
+  #bdCalls .bc.bust{color:#ff6a5a;text-shadow:0 3px 0 #000,0 0 16px rgba(255,90,70,.9);}
+  #bdCalls .bc.miss{color:#8d8676;text-shadow:0 3px 0 #000;}
+  #bdCalls .bc.lng{font-size:34px;}
+  #bdCalls .bc:last-child{animation:markpop .35s cubic-bezier(.2,1.5,.4,1);}
+  #game.kpmode .dartfloat{display:none;}
+  #game.bdopen #backBtn{display:block;position:absolute;top:14px;left:14px;z-index:2;}
+  @media (max-width:600px){ #bdCalls{gap:16px;min-height:44px;} #bdCalls .bc{font-size:34px;} #bdCalls .bc.lng{font-size:22px;} }
+
   /* A–Z jump bar */
   #azBar{display:flex;flex-wrap:nowrap;gap:2px;margin:0 0 10px;}
   #azBar button{flex:1 1 0;min-width:0;padding:7px 0;font-size:13px;font-family:var(--num);font-weight:700;
@@ -803,6 +827,7 @@
 
     <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
+      <div id="bdCalls"></div>
       <div class="turnbar">
         <button class="ghost" id="inputToggle" title="Switch scoring input">🔢</button>
         <div class="darts" id="dartsRow"></div>
@@ -1528,7 +1553,7 @@ function commitTurn(){
 function endTurnManual(){            // the "Confirm ▶" button
   if(G && G.isFat6) return;          // Fat 6: turn passes only via target tap / elimination
   if(G.over)return;
-  if(G.pendingWin){ declareWin(G.pendingWin.teamIdx,G.pendingWin.detail); closeBoard(); return; }
+  if(G.pendingWin){ declareWin(G.pendingWin.teamIdx,G.pendingWin.detail); closeBoard(); closeBoard01(); return; }
   pushHistory();
   // any darts not thrown this turn count as misses
   while(G.darts.length<3){
@@ -1536,6 +1561,7 @@ function endTurnManual(){            // the "Confirm ▶" button
   }
   commitTurn();
   closeBoard();
+  closeBoard01();
 }
 
 //------- Fat 6 logic (outcome-based input) -------
@@ -1623,7 +1649,12 @@ function renderGame(){
   var _cc=document.getElementById('cricketConfirmBtn'); if(_cc) _cc.disabled=false;
   const confirmBtn=document.getElementById('endTurnBtn');
   confirmBtn.disabled=G.over;
-  confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
+  if(G.pendingWin) confirmBtn.textContent='🏆 Confirm Winner';
+  else if(document.getElementById('game').classList.contains('bdopen') && !G.isCricket && !G.isFat6){
+    const _tot=G.darts.reduce((s,d)=>s+((d.bust||d.noCount)?0:d.score),0);
+    confirmBtn.textContent=G.darts.some(d=>d.bust)?'✓ Confirm — BUST':('✓ Confirm — '+_tot);
+  }
+  else confirmBtn.textContent='Confirm ▶';
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
   var _ccw=document.getElementById('cricketConfirmBtn');
@@ -1636,7 +1667,7 @@ function renderGame(){
 function fitScreen(){
   var g=document.getElementById('game');
   if(!g) return;
-  if(g.classList.contains('hidden')||g.classList.contains('board-open')){ g.style.transform=''; return; }
+  if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){ g.style.transform=''; return; }
   g.style.transform='none'; g.style.transformOrigin='top center';
   var wrap=document.querySelector('.wrap');
   var _cs=getComputedStyle(wrap);
@@ -1720,6 +1751,7 @@ function renderFloats(){
   fr.innerHTML = G.cur===1?html:'';
 }
 function renderDarts(){
+  renderBdCalls();
   renderFloats();
   const el=document.getElementById('dartsRow');
   el.innerHTML='';
@@ -1885,7 +1917,12 @@ function buildBoard(){
 }
 function openBoard(){ document.getElementById('game').style.transform=''; document.getElementById('game').classList.add('board-open'); }
 function closeBoard(){ document.getElementById('game').classList.remove('board-open'); fitScreen(); }
-function backBoard(){ while(G.darts.length>0) undo(); redoStack.length=0; closeBoard(); renderGame(); }
+function backBoard(){
+  while(G.darts.length>0) undo();
+  redoStack.length=0;
+  if(document.getElementById('game').classList.contains('bdopen')) closeBoard01(); else closeBoard();
+  renderGame();
+}
 function seg(cx,cy,ri,ro,a0,a1,fill,num,mult){
   const p=annular(cx,cy,ri,ro,a0,a1);
   return `<path d="${p}" fill="${fill}" stroke="#aab2bc" stroke-width="1.1" stroke-linejoin="round" data-v="${num}" data-m="${mult}"></path>`;
@@ -1927,12 +1964,30 @@ let kpExpr='';
 function kpAllowed(){ return !!G && !G.isCricket && !G.isFat6; }
 function applyInputMode(){
   const g=document.getElementById('game');
-  const kp=kpAllowed() && inputMode==='keypad';
+  const kp=kpAllowed();                       // 01 games: the calculator IS the home screen
   g.classList.toggle('kpmode',kp);
+  g.classList.remove('bdopen');
   document.getElementById('kpWrap').classList.toggle('hidden',!kp);
-  document.getElementById('inputToggle').textContent = kp?'🎯 Dart Board':'🔢 Calculator';
-  document.getElementById('inputToggle').title = kp?'Switch to dartboard input':'Switch to calculator input';
+  document.getElementById('inputToggle').textContent='🎯 Dart Board';
+  document.getElementById('inputToggle').title='Tap the board for this turn';
   kpExpr=''; kpRender(); fitScreen();
+}
+function openBoard01(){                        // temporary full-screen board for one turn
+  if(!kpAllowed()||G.over||G.pendingWin) return;
+  document.getElementById('game').classList.add('bdopen');
+  fitScreen();
+}
+function closeBoard01(){
+  document.getElementById('game').classList.remove('bdopen');
+  fitScreen();
+}
+function renderBdCalls(){                      // live dart calls across the top of the board overlay
+  const el=document.getElementById('bdCalls'); if(!el)return;
+  if(!G||G.isCricket||G.isFat6){ el.innerHTML=''; return; }
+  el.innerHTML=G.darts.map(d=>{
+    const cls=d.bust?' bust':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>6?' lng':'');
+    return `<span class="bc${cls}">${esc(d.bust?'BUST':d.label)}</span>`;
+  }).join('');
 }
 function kpEval(expr){
   const e=(expr||'').replace(/[+x]+$/,'');       // ignore trailing operator
@@ -1980,11 +2035,7 @@ function kpCommit(total){
   }
   kpExpr=''; kpRender();
 }
-document.getElementById('inputToggle').onclick=()=>{
-  inputMode = inputMode==='board' ? 'keypad' : 'board';
-  localStorage.setItem(LS_INPUT,inputMode);
-  applyInputMode();
-};
+document.getElementById('inputToggle').onclick=()=>{ if(kpAllowed()) openBoard01(); };
 document.getElementById('kpGrid').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   const k=b.dataset.k;
