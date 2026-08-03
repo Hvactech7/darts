@@ -217,7 +217,7 @@
   .cricket .chead .spine,.cricket .ptrow .spine{font-family:var(--display);font-size:12px;color:var(--muted);font-weight:700;
        text-transform:uppercase;letter-spacing:.6px;}
   .cricket .marks{font-size:28px;letter-spacing:4px;font-weight:800;color:var(--blue);text-shadow:0 0 10px rgba(79,124,255,.35);}
-  #game.cricket #cricketBoard .cricket .marks.closed{color:var(--gold);text-shadow:none;box-sizing:border-box;border:5px solid var(--gold);border-radius:50%;width:72px;height:72px;margin:0 auto;font-size:54px;box-shadow:0 0 12px rgba(255,214,74,.35);}
+  #game.cricket #cricketBoard .cricket .marks.closed{color:var(--gold);text-shadow:none;border:none;width:auto;height:auto;margin:0 auto;box-shadow:none;}
   .cricket .cric-pts{font-family:var(--display);font-size:36px;font-weight:900;}
   .cricket .activeside{background:rgba(255,255,255,.05);}
   .cricket .ptrow td{border-bottom:none;padding-top:14px;}
@@ -277,7 +277,7 @@
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
 
   #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:middle;padding-bottom:0;}
-  .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;}
+  .chead .pname{font-family:var(--display);font-size:29px;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;}
   .chead .tlabel{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
   #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
 
@@ -556,6 +556,26 @@
   #undoBtn,#redoBtn,#missBtn,#endTurnBtn{ font-size:20px; padding:18px 22px; }   /* per-turn controls big; session controls small */
 
 
+  .chead .cpts{font-family:var(--num);font-size:54px;font-weight:700;line-height:1;margin-top:4px;}
+  /* forged cricket marks */
+  .marks svg.mk{width:1.04em;height:1.04em;display:block;margin:0 auto;overflow:visible;}
+  .marks svg.t0{filter:drop-shadow(0 2px 2px rgba(0,0,0,.7)) drop-shadow(0 0 9px rgba(74,168,255,.65));}
+  .marks svg.t1{filter:drop-shadow(0 2px 2px rgba(0,0,0,.7)) drop-shadow(0 0 9px rgba(255,122,46,.6));}
+  .marks svg.mk3{filter:drop-shadow(0 2px 2px rgba(0,0,0,.7)) drop-shadow(0 0 10px rgba(217,180,92,.6));}
+  .smiley{filter:drop-shadow(0 0 12px rgba(255,214,74,.8));}
+  .cricket tr.deadrow .marks svg{filter:grayscale(1) opacity(.4);}
+  @keyframes markpop{0%{transform:scale(.15) rotate(-30deg);opacity:0}55%{transform:scale(1.28) rotate(6deg);opacity:1}100%{transform:scale(1) rotate(0deg)}}
+  .marks.fresh svg,.smiley.fresh{animation:markpop .4s cubic-bezier(.2,1.5,.4,1);}
+  #game.cricket #cricketBoard .cricket .chead .head1 .cpts{color:var(--blue-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(74,168,255,.6);}
+  #game.cricket #cricketBoard .cricket .chead .head2 .cpts{color:var(--yellow-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(255,122,46,.6);}
+
+  /* 01 cards: player name banners the top; score sits below it — no more collisions */
+  #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:absolute;top:10px;left:14px;right:14px;
+    font-size:26px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;min-height:0;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team2 .thrower{text-align:right;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team .big{top:46px;font-size:96px;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{top:60px;}
+
   /* ==================== PHONE (iPhone-width) PASS ==================== */
   @media (max-width:600px){
     /* menu */
@@ -597,13 +617,14 @@
     #kpWrap{gap:7px;}
     /* cricket */
     #game.cricket #cricketBoard .cricket .marks{font-size:38px;}
-    #game.cricket #cricketBoard .cricket .marks.closed{width:40px;height:40px;font-size:26px;border-width:3px;}
+    #game.cricket #cricketBoard .cricket .marks.closed{font-size:34px;}
     #game.cricket #cricketBoard .cricket .smiley{font-size:34px;}
     #game.cricket #cricketBoard .cricket .tgt{font-size:28px;}
     #game.cricket #cricketBoard .cricket .dt-d,#game.cricket #cricketBoard .cricket .dt-t{font-size:28px;padding:4px 5px;}
     #game.cricket #cricketBoard .cricket td.spine.tgt{padding-left:8px;padding-right:8px;}
     #game.cricket #cricketBoard .cricket .cric-pts{font-size:40px;}
     .chead .pname{font-size:20px;}
+    .chead .cpts{font-size:30px;}
     .chead .tlabel{font-size:11px;}
     #game.cricket #cricketBoard .cricket .chead .mcell{font-size:13px;}
     .dart{font-size:15px;min-height:36px;padding:8px 3px;}
@@ -1271,6 +1292,7 @@ function startGame(startTeam, leadoff, ironOrder){
   document.getElementById('game').classList.remove('board-open');
   buildBoard();
   applyInputMode();
+  _prevCMarks=null;
   renderGame();
 }
 
@@ -1661,6 +1683,7 @@ function renderDarts(){
   }
 }
 
+let _prevCMarks=null;   // display-only: which cells changed since last render (drives the pop)
 function renderCricket(){
   // Targets (15-20 + Bull) run down the center spine; Team 1 on the left,
   // Team 2 on the right. (Always exactly two teams in this app.)
@@ -1678,26 +1701,43 @@ function renderCricket(){
     const m=t.marks[n];
     const active=(!dead && G.cur===idx && !G.over)?' activeside':'';
     const tripIn=t.tripleClose && t.tripleClose[n] && m>=3;
-    const inner=tripIn ? '<span class="smiley">😁</span>' : `<span class="marks${m>=3?' closed':''}">${markStr(m)}</span>`;
+    const fresh=_prevCMarks && _prevCMarks[idx] && _prevCMarks[idx][n]!==m ? ' fresh' : '';
+    const inner=tripIn ? `<span class="smiley${fresh}">😁</span>` : `<span class="marks${m>=3?' closed':''}${fresh}">${markSVG(m,idx)}</span>`;
     return `<td class="mcell${active}">${inner}</td>`;
   };
   let html='<div class="card"><table class="cricket">'
-    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}"><div class="tlabel">${tlabel(0)}</div><div class="pname">${pname(t1)}</div></th>`
+    +`<tr class="chead"><th class="mcell head1${(G.cur===0&&!G.over)?' active':''}"><div class="tlabel">${tlabel(0)}</div><div class="pname">${pname(t1)}</div><div class="cpts">${t1.pts}</div></th>`
     +'<th class="spine hdrboard"><div class="hdr-throw">'+BOARD_SVG+'<div class="hdr-label">▸ Tap</div></div></th>'
-    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}"><div class="tlabel">${tlabel(1)}</div><div class="pname">${pname(t2)}</div></th></tr>`;
+    +`<th class="mcell head2${(G.cur===1&&!G.over)?' active':''}"><div class="tlabel">${tlabel(1)}</div><div class="pname">${pname(t2)}</div><div class="cpts">${t2.pts}</div></th></tr>`;
   CRICKET_TARGETS.forEach(n=>{
     const lbl=n===25?'Bull':n;
     const dead=t1.marks[n]>=3 && t2.marks[n]>=3;   // both closed → no longer scorable
     html+=`<tr class="${dead?'deadrow':''}">`+cell(t1,0,n,dead)+`<td class="spine tgt"><div class="tgtrow"><span class="dt-d" data-v="${n}" data-m="2">D</span><span class="dt-v" data-v="${n}" data-m="1">${lbl}</span>${n!==25?`<span class="dt-t" data-v="${n}" data-m="3">T</span>`:`<span class="dt-t dt-spacer">T</span>`}</div></td>`+cell(t2,1,n,dead)+'</tr>';
   });
-  html+=`<tr class="ptrow"><td class="cric-pts">${t1.pts}</td>`
-      +'<td class="spine">Points</td>'
-      +`<td class="cric-pts">${t2.pts}</td></tr>`;
   html+='</table></div>';
   el.innerHTML=html;
+  _prevCMarks=[Object.assign({},t1.marks),Object.assign({},t2.marks)];
   const _hb=el.querySelector('.hdr-throw'); if(_hb) _hb.addEventListener('click',openBoard);
 }
-function markStr(m){ // 0 -> '', 1 -> '/', 2 -> 'X', 3+ -> Ⓧ (closed)
+function markSVG(m,team){                 // double-ended sword blades: 1 = blade, 2 = crossed blades, 3 = crossed in the gold seal
+  if(m<=0)return '';
+  const CORE=team===0?'#dcefff':'#ffe6b0', EDGE=team===0?'#3f7fc4':'#c86a28';
+  // blade '/' — sharp tip at BOTH ends, shoulders at quarter points, beveled facet + fuller
+  const blade=`<polygon points="14,86 29.2,81.4 81.4,29.2 86,14 70.8,18.6 18.6,70.8" fill="${EDGE}" stroke="#14141a" stroke-width="1.2" stroke-linejoin="round"/>`
+    +`<polygon points="14,86 29.2,81.4 81.4,29.2 86,14 78.9,21.1 21.1,78.9" fill="#ffffff" opacity=".22"/>`
+    +`<line x1="21.1" y1="78.9" x2="78.9" y2="21.1" stroke="${CORE}" stroke-width="3" stroke-linecap="round"/>`;
+  const bladeM=`<g transform="translate(100,0) scale(-1,1)">${blade}</g>`;
+  if(m===1) return `<svg class="mk t${team}" viewBox="0 0 100 100">${blade}</svg>`;
+  if(m===2) return `<svg class="mk t${team}" viewBox="0 0 100 100">${blade}${bladeM}</svg>`;
+  return `<svg class="mk mk3 t${team}" viewBox="0 0 100 100">`
+    +`<circle cx="50" cy="50" r="44" fill="rgba(0,0,0,.35)" stroke="#5b430f" stroke-width="10"/>`
+    +`<circle cx="50" cy="50" r="44" fill="none" stroke="#d9b45c" stroke-width="6.5"/>`
+    +`<g transform="translate(50,50) scale(.62) translate(-50,-50)">${blade}${bladeM}</g>`
+    +`<circle cx="50" cy="6" r="4.5" fill="#f4e3ae"/><circle cx="50" cy="94" r="4.5" fill="#f4e3ae"/>`
+    +`<circle cx="6" cy="50" r="4.5" fill="#f4e3ae"/><circle cx="94" cy="50" r="4.5" fill="#f4e3ae"/>`
+    +`</svg>`;
+}
+function markStr(m){ // legacy (unused by cricket render)
   if(m<=0)return '';
   if(m===1)return '/';
   if(m===2)return 'X';
