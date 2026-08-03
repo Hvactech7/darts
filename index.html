@@ -963,7 +963,7 @@ function renderColumns(){
       const div=document.createElement('div');
       div.className='nameopt'+(f6Sel.includes(name)?' sel1':'');
       div.innerHTML='<span class="nopt-name"></span>';
-      div.querySelector('.nopt-name').textContent=name;
+      div.querySelector('.nopt-name').textContent=shortName(name);
       div.dataset.az=(name.trim()[0]||'').toUpperCase();
       div.onclick=()=>{ const i=f6Sel.indexOf(name); if(i>=0)f6Sel.splice(i,1); else f6Sel.push(name); renderColumns();updateStart(); };
       el.appendChild(div);
@@ -994,7 +994,7 @@ function renderColumns(){
       div.className=cls;
       const tm=teamOfPlayer(name);
       div.innerHTML='<span class="nopt-name"></span>'+(tm?'<span class="nopt-team"></span>':'');
-      div.querySelector('.nopt-name').textContent=name;
+      div.querySelector('.nopt-name').textContent=shortName(name);
       div.dataset.az=(name.trim()[0]||'').toUpperCase();
       if(tm) div.querySelector('.nopt-team').textContent=tm;
       if(!inOther) div.onclick=()=>toggleName(name,t);
@@ -1133,7 +1133,7 @@ function renderLineup(){
     const d=document.createElement('div');
     d.className='grow pickslot slot'+(t+1)+(names.length===reqFor(t)?' filled':'');
     d.style.minWidth='120px';
-    const body=names.length?names.map(esc).join(' & '):'pick below';
+    const body=names.length?names.map(n=>esc(shortName(n))).join(' & '):'pick below';
     d.innerHTML=`<div class="center"><div class="small">${label}</div><div>${body}</div></div>`;
     el.appendChild(d);
   });
@@ -1788,7 +1788,7 @@ function f6LifeBtn(){
       try{ recordGameResult([alive[0].name], G.players.filter(q=>q.out).map(q=>q.name), 'fat6', null); }catch(e){}
       document.getElementById('game').classList.add('hidden');
       document.getElementById('winScreen').classList.remove('hidden');
-      document.getElementById('winName').textContent=alive[0].name;
+      document.getElementById('winName').textContent=shortName(alive[0].name);
       document.getElementById('winDetail').textContent='Last one standing — Fat 6';
       return;
     }
@@ -1839,8 +1839,8 @@ function declareWin(teamIdx,detail){
   document.getElementById('winDetail').textContent=detail||'';
 }
 function displayName(t){
-  if(config.mode==='2p'||t.members.length===1) return t.members[0];
-  return `${t.name} (${t.members.join(' & ')})`;
+  if(config.mode==='2p'||t.members.length===1) return shortName(t.members[0]);
+  return `${t.name} (${t.members.map(shortName).join(' & ')})`;
 }
 
 //============================ RENDER ============================
@@ -1991,7 +1991,7 @@ function renderCricket(){
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
   const pname=t=>{ let n=shortName(t.members[t.memberIdx]);
-    if(n.length>10){ const p=t.members[t.memberIdx].trim().split(/\s+/); if(p.length>2) n=p[0]+' '+p[p.length-1][0].toUpperCase()+'.'; }
+    if(n.length>10){ const p=t.members[t.memberIdx].trim().split(/\s+/); if(p.length>2) n=p[0]+' '+p[p.length-1][0].toUpperCase(); }
     return esc(n.length>10 ? n.slice(0,9)+'.' : n); };
   const tlabel=i=>{ const t=G.teams[i]; if(config.mode==='iron'&&t.members.length===1) return '\ud83e\uddbe Ironman'; const duo=t.members.length===2?duoTeamName(t.members):''; const tm=duo||teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
@@ -2323,8 +2323,8 @@ function toMenu(){
 function shortName(n){
   const p=String(n).trim().split(/\s+/).filter(Boolean);
   if(p.length<2) return p[0]||'';
-  if(p.length===2) return p[0]+' '+p[1][0].toUpperCase()+'.';
-  return p[0]+' '+p[p.length-2][0].toUpperCase()+'. '+p[p.length-1][0].toUpperCase()+'.';
+  if(p.length===2) return p[0]+' '+p[1][0].toUpperCase();
+  return p[0]+' '+p[p.length-2][0].toUpperCase()+' '+p[p.length-1][0].toUpperCase();
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
