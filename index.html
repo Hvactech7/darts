@@ -551,6 +551,66 @@
   /* prominent session controls */
   #undoBtn,#redoBtn,#missBtn,#endTurnBtn{ font-size:20px; padding:18px 22px; }   /* per-turn controls big; session controls small */
 
+
+  /* ==================== PHONE (iPhone-width) PASS ==================== */
+  @media (max-width:600px){
+    /* menu */
+    .nameopt{font-size:19px;padding:10px 12px;gap:6px;}
+    .teamcol-head{font-size:12px;letter-spacing:1px;padding:8px 4px;}
+    h2{font-size:12px;letter-spacing:2px;gap:8px;}
+    .grpchip{font-size:12px;padding:8px 11px;}
+    .pid-name{font-size:17px;padding:11px 12px;}
+    .pid-num{width:30px;height:30px;font-size:18px;}
+    /* 01 score cards */
+    #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:296px;padding:10px 10px;}
+    #game:not(.cricket) .scoreboard .team .thrower{position:absolute;top:8px;left:10px;right:10px;font-size:15px;line-height:1.15;
+      white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left;min-height:0;}
+    #game:not(.cricket) .scoreboard .team2 .thrower{text-align:right;}
+    #game:not(.cricket) .scoreboard .team .big{font-size:46px;top:52px;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:108px;font-size:11px;letter-spacing:1px;}
+    #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{top:108px;font-size:11px;}
+    #game:not(.cricket) .scoreboard .team .team-hist{top:132px;gap:4px;}
+    .histscore{font-size:11px;min-width:30px;padding:2px 5px;}
+    .histlbl{font-size:8px;}
+    /* board mode */
+    .dartfloat{width:46px;gap:8px;top:42%;}
+    .dartfloat span{font-size:26px;}
+    .dartfloat span.long{font-size:15px;}
+    #undoBtn,#redoBtn,#missBtn,#endTurnBtn{font-size:14px;padding:12px 12px;}
+    #inputToggle{font-size:12px;padding:11px 10px;letter-spacing:.5px;margin:0 6px;}
+    /* calculator */
+    .kpSide{flex:0 0 56px;gap:8px;}
+    .kpSide button{font-size:20px;}
+    #kpGrid{gap:7px;}
+    #kpGrid button{font-size:25px;padding:11px 0;}
+    #kpGrid button.kpop{font-size:38px;}
+    #kpVal{font-size:42px;}
+    #kpVal.long{font-size:24px;}
+    #kpHint{font-size:15px;}
+    #kpDisplay{min-height:46px;padding:8px 12px;margin-bottom:8px;}
+    #kpOK{font-size:17px;padding:12px;}
+    #kpWrap{gap:7px;}
+    /* cricket */
+    #game.cricket #cricketBoard .cricket .marks{font-size:38px;}
+    #game.cricket #cricketBoard .cricket .marks.closed{width:40px;height:40px;font-size:26px;border-width:3px;}
+    #game.cricket #cricketBoard .cricket .smiley{font-size:34px;}
+    #game.cricket #cricketBoard .cricket .tgt{font-size:28px;}
+    #game.cricket #cricketBoard .cricket .dt-d,#game.cricket #cricketBoard .cricket .dt-t{font-size:28px;padding:4px 5px;}
+    #game.cricket #cricketBoard .cricket td.spine.tgt{padding-left:8px;padding-right:8px;}
+    #game.cricket #cricketBoard .cricket .cric-pts{font-size:40px;}
+    .chead .pname{font-size:20px;}
+    .chead .tlabel{font-size:11px;}
+    #game.cricket #cricketBoard .cricket .chead .mcell{font-size:13px;}
+    .dart{font-size:15px;min-height:36px;padding:8px 3px;}
+    /* fat 6 */
+    .f6-p{min-width:76px;padding:5px 8px;}
+    .f6-p .nm{font-size:14px;}
+    .f6-p .lv{font-size:12px;letter-spacing:1px;}
+    .f6-target .val{font-size:44px;}
+    .f6-target .val.long{font-size:24px;}
+    .f6-phase{font-size:13px;}
+  }
+
 </style>
 </head>
 <body>
