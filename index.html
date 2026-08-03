@@ -407,6 +407,21 @@
   .grpchip.del{border-color:rgba(255,64,104,.5);color:#ff90a6;background:rgba(255,64,104,.08);}
   #duoCard input{min-width:0;}
 
+  /* A–Z jump bar */
+  #azBar{display:flex;flex-wrap:nowrap;gap:2px;margin:0 0 10px;}
+  #azBar button{flex:1 1 0;min-width:0;padding:7px 0;font-size:13px;font-family:var(--num);font-weight:700;
+    border-radius:5px;background:#1d150c;border:1px solid #4a3d28;color:#e9ddc0;box-shadow:none;background-image:none;letter-spacing:0;}
+  #azBar button.dim{opacity:.26;pointer-events:none;}
+  #azBar button:active{transform:none;background:#2b5f96;border-color:#7fb8ef;}
+
+  /* pause/resume + quit confirm */
+  #resumeBtn{width:100%;font-size:19px;padding:16px;margin:0 0 12px;}
+  #confirmQuit{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
+  #confirmQuit.hidden{display:none;}
+  #confirmQuit .card{max-width:430px;margin:20px;width:100%;}
+  #cqBtns{display:flex;gap:10px;margin-top:16px;}
+  #cqBtns button{flex:1;}
+
   /* Piddle screen */
   #pidTitle{font-size:34px;letter-spacing:2.5px;line-height:1.15;justify-content:center;text-align:center;
     text-shadow:0 2px 0 #000, 0 0 24px rgba(232,200,118,.5);margin-bottom:14px;}
@@ -582,6 +597,8 @@
   @media (max-width:600px){
     /* menu */
     .nameopt{font-size:19px;padding:10px 12px;gap:6px;}
+    #azBar{flex-wrap:wrap;gap:3px;}
+    #azBar button{flex:0 0 calc(100%/13 - 3px);padding:9px 0;font-size:14px;}
     .teamcol-head{font-size:12px;letter-spacing:1px;padding:8px 4px;}
     h2{font-size:12px;letter-spacing:2px;gap:8px;}
     .grpchip{font-size:12px;padding:8px 11px;}
@@ -646,6 +663,7 @@
   <!-- ================= SETUP ================= -->
   <div id="setup">
     <h1 id="appBanner"><img src="dk-banner.jpg" alt="Dart Keeper"></h1>
+    <button class="primary hidden" id="resumeBtn">⏸ Return to Game ▶</button>
     <div class="card">
       <h2>Game</h2>
       <div class="seg-toggle" id="gameSel">
@@ -656,15 +674,6 @@
       </div>
     </div>
 
-    <div class="card" id="groupCard">
-      <h2>👥 Groups</h2>
-      <div id="groupChips" class="row"></div>
-      <div class="row" style="margin-top:8px;">
-        <input type="text" id="groupName" class="grow" placeholder="Group name…" autocomplete="off">
-        <button class="accent" id="saveGroupBtn">Save</button>
-      </div>
-      <p class="small" id="groupHint" style="margin-top:6px;">Save the current line-up as a group, or tap a group to load it.</p>
-    </div>
 
     <div class="card" id="modeCard">
       <h2>Mode</h2>
@@ -683,6 +692,7 @@
 
     <div class="card">
       <h2>Select Players</h2>
+      <div id="azBar"></div>
       <div class="teamcols">
         <div class="teamcol">
           <div class="teamcol-head head1">Team 1</div>
@@ -696,6 +706,16 @@
       <button class="accent" id="manageBtn" style="width:100%;margin-top:14px;">⚙ Manage Players</button>
     </div>
 
+    <div class="card" id="groupCard">
+      <h2>👥 Groups</h2>
+      <div id="groupChips" class="row"></div>
+      <div class="row" style="margin-top:8px;">
+        <input type="text" id="groupName" class="grow" placeholder="Group name…" autocomplete="off">
+        <button class="accent" id="saveGroupBtn">Save</button>
+      </div>
+      <p class="small" id="groupHint" style="margin-top:6px;">Save the current line-up as a group, or tap a group to load it.</p>
+    </div>
+
     <div class="card hidden" id="duoCard">
       <h2>Team Names</h2>
       <div class="row">
@@ -707,6 +727,18 @@
     </div>
 
     <button class="primary" id="startBtn" style="width:100%;font-size:18px;padding:16px;" disabled>Start Game</button>
+  </div>
+
+  <!-- ================= QUIT CONFIRM ================= -->
+  <div id="confirmQuit" class="hidden">
+    <div class="card">
+      <h2>Quit this game?</h2>
+      <p style="margin:4px 0 0;">The current game will be <b>erased</b> — scores and turns are lost for good.</p>
+      <div id="cqBtns">
+        <button class="ghost" id="cqCancel">Keep Playing</button>
+        <button class="confirm-btn" id="cqQuit">🗑 Quit Game</button>
+      </div>
+    </div>
   </div>
 
   <!-- ================= PIDDLE (who throws first) ================= -->
@@ -804,7 +836,7 @@
     </div>
 
     <div class="gamebtns">
-      <button class="ghost" id="newGameBtn">↺ New Game</button>
+      <button class="ghost" id="newGameBtn">☰ Menu</button>
       <button class="warn" id="quitBtn">Quit to Menu</button>
     </div>
   </div>
@@ -870,15 +902,17 @@ function renderColumns(){
     const el=document.getElementById('col1');
     el.innerHTML='';
     document.getElementById('col2').innerHTML='';
-    if(roster.length===0){ el.innerHTML='<span class="small">No players yet — use “Manage Players”.</span>'; return; }
-    roster.forEach(name=>{
+    if(roster.length===0){ el.innerHTML='<span class="small">No players yet — use “Manage Players”.</span>'; renderAZ(); return; }
+    [...roster].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).forEach(name=>{
       const div=document.createElement('div');
       div.className='nameopt'+(f6Sel.includes(name)?' sel1':'');
       div.innerHTML='<span class="nopt-name"></span>';
       div.querySelector('.nopt-name').textContent=name;
+      div.dataset.az=(name.trim()[0]||'').toUpperCase();
       div.onclick=()=>{ const i=f6Sel.indexOf(name); if(i>=0)f6Sel.splice(i,1); else f6Sel.push(name); renderColumns();updateStart(); };
       el.appendChild(div);
     });
+    renderAZ();
     return;
   }
   if(_h1) _h1.textContent=config.mode==='iron'?'Team 1 · pick 2':'Team 1';
@@ -892,7 +926,7 @@ function renderColumns(){
       return;
     }
     const full=teamSel[t].length>=reqFor(t);
-    roster.forEach(name=>{
+    [...roster].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).forEach(name=>{
       const owner=teamOf(name);
       const selHere=owner===t;
       const inOther=owner!==-1 && owner!==t;
@@ -905,12 +939,28 @@ function renderColumns(){
       const tm=teamOfPlayer(name);
       div.innerHTML='<span class="nopt-name"></span>'+(tm?'<span class="nopt-team"></span>':'');
       div.querySelector('.nopt-name').textContent=name;
+      div.dataset.az=(name.trim()[0]||'').toUpperCase();
       if(tm) div.querySelector('.nopt-team').textContent=tm;
       if(!inOther) div.onclick=()=>toggleName(name,t);
       el.appendChild(div);
     });
   });
+  renderAZ();
 }
+
+function renderAZ(){
+  const bar=document.getElementById('azBar'); if(!bar)return;
+  const have=new Set(roster.map(n=>(n.trim()[0]||'').toUpperCase()));
+  bar.innerHTML='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(L=>
+    `<button type="button" data-l="${L}" class="${have.has(L)?'':'dim'}">${L}</button>`).join('');
+}
+document.getElementById('azBar').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-l]'); if(!b)return;
+  const el=[...document.querySelectorAll('#col1 .nameopt')].find(d=>(d.dataset.az||'')===b.dataset.l);
+  if(!el)return;
+  const list=document.getElementById('col1');
+  list.scrollTop += el.getBoundingClientRect().top - list.getBoundingClientRect().top;
+});
 function renderLibrary(){
   const el=document.getElementById('libList');
   el.innerHTML='';
@@ -1950,8 +2000,31 @@ document.getElementById('kpOK').onclick=()=>{ const v=kpEval(kpExpr); if(v<=180)
   });
 });
 document.getElementById('endTurnBtn').onclick=endTurnManual;
-document.getElementById('quitBtn').onclick=toMenu;
-document.getElementById('newGameBtn').onclick=()=>{ if(confirm('Start a new game with the same line-up?')) showPiddle(); };
+document.getElementById('quitBtn').onclick=()=>{ if(G && !G.over) document.getElementById('confirmQuit').classList.remove('hidden'); else toMenu(); };
+let pausedSig=null;
+function gameSig(){ return JSON.stringify({g:config.game,m:config.mode,t:teamSel,f:config.game==='fat6'?f6Sel:null}); }
+function refreshResume(){ const b=document.getElementById('resumeBtn'); if(b) b.classList.toggle('hidden', !(G && !G.over)); }
+document.getElementById('newGameBtn').onclick=()=>{           // ☰ Menu: pause the game, open setup
+  if(G && !G.over) pausedSig=gameSig();
+  toMenu();
+};
+document.getElementById('resumeBtn').onclick=()=>{
+  if(!G || G.over) return;
+  if(gameSig()===pausedSig){                                  // nothing changed — resume exactly
+    ['setup','winScreen','piddle'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('game').classList.remove('hidden');
+    renderGame();
+  }else{                                                      // changed game/players — start the new setup
+    if(document.getElementById('startBtn').disabled){ flashToast('Finish the line-up first'); return; }
+    showPiddle();
+  }
+};
+document.getElementById('cqCancel').onclick=()=>document.getElementById('confirmQuit').classList.add('hidden');
+document.getElementById('cqQuit').onclick=()=>{
+  document.getElementById('confirmQuit').classList.add('hidden');
+  G=null; pausedSig=null; history=[]; redoStack.length=0;
+  toMenu();
+};
 document.getElementById('rematchBtn').onclick=showPiddle;
 document.getElementById('piddle').addEventListener('click',function(e){ const el=e.target.closest('.pid-name'); if(el) pidTap(parseInt(el.dataset.team,10), parseInt(el.dataset.idx,10)); });
 document.getElementById('pidResetBtn').onclick=function(){ pidPicks=[]; renderPiddle(); };
@@ -1975,6 +2048,7 @@ document.getElementById('winUndoBtn').onclick=()=>{
   renderGame();
 };
 function toMenu(){
+  refreshResume();
   document.getElementById('game').classList.add('hidden');
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('setup').classList.remove('hidden');
