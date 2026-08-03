@@ -800,6 +800,21 @@
       <div id="libList"></div>
       <p class="small" style="margin-top:6px;">Names are saved on this device.</p>
     </div>
+    <div class="card">
+      <h2>☁ Backup &amp; Restore</h2>
+      <p class="small" style="margin:0 0 10px;">Players, teams, groups and stats back up to the family relay. One email covers every device.</p>
+      <div class="row" style="margin-bottom:10px;">
+        <input type="text" id="bkEmail" class="grow" placeholder="you@email.com" autocomplete="email" inputmode="email">
+      </div>
+      <div class="row" id="bkCodeRow" style="display:none;margin-bottom:10px;">
+        <input type="text" id="bkCode" class="grow" placeholder="6-digit code from the email" inputmode="numeric" maxlength="6">
+      </div>
+      <div class="row">
+        <button class="primary grow" id="bkSaveBtn">☁ Back up now</button>
+        <button class="accent grow" id="bkRestoreBtn">⤓ Restore</button>
+      </div>
+      <p class="small" id="bkMsg" style="margin-top:8px;min-height:18px;"></p>
+    </div>
     <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:17px;padding:15px;">Done</button>
   </div>
@@ -908,11 +923,11 @@ const CRICKET_TARGETS=[20,19,18,17,16,15,25]; // 25 = bull
 
 //============================ ROSTER ============================
 function loadRoster(){try{return JSON.parse(localStorage.getItem(LS_PLAYERS))||[];}catch(e){return [];}}
-function saveRoster(){localStorage.setItem(LS_PLAYERS,JSON.stringify(roster));}
+function saveRoster(){localStorage.setItem(LS_PLAYERS,JSON.stringify(roster));bkQueue();}
 function loadTeams(){try{return JSON.parse(localStorage.getItem(LS_TEAMS))||[];}catch(e){return [];}}
-function saveTeams(){localStorage.setItem(LS_TEAMS,JSON.stringify(teamLib));}
+function saveTeams(){localStorage.setItem(LS_TEAMS,JSON.stringify(teamLib));bkQueue();}
 function loadPlayerTeams(){try{return JSON.parse(localStorage.getItem(LS_PTEAMS))||{};}catch(e){return {};}}
-function savePlayerTeams(){localStorage.setItem(LS_PTEAMS,JSON.stringify(playerTeams));}
+function savePlayerTeams(){localStorage.setItem(LS_PTEAMS,JSON.stringify(playerTeams));bkQueue();}
 function teamOfPlayer(n){return playerTeams[n]||'';}
 
 function teamOf(name){
@@ -1169,12 +1184,146 @@ document.getElementById('groupChips').addEventListener('click',e=>{
 document.getElementById('duoName1').addEventListener('input',e=>{ if(teamSel[0].length===2) setDuoTeamName(teamSel[0],e.target.value); });
 document.getElementById('duoName2').addEventListener('input',e=>{ if(teamSel[1].length===2) setDuoTeamName(teamSel[1],e.target.value); });
 renderGroups();refreshDuoCard();
+document.getElementById('bkSaveBtn').onclick=bkSave;
+document.getElementById('bkRestoreBtn').onclick=bkRestore;
+(function(){ const em=localStorage.getItem(LS_BKEMAIL); if(em) document.getElementById('bkEmail').value=em; })();
+
+//============================ STATS LEDGER ============================
+var LS_STATS='darts_stats_v1';
+var statsLib=(function(){ try{const v=JSON.parse(localStorage.getItem(LS_STATS)); if(v&&typeof v==='object')return v;}catch(e){} return {}; })();
+function saveStats(){ localStorage.setItem(LS_STATS,JSON.stringify(statsLib)); bkQueue(); }
+function statFor(n){ const k=String(n); if(!statsLib[k]) statsLib[k]={g:0,w:0,byGame:{}}; const s=statsLib[k]; if(!s.byGame)s.byGame={}; return s; }
+function recordGameResult(winnerNames, loserNames, gameType, extra){
+  // per-player lifetime ledger: games + wins by game type (01 solo adds scoring detail)
+  const all=[...winnerNames,...loserNames];
+  all.forEach(n=>{ const s=statFor(n); s.g++; const bg=s.byGame[gameType]=s.byGame[gameType]||{g:0,w:0}; bg.g++; });
+  winnerNames.forEach(n=>{ const s=statFor(n); s.w++; s.byGame[gameType].w++; });
+  if(extra) Object.keys(extra).forEach(n=>{ const s=statFor(n), e=extra[n];
+    s.pts=(s.pts||0)+(e.pts||0); s.turns=(s.turns||0)+(e.turns||0);
+    if(e.best!=null) s.best=Math.max(s.best||0,e.best);
+    s.t180=(s.t180||0)+(e.t180||0);
+  });
+  saveStats();
+}
+
+//============================ BACKUP (Pi relay, Battle Tees pattern) ============================
+var DK_RELAY='wss://raspi5.tail734d97.ts.net/battletees';
+var LS_BKEMAIL='darts_backup_email_v1';
+var LS_BKFP='darts_backup_fp_v1';
+var bkTimer=null;
+function bkPayload(){
+  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, groups:groupLib, stats:statsLib, v:1};
+}
+function bkFingerprint(){ return JSON.stringify(bkPayload()); }
+function relayBackup(payload){
+  return new Promise((res,rej)=>{
+    let ws;
+    try{ ws=new WebSocket(DK_RELAY); }catch(e){ return rej(e); }
+    const to=setTimeout(()=>{ try{ws.close();}catch(e){} rej(new Error('timeout')); },15000);
+    ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'backup',rid:'d'+Math.random().toString(36).slice(2,8),app:'darts',...payload})); }catch(e){ clearTimeout(to); rej(e);} };
+    ws.onmessage=e=>{ try{ const m=JSON.parse(e.data); if(m.t==='backupResult'){ clearTimeout(to); try{ws.close();}catch(_){} res(m); } }catch(_){} };
+    ws.onerror=()=>{ clearTimeout(to); rej(new Error('relay offline')); };
+  });
+}
+function bkQueue(){                          // silent auto-backup, debounced 8s after any library change
+  const em=(localStorage.getItem(LS_BKEMAIL)||'').trim();
+  if(!em) return;
+  clearTimeout(bkTimer);
+  bkTimer=setTimeout(async ()=>{
+    const fp=bkFingerprint();
+    if(fp===localStorage.getItem(LS_BKFP)) return;
+    try{
+      const r=await relayBackup({op:'save',email:em,data:bkPayload(),quiet:true});
+      if(r&&r.ok) localStorage.setItem(LS_BKFP,fp);
+    }catch(e){}
+  },8000);
+}
+function bkMsg(t){ const el=document.getElementById('bkMsg'); if(el) el.textContent=t; }
+function bkEmailVal(){
+  const el=document.getElementById('bkEmail');
+  const em=(el&&el.value||'').trim().toLowerCase();
+  if(!/^\S+@\S+\.\S+$/.test(em)){ bkMsg('Enter a valid email address.'); return null; }
+  localStorage.setItem(LS_BKEMAIL,em);
+  return em;
+}
+let bkMode=null;                             // 'verify' | 'restore' while a code is pending
+async function bkSave(){
+  const em=bkEmailVal(); if(!em) return;
+  const code=(document.getElementById('bkCode')&&document.getElementById('bkCode').value||'').trim();
+  if(bkMode==='verify' && /^\d{6}$/.test(code)){
+    bkMsg('Confirming…');
+    try{
+      const r=await relayBackup({op:'confirm',email:em,code});
+      if(!(r&&r.ok)){ bkMsg((r&&r.error)||'Could not confirm that code.'); return; }
+      bkMode=null; document.getElementById('bkCodeRow').style.display='none';
+    }catch(e){ bkMsg('Could not connect — try again.'); return; }
+  }
+  bkMsg('Backing up…');
+  try{
+    const r=await relayBackup({op:'save',email:em,data:bkPayload()});
+    if(r&&r.ok){
+      localStorage.setItem(LS_BKFP,bkFingerprint());
+      bkMsg('✓ '+roster.length+' player'+(roster.length===1?'':'s')+' + teams, groups and stats backed up'+(r.emailed?' — confirmation emailed':'')+'. Auto-backup is on.');
+    }else if(r&&r.needVerify){
+      bkMode='verify';
+      const s=await relayBackup({op:'verify',email:em});
+      if(s&&s.ok){ document.getElementById('bkCodeRow').style.display='flex'; bkMsg('First time: we emailed a 6-digit code — enter it above, then tap Back up again.'); }
+      else bkMsg((s&&s.error)||'Could not send the code.');
+    }else bkMsg((r&&r.error)||'Backup failed.');
+  }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+}
+async function bkRestore(){
+  const em=bkEmailVal(); if(!em) return;
+  const code=(document.getElementById('bkCode')&&document.getElementById('bkCode').value||'').trim();
+  if(bkMode!=='restore' || !/^\d{6}$/.test(code)){
+    bkMsg('Emailing you a restore code…');
+    try{
+      const r=await relayBackup({op:'code',email:em});
+      if(r&&r.ok){ bkMode='restore'; document.getElementById('bkCodeRow').style.display='flex'; bkMsg('Enter the 6-digit code from the email, then tap Restore again.'); }
+      else bkMsg((r&&r.error)||'No backup found for that email.');
+    }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+    return;
+  }
+  bkMsg('Restoring…');
+  try{
+    const r=await relayBackup({op:'get',email:em,code});
+    if(!(r&&r.ok&&r.data)){ bkMsg((r&&r.error)||'Restore failed.'); return; }
+    const d=r.data;
+    let added=0;
+    (d.players||[]).forEach(n=>{ if(n&&!roster.includes(n)){ roster.push(n); added++; } });
+    (d.teams||[]).forEach(t=>{ if(t&&!teamLib.includes(t)) teamLib.push(t); });
+    Object.assign(playerTeams, d.pteams||{});
+    Object.assign(duoTeams, d.duoTeams||{});
+    (d.groups||[]).forEach(g=>{
+      if(!g||!g.name) return;
+      const ex=groupLib.find(x=>x.name.toLowerCase()===g.name.toLowerCase());
+      if(ex) ex.members=g.members; else groupLib.push(g);
+    });
+    const inStats=d.stats||{};
+    Object.keys(inStats).forEach(n=>{
+      const inc=inStats[n];
+      if(!statsLib[n]){ statsLib[n]=inc; return; }
+      const s=statFor(n);
+      ['g','w','pts','turns','t180'].forEach(k=>{ s[k]=Math.max(s[k]||0, inc[k]||0); });
+      if(inc.best!=null) s.best=Math.max(s.best||0, inc.best);
+      Object.keys(inc.byGame||{}).forEach(gt=>{
+        const a=s.byGame[gt]=s.byGame[gt]||{g:0,w:0}, b=inc.byGame[gt];
+        a.g=Math.max(a.g,b.g||0); a.w=Math.max(a.w,b.w||0);
+      });
+    });
+    saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams(); saveGroups(); saveStats();
+    bkMode=null; document.getElementById('bkCodeRow').style.display='none';
+    try{renderLibrary();}catch(e){} renderColumns(); renderLineup(); updateStart(); renderGroups();
+    localStorage.setItem(LS_BKFP,bkFingerprint());
+    bkMsg('✓ Restored — '+added+' player'+(added===1?'':'s')+' added, teams, groups and stats merged.');
+  }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+}
 
 //============================ GROUPS + DUO TEAM NAMES ============================
 function loadDuoTeams(){ try{const v=JSON.parse(localStorage.getItem(LS_DUOS)); if(v&&typeof v==='object'&&!Array.isArray(v))return v;}catch(e){} return null; }
-function saveDuoTeams(){ localStorage.setItem(LS_DUOS,JSON.stringify(duoTeams)); }
+function saveDuoTeams(){ localStorage.setItem(LS_DUOS,JSON.stringify(duoTeams)); bkQueue(); }
 function loadGroups(){ try{const v=JSON.parse(localStorage.getItem(LS_GROUPS)); if(Array.isArray(v))return v;}catch(e){} return []; }
-function saveGroups(){ localStorage.setItem(LS_GROUPS,JSON.stringify(groupLib)); }
+function saveGroups(){ localStorage.setItem(LS_GROUPS,JSON.stringify(groupLib)); bkQueue(); }
 function duoKey(a,b){ return JSON.stringify([String(a),String(b)].map(s=>s.trim().toLowerCase()).sort()); }  // JSON key: names with any characters can't collide
 function duoTeamName(members){ if(!members||members.length!==2)return ''; return duoTeams[duoKey(members[0],members[1])]||''; }
 function setDuoTeamName(members,name){
@@ -1587,6 +1736,7 @@ function f6LifeBtn(){
     const alive=G.players.filter(q=>!q.out);
     if(alive.length===1){
       G.over=true;
+      try{ recordGameResult([alive[0].name], G.players.filter(q=>q.out).map(q=>q.name), 'fat6', null); }catch(e){}
       document.getElementById('game').classList.add('hidden');
       document.getElementById('winScreen').classList.remove('hidden');
       document.getElementById('winName').textContent=alive[0].name;
@@ -1620,6 +1770,20 @@ function pendWin(teamIdx,detail){          // winning dart thrown — wait for C
 function declareWin(teamIdx,detail){
   G.over=true;
   const t=G.teams[teamIdx];
+  try{
+    const lose=G.teams[1-teamIdx];
+    let extra=null;
+    if(!G.isCricket){                       // 01 detail: turns/points/best/180s per team member share
+      extra={};
+      G.teams.forEach(tm=>{
+        const hist=tm.history||[];
+        const per={pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
+                   best:hist.length?Math.max(...hist):null, t180:hist.filter(x=>x===180).length};
+        tm.members.forEach(n=>{ extra[n]=per; });
+      });
+    }
+    recordGameResult(t.members.slice(), lose.members.slice(), G.game, extra);
+  }catch(e){}
   document.getElementById('game').classList.add('hidden');
   document.getElementById('winScreen').classList.remove('hidden');
   document.getElementById('winName').textContent=displayName(t);
