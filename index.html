@@ -566,6 +566,8 @@
   .cricket tr.deadrow .marks svg{filter:grayscale(1) opacity(.4);}
   @keyframes markpop{0%{transform:scale(.15) rotate(-30deg);opacity:0}55%{transform:scale(1.28) rotate(6deg);opacity:1}100%{transform:scale(1) rotate(0deg)}}
   .marks.fresh svg,.smiley.fresh{animation:markpop .4s cubic-bezier(.2,1.5,.4,1);}
+  @keyframes winpulse{0%,100%{box-shadow:0 0 16px rgba(232,200,118,.45);}50%{box-shadow:0 0 38px rgba(232,200,118,.95);}}
+  #game.pendwin #endTurnBtn,#game.pendwin #cricketConfirmBtn{animation:winpulse 1.1s ease-in-out infinite;}
   #game.cricket #cricketBoard .cricket .chead .head1 .cpts{color:var(--blue-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(74,168,255,.6);}
   #game.cricket #cricketBoard .cricket .chead .head2 .cpts{color:var(--yellow-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(255,122,46,.6);}
 
@@ -1574,6 +1576,9 @@ function renderGame(){
   confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
+  var _ccw=document.getElementById('cricketConfirmBtn');
+  if(_ccw){ _ccw.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
+    _ccw.classList.toggle('primary',!!G.pendingWin); _ccw.classList.toggle('confirm-btn',!G.pendingWin); }
   document.getElementById('game').classList.toggle('pendwin',!!G.pendingWin);
   kpRender();
   fitScreen();
