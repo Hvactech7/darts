@@ -1,40 +1,38 @@
-// Darts Scorekeeper service worker — offline cache + auto-update.
-// Strategy: stale-while-revalidate. The app loads instantly from cache (works
-// fully offline), and in the background it fetches the latest from the network
-// and updates the cache, so a new version appears the next time it's opened
-// while online. Bump CACHE when the file list below changes.
-const CACHE = 'darts-v5';
-const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
-  './dk-bg.jpg'
-,  './dk-side-blue.jpg',
-  './dk-side-red.jpg'
-];
+// Retirement worker for the OLD root-scope service worker.
+//
+// Dart Keeper used to be served from "/" and registered a stale-while-revalidate
+// worker at this exact URL with scope "/". Its fetch handler was
+// `return cached || network`, so on every visit it answered "/" from cache —
+// which means a returning visitor would be handed the cached APP forever and
+// would never see the new landing page.
+//
+// Browsers re-fetch the worker script on navigation. They get THIS file instead,
+// see it differs byte-for-byte from the old one, and install it. It then wipes
+// every cache, unregisters itself, and reloads any open window so the real page
+// is fetched from the network. After that, "/" has no worker at all.
+//
+// The app's own worker now lives at /play/sw.js with scope /play/ and is a
+// completely separate registration — nothing here touches it.
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+self.addEventListener('install', function () {
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+self.addEventListener('activate', function (e) {
+  e.waitUntil((async function () {
+    try {
+      var keys = await caches.keys();
+      await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    } catch (err) {}
+    try { await self.registration.unregister(); } catch (err) {}
+    try {
+      var clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach(function (c) { if (c.url.indexOf('/play/') === -1) c.navigate(c.url); });
+    } catch (err) {}
+  })());
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req).then((resp) => {
-        if (resp && resp.status === 200) {
-          const clone = resp.clone();
-          caches.open(CACHE).then((c) => c.put(req, clone));
-        }
-        return resp;
-      }).catch(() => cached);
-      return cached || network;
-    })
-  );
+// Pass everything straight to the network while this worker is still alive.
+self.addEventListener('fetch', function (e) {
+  e.respondWith(fetch(e.request));
 });
