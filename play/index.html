@@ -1583,7 +1583,7 @@ function startGame(startTeam, leadoff, ironOrder){
 function startFat6(order){
   G={game:'fat6', mode:'ffa', isCricket:false, isFat6:true,
      players:order.map(n=>({name:n,lives:5,out:false})),
-     cur:0, darts:[], target:{v:6,m:1}, phase:'hunt',
+     cur:0, darts:[], target:{v:6,m:1,r:'out'}, phase:'hunt',
      teams:[], startTeam:0, turnStartScore:0, turnStartOpened:false,
      turnLocked:false, pendingWin:null, round:1, over:false};
   history=[]; redoStack.length=0;
@@ -1635,7 +1635,7 @@ function redo(){
 }
 
 // register one dart: value=number(0 for miss, 25 for bull), mult=1/2/3
-function throwDart(value,mult){
+function throwDart(value,mult,region){
   if(G.over)return;
   if(G.turnLocked)return;
   if(G.darts.length>=3)return;
@@ -1645,7 +1645,7 @@ function throwDart(value,mult){
   G.darts.push({value,mult,score,label,bust:false,noCount:false});
 
   if(G.isCricket){ applyCricket(value,mult); }
-  else if(G.isFat6){ applyFat6(value,mult); }
+  else if(G.isFat6){ applyFat6(value,mult,region); }
   else{ applyX01(value,mult); }
 
   if(!G.isFat6 && G.darts.length>=3) G.turnLocked=true; // all 3 thrown — require Confirm (Fat 6 auto-resolves)
@@ -1777,9 +1777,10 @@ function endTurnManual(){            // the "Confirm ▶" button
 //   "Lose a life" button = deduct a life, SAME player stays current (overtime may still set);
 //                          then either tap the target they set, or "Next player" (target stays)
 //   elimination (0 lives) advances automatically, target unchanged
-function applyFat6(value,mult){
+function applyFat6(value,mult,region){
   if(value<=0) return;                     // no per-dart misses in outcome mode
-  G.target={v:value,m:mult};
+  // FAT n and SKINNY n are DIFFERENT targets — same number, different band.
+  G.target={v:value,m:mult,r:region};
   const nm=fat6TargetLabel();
   f6NextPlayer();
   flashToast('New target: '+nm);
@@ -1816,7 +1817,10 @@ function f6NextPlayer(){
 function fat6TargetLabel(){
   const t=G.target;
   if(t.v===25) return t.m===2?'DOUBLE BULLSEYE':'SINGLE BULLSEYE';
-  return t.m===1?'FAT '+t.v:(t.m===2?'D':'T')+t.v;
+  // A single is either band: inside the triple ring = SKINNY, outside it = FAT.
+  // (r is undefined only for pre-existing states — fall back to the old FAT label.)
+  if(t.m===1) return (t.r==='in'?'SKINNY ':'FAT ')+t.v;
+  return (t.m===2?'D':'T')+t.v;
 }
 
 //============================ WIN ============================
@@ -2068,12 +2072,12 @@ function buildBoard(){
     const dark=(i%2===0);
     const single= dark?'url(#sisalDark)':'url(#sisalCream)';
     const ring=  dark?'url(#ringRed)':'url(#ringGreen)';
-    // single inner
-    paths+=seg(cx,cy,rBullOut,rTripleIn,a0,a1,single,num,1);
+    // single inner — inside the triple ring = SKINNY in Fat 6
+    paths+=seg(cx,cy,rBullOut,rTripleIn,a0,a1,single,num,1,'in');
     // triple
     paths+=seg(cx,cy,rTripleIn,rTripleOut,a0,a1,ring,num,3);
-    // single outer
-    paths+=seg(cx,cy,rTripleOut,rDoubleIn,a0,a1,single,num,1);
+    // single outer — outside the triple ring = FAT in Fat 6
+    paths+=seg(cx,cy,rTripleOut,rDoubleIn,a0,a1,single,num,1,'out');
     // double
     paths+=seg(cx,cy,rDoubleIn,rDoubleOut,a0,a1,ring,num,2);
   }
@@ -2130,7 +2134,7 @@ function buildBoard(){
   wrap.querySelector('svg').addEventListener('click',e=>{
     const el=e.target.closest('[data-v]');
     if(!el)return;
-    throwDart(parseInt(el.dataset.v,10),parseInt(el.dataset.m,10));
+    throwDart(parseInt(el.dataset.v,10),parseInt(el.dataset.m,10),el.dataset.r);
   });
   const mini=document.getElementById('miniBoard');
   if(mini){
@@ -2146,9 +2150,13 @@ function backBoard(){
   if(document.getElementById('game').classList.contains('bdopen')) closeBoard01(); else closeBoard();
   renderGame();
 }
-function seg(cx,cy,ri,ro,a0,a1,fill,num,mult){
+// `region` marks WHICH single band was hit: 'in' = inside the triple ring (SKINNY),
+// 'out' = between the triple and double rings (FAT). Only Fat 6 cares — 01 and
+// cricket score both bands identically as a single.
+function seg(cx,cy,ri,ro,a0,a1,fill,num,mult,region){
   const p=annular(cx,cy,ri,ro,a0,a1);
-  return `<path d="${p}" fill="${fill}" stroke="#aab2bc" stroke-width="1.1" stroke-linejoin="round" data-v="${num}" data-m="${mult}"></path>`;
+  const r=region?` data-r="${region}"`:'';
+  return `<path d="${p}" fill="${fill}" stroke="#aab2bc" stroke-width="1.1" stroke-linejoin="round" data-v="${num}" data-m="${mult}"${r}></path>`;
 }
 function annular(cx,cy,ri,ro,a0,a1){
   const pt=(r,a)=>{const rad=a*Math.PI/180;return [cx+r*Math.sin(rad),cy-r*Math.cos(rad)];};
