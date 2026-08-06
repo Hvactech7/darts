@@ -227,7 +227,11 @@
   .toast{font-family:var(--display);position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
        background:linear-gradient(135deg,var(--gold),#ff9d3a);color:#1a1206;
        padding:14px 24px;border-radius:14px;font-weight:800;font-size:23px;letter-spacing:.5px;
-       box-shadow:0 8px 34px rgba(255,160,40,.5);z-index:50;}
+       box-shadow:0 8px 34px rgba(255,160,40,.5);z-index:50;
+       /* purely informational — must never swallow taps. It sits bottom-centre,
+          right on top of Fat 6's "Lose a life" button, which fires a toast on
+          every target set. */
+       pointer-events:none;}
   .winbanner{text-align:center;padding:20px;}
   .winbanner .big{font-family:var(--display);font-size:44px;font-weight:900;letter-spacing:1px;margin:10px 0;
        background:linear-gradient(90deg,var(--yellow),#ffffff,var(--blue-lt));-webkit-background-clip:text;background-clip:text;color:transparent;
@@ -427,7 +431,10 @@
   #game.bdopen #playArea .gamebtns{display:flex;margin:8px auto 0;max-width:520px;width:100%;}
   #game.bdopen #endTurnBtn{display:block !important;flex:1;font-size:29px;}
   #game.bdopen #missBtn{display:none !important;}
-  #game:not(.bdopen):not(.cricket) #playArea .gamebtns #missBtn{display:none;}
+  /* 01 games hide Miss (the calculator/board overlay handles it) — but Fat 6 needs
+     this button: it is the ONLY route to f6LifeBtn(), i.e. the only way to drop a
+     heart. Excluding .fat6 here fixes that. */
+  #game:not(.bdopen):not(.cricket):not(.fat6) #playArea .gamebtns #missBtn{display:none;}
   #bdCalls{display:none;}
   #game.bdopen #bdCalls{display:flex;position:absolute;top:12px;left:0;right:0;justify-content:center;gap:34px;z-index:1;pointer-events:none;min-height:64px;align-items:center;}
   #bdCalls .bc{font-family:var(--num);font-size:75px;font-weight:700;line-height:1;}
@@ -589,6 +596,34 @@
     box-shadow:0 8px 18px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08); }
   .f6-p.cur{ border-color:#4aa8ff; box-shadow:0 0 18px rgba(74,168,255,.45), inset 0 0 12px rgba(74,168,255,.15); }
   .f6-p .lv{ color:#4aa8ff; text-shadow:0 0 8px rgba(74,168,255,.85),0 1px 2px rgba(0,0,0,.6); }
+  /* Fat 6 on tablets: the target text was eating ~115px and ~107px sat unused
+     under the buttons. Trim the type, let the board take the reclaimed height. */
+  @media (min-width:601px){
+    #game.fat6 svg.board{ max-width:90%; }
+    /* compact the chips so 5-6 players still fit on ONE row — a second row
+       costs ~73px and forces fitScreen to shrink the whole board */
+    #game.fat6 .f6-players{ margin-bottom:4px; gap:6px; }
+    #game.fat6 .f6-p{ min-width:96px; padding:5px 10px; }
+    #game.fat6 .f6-p .nm{ font-size:21px; }
+    #game.fat6 .f6-p .lv{ font-size:19px; letter-spacing:1px; }
+    /* 6 players overflow the row by ~29px — tighten ONLY at that count
+       (quantity query: fires when a chip has 5+ siblings after it) */
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6),
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) ~ .f6-p{ min-width:86px; padding:5px 6px; }
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) .nm,
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) ~ .f6-p .nm{ font-size:19px; }
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) .lv,
+    #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) ~ .f6-p .lv{ font-size:17px; letter-spacing:0; }
+    #game.fat6 .f6-target{ margin-bottom:0; }
+    #game.fat6 .f6-target .lbl{ font-size:13px; letter-spacing:2.5px; }
+    #game.fat6 .f6-target .val{ font-size:58px; }
+    #game.fat6 .f6-target .val.long{ font-size:38px; line-height:1.05; padding-top:4px; }
+    #game.fat6 .f6-phase{ font-size:19px; margin:0 0 2px; min-height:20px; }
+    /* Undo/Redo are rare in Fat 6 — shrink them. "Lose a life" is pressed every
+       missed turn, so it stays big. */
+    #game.fat6 #turnbar button{ font-size:19px; padding:10px 16px; }
+    #game.fat6 #missBtn{ font-size:24px; padding:13px 20px; }
+  }
   .f6-target .val{ color:#ffae5a; text-shadow:0 3px 4px rgba(20,10,0,.8),0 0 14px rgba(255,122,46,.85),0 0 44px rgba(255,122,46,.4); }
   .f6-phase{ color:#e8c876; }
   /* win screen */
@@ -695,6 +730,11 @@
     .f6-target .val{font-size:57px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
+    /* the -58px pull (from the 01 layout) tucks Undo/Redo under the board — fine
+       on a tablet where the circle leaves empty corners, but on a phone the board
+       is small enough that they collide. There's ample slack here, so drop it. */
+    #game.fat6 #playArea #undoBtn,
+    #game.fat6 #playArea #redoBtn{ margin-top:0; }
   }
 
 </style>
@@ -1593,7 +1633,11 @@ function startFat6(order){
   document.getElementById('game').classList.remove('hidden');
   document.getElementById('cricketBoard').classList.add('hidden');
   const g=document.getElementById('game');
-  g.classList.remove('cricket','board-open');
+  // Clear EVERY mode class the previous game may have left behind. startGame()
+  // gets this via applyInputMode(); Fat 6 never called it, so coming from an 01
+  // game left `kpmode` (which hides #missBtn — the only way to lose a life) and
+  // `bdopen` (which pins #playArea as a fullscreen overlay).
+  g.classList.remove('cricket','board-open','kpmode','bdopen','pendwin');
   g.classList.add('fat6');
   document.getElementById('missBtn').textContent='\ud83d\udc94 Lose a life';
   buildBoard();
