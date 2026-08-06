@@ -1845,6 +1845,7 @@ function f6LifeBtn(){
       document.getElementById('winScreen').classList.remove('hidden');
       document.getElementById('winName').textContent=shortName(alive[0].name);
       document.getElementById('winDetail').textContent='Last one standing — Fat 6';
+      clearGameState();                // game finished — nothing to resume
       return;
     }
     flashToast(shortName(p.name)+' is OUT!');
@@ -1895,6 +1896,7 @@ function declareWin(teamIdx,detail){
   document.getElementById('winScreen').classList.remove('hidden');
   document.getElementById('winName').textContent=displayName(t);
   document.getElementById('winDetail').textContent=detail||'';
+  clearGameState();                    // game finished — nothing to resume
 }
 function displayName(t){
   if(config.mode==='2p'||t.members.length===1) return shortName(t.members[0]);
@@ -1908,6 +1910,7 @@ function renderGame(){
     document.getElementById('undoBtn').disabled=history.length===0;
     var _fr=document.getElementById('redoBtn'); if(_fr) _fr.disabled=redoStack.length===0;
     fitScreen();
+    gsQueue();
     return;
   }
   renderScoreboard();
@@ -1934,6 +1937,7 @@ function renderGame(){
   document.getElementById('game').classList.toggle('pendwin',!!G.pendingWin);
   kpRender();
   fitScreen();
+  gsQueue();
 }
 function fitScreen(){
   var g=document.getElementById('game');
@@ -2350,6 +2354,7 @@ document.getElementById('cqCancel').onclick=()=>document.getElementById('confirm
 document.getElementById('cqQuit').onclick=()=>{
   document.getElementById('confirmQuit').classList.add('hidden');
   G=null; pausedSig=null; history=[]; redoStack.length=0;
+  clearGameState();                    // deliberate quit — don't resurrect it
   toMenu();
 };
 document.getElementById('rematchBtn').onclick=showPiddle;
@@ -2392,9 +2397,77 @@ function shortName(n){
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+//============================ IN-PROGRESS GAME PERSISTENCE ============================
+// Until now G lived only in memory, so closing the app (or iOS evicting the PWA)
+// mid-game lost the score entirely. Snapshot the live game to localStorage and
+// bring it back on launch. `var` throughout — this runs at startup, and startup
+// code must never touch let/const declared further down.
+var LS_GAME='darts_game_v1';
+var GAME_TTL=24*60*60*1000;          // don't resurrect a game older than a day
+var gsTimer=null;
+
+function gsPaused(){ return document.getElementById('game').classList.contains('hidden'); }
+
+function saveGameState(){
+  try{
+    if(!G || G.over){ clearGameState(); return; }
+    localStorage.setItem(LS_GAME, JSON.stringify({
+      v:1, ts:Date.now(),
+      cfg:{game:config.game, mode:config.mode},
+      teamSel:teamSel, f6Sel:f6Sel,
+      paused:gsPaused(), pausedSig:pausedSig,
+      G:G,
+      hist:history.slice(-40),          // enough undo to be useful, small enough to write often
+      redo:redoStack.slice(-20)
+    }));
+  }catch(e){}                          // quota/private-mode: never break the game over a save
+}
+function gsQueue(){                     // debounced — renderGame fires a lot
+  try{ clearTimeout(gsTimer); }catch(e){}
+  gsTimer=setTimeout(saveGameState,180);
+}
+function clearGameState(){ try{ clearTimeout(gsTimer); localStorage.removeItem(LS_GAME); }catch(e){} }
+
+function restoreGameState(){
+  var raw=null;
+  try{ raw=localStorage.getItem(LS_GAME); }catch(e){ return false; }
+  if(!raw) return false;
+  var s=null;
+  try{ s=JSON.parse(raw); }catch(e){ clearGameState(); return false; }
+  if(!s || s.v!==1 || !s.G || s.G.over){ clearGameState(); return false; }
+  if(!s.ts || (Date.now()-s.ts)>GAME_TTL){ clearGameState(); return false; }
+  try{
+    config.game=s.cfg.game; config.mode=s.cfg.mode;
+    teamSel=s.teamSel||[[],[]]; f6Sel=s.f6Sel||[];
+    // Re-run the real starters so the DOM, mode classes and board are set up
+    // exactly as they would be normally, then swap the saved state back in.
+    if(s.G.isFat6) startFat6((s.G.players||[]).map(function(p){return p.name;}));
+    else startGame(s.G.startTeam||0,{},s.G.ironOrder||undefined);
+    G=s.G;
+    history.length=0; (s.hist||[]).forEach(function(h){ history.push(h); });
+    redoStack.length=0; (s.redo||[]).forEach(function(h){ redoStack.push(h); });
+    _prevCMarks=null;
+    if(s.paused){                       // they were sat on the menu with a game paused
+      pausedSig=s.pausedSig||null;
+      toMenu();
+    }else{
+      ['setup','winScreen','piddle'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+      document.getElementById('game').classList.remove('hidden');
+      renderGame();
+    }
+    return true;
+  }catch(e){ clearGameState(); return false; }
+}
+
+// iOS can kill a backgrounded PWA without warning — flush synchronously on the
+// way out rather than relying on the debounce.
+window.addEventListener('pagehide', saveGameState);
+window.addEventListener('visibilitychange', function(){ if(document.hidden) saveGameState(); });
+
 //============================ INIT ============================
 resetSelection();
 renderColumns();renderLineup();updateStart();
+restoreGameState();          // bring back an in-progress game after an app restart
 (function(){
   const c1=document.getElementById('col1'), c2=document.getElementById('col2'); let s=false;
   const sync=(a,b)=>a.addEventListener('scroll',()=>{ if(s)return; s=true; b.scrollTop=a.scrollTop; s=false; });
