@@ -354,6 +354,10 @@
   #game.fat6 #scoreboard{display:none;}
   #game.fat6{margin-top:6px;}
   #game.fat6 #playArea .boardwrap{margin-top:0;}
+  /* Fat 6 hides the input toggle and dart row, so Undo/Redo were left sitting
+     next to each other in the bottom-left. Push them to opposite corners under
+     the board — Undo left, Redo right, level with each other. */
+  #game.fat6 #playArea .turnbar{ width:100%; justify-content:space-between; }
   .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px;}
   .f6-p{border:2px solid rgba(255,255,255,.10);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;
     background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%),rgba(20,16,50,.6);
@@ -434,7 +438,15 @@
   #game.kpmode.bdopen #boardwrap{display:flex !important;margin:0 !important;justify-content:center;}
   #game.bdopen svg.board{max-width:min(97vw,90vh) !important;width:min(97vw,90vh);}
   #game.kpmode.bdopen #kpWrap{display:none !important;}
-  #game.bdopen .turnbar{display:none !important;}
+  /* The 01 board overlay used to hide the whole turnbar, which took Undo/Redo
+     with it — nothing to correct a mis-tap with. Keep the bar, drop only the
+     pieces the overlay replaces (input toggle + dart slots; the calls strip at
+     the top already shows the darts), and pin Undo/Redo to the bottom corners. */
+  #game.bdopen .turnbar{display:flex !important;position:absolute;left:14px;right:14px;bottom:82px;
+    margin:0;justify-content:space-between;align-items:center;z-index:2;pointer-events:none;}
+  #game.bdopen .turnbar #undoBtn,#game.bdopen .turnbar #redoBtn{
+    display:block;pointer-events:auto;margin:0;flex:0 0 auto;border-radius:20px;}
+  #game.bdopen .turnbar #inputToggle,#game.bdopen .turnbar .darts{display:none !important;}
   #game.bdopen #playArea .gamebtns{display:flex;margin:8px auto 0;max-width:520px;width:100%;}
   #game.bdopen #endTurnBtn{display:block !important;flex:1;font-size:29px;}
   #game.bdopen #missBtn{display:none !important;}
@@ -713,14 +725,14 @@
     #setup h2{ font-size:15px; margin:0 0 5px; }
     #setup .card{ padding:2px 12px 8px; margin-bottom:7px; }
     #gameSel button{ font-size:15px; padding:7px 6px; }
-    #startBtn{ font-size:17px !important; padding:9px !important; margin:0 0 7px !important; }
+    #startBtn{ font-size:17px !important; padding:9px !important; margin:7px 0 0 !important; }
     #azBar button{ padding:3px 0; font-size:13px; }
     /* Match-up lives here now: fixed-height heads holding each side's picks */
     .teamcol-head{ font-size:20px; padding:5px 6px; }
     #pickHeads .teamcol-head{ height:62px; }
     .th-team{ padding:2px 6px !important; font-size:12.5px !important; }
     #pickHeads{ margin-bottom:4px; }
-    #manageBtn{ margin-top:7px !important; padding:7px 14px; font-size:13.5px; }
+    #manageBtn{ margin:0 0 7px !important; padding:7px 14px; font-size:13.5px; }
     /* list rows a touch tighter so 4 fit — names still by far the biggest text */
     #listScroll .nameopt{ font-size:40px; padding:6px 14px; }
     #listScroll .nopt-team{ font-size:17px; }
@@ -782,13 +794,13 @@
     #setup h2{ font-size:13px; margin:0 0 4px; letter-spacing:1.6px; }
     #setup .card{ padding:2px 9px 7px; margin-bottom:6px; border-width:8px; border-image-width:8px; }
     #gameSel button{ font-size:12.5px; padding:6px 3px; letter-spacing:.6px; }
-    #startBtn{ font-size:15px !important; padding:8px !important; margin:0 0 6px !important; }
+    #startBtn{ font-size:15px !important; padding:8px !important; margin:6px 0 0 !important; }
     /* Match-up lives here now: fixed-height heads holding each side's picks */
     .teamcol-head{ font-size:15px; padding:4px 4px; letter-spacing:.6px; }
     #pickHeads .teamcol-head{ height:48px; }
     .th-team{ padding:1px 4px !important; font-size:10.5px !important; }
     #pickHeads{ margin-bottom:4px; }
-    #manageBtn{ margin-top:7px !important; padding:7px 10px; font-size:12.5px; }
+    #manageBtn{ margin:0 0 6px !important; padding:7px 10px; font-size:12.5px; }
     /* Backup card: compact here too. nowrap keeps "Back up now" on ONE line —
        wrapping doubled the button height and undid the shrink. */
     #bkCard h2{ margin:0 0 4px; }
@@ -906,8 +918,10 @@
 
 
     <!-- Match-up card removed 2026-08-07: the picked names now live in the
-         Select Players column heads, and the height goes to the banner. -->
-    <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;margin:0 0 10px;" disabled>Start Game</button>
+         Select Players column heads, and the height goes to the banner.
+         Swapped 2026-08-07: Manage Players sits above the picker, Start Game
+         went to the bottom of it (it's the last thing you do). -->
+    <button class="accent" id="manageBtn" style="width:100%;margin:0 0 10px;">⚙ Manage Players</button>
 
     <div class="card" id="pickCard">
       <h2>Select Players</h2>
@@ -932,7 +946,7 @@
         <div class="namelist" id="col1"></div>
         <div class="namelist" id="col2"></div>
       </div>
-      <button class="accent" id="manageBtn" style="width:100%;margin-top:14px;">⚙ Manage Players</button>
+      <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;margin-top:14px;" disabled>Start Game</button>
     </div>
 
     <!-- (Pairings card removed 2026-08-07 — the players list gets the room.
@@ -2207,6 +2221,8 @@ function renderDarts(){
     }
     el.appendChild(d);
   }
+  // slot heights change with the labels — keep ← Back sitting under them
+  if(typeof placeCricketBack==='function') placeCricketBack();
 }
 
 let _prevCMarks=null;   // display-only: which cells changed since last render (drives the pop)
@@ -2355,8 +2371,28 @@ function buildBoard(){
     mini.querySelector('.mini-inner').addEventListener('click',openBoard);
   }
 }
-function openBoard(){ document.getElementById('game').style.transform=''; document.getElementById('game').classList.add('board-open'); }
-function closeBoard(){ document.getElementById('game').classList.remove('board-open'); fitScreen(); }
+function openBoard(){
+  document.getElementById('game').style.transform='';
+  document.getElementById('game').classList.add('board-open');
+  placeCricketBack();
+}
+// ← Back used to sit at the top-left, right on top of the first dart-score box.
+// Drop it just under that box. Measured live so it tracks the slot size on any
+// screen instead of relying on a hard-coded offset that silently drifts.
+function placeCricketBack(){
+  var back=document.getElementById('backBtn'), row=document.getElementById('dartsRow');
+  if(!back||!row) return;
+  var g=document.getElementById('game');
+  if(!g.classList.contains('cricket')||!g.classList.contains('board-open')){ back.style.top=''; return; }
+  var pa=document.getElementById('playArea');
+  var rr=row.getBoundingClientRect(), pr=pa.getBoundingClientRect();
+  if(rr.height>0) back.style.top=Math.round(rr.bottom-pr.top+8)+'px';
+}
+function closeBoard(){
+  document.getElementById('game').classList.remove('board-open');
+  var b=document.getElementById('backBtn'); if(b) b.style.top='';
+  fitScreen();
+}
 function backBoard(){
   while(G.darts.length>0) undo();
   redoStack.length=0;
