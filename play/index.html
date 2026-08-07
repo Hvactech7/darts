@@ -3119,14 +3119,27 @@ restoreGameState();          // bring back an in-progress game after an app rest
 // in progress, nothing being typed.
 window.dkSafeToReload=function(){
   try{
-    if(G && !G.over) return false;                       // mid-game
-    var setupEl=document.getElementById('setup');
-    if(!setupEl || setupEl.classList.contains('hidden')) return false;
+    // An active game does NOT block updating: the game state is persisted and
+    // restored across reloads (that's the whole mid-game persistence feature).
+    // The old "if a game exists, wait" rule meant the update almost NEVER
+    // auto-applied — with persistence there is nearly always an unfinished
+    // game, so Nathan was stuck doing the open-close-open dance. Only defer
+    // when a reload would interrupt an ACTION in progress:
     var a=document.activeElement;
     if(a && a.matches && a.matches('input,textarea,select')) return false;  // typing
+    var cq=document.getElementById('confirmQuit');
+    if(cq && !cq.classList.contains('hidden')) return false;                // quit modal open
+    var g=document.getElementById('game');
+    if(g && (g.classList.contains('bdopen')||g.classList.contains('board-open'))) return false;  // mid-throw on the board
+    if(G && G.pendingWin) return false;                                     // at the confirm-winner gate
+    var pd=document.getElementById('piddle');
+    if(pd && !pd.classList.contains('hidden')) return false;                // mid bull-off
     return true;
   }catch(e){ return false; }
 };
+// Flush the in-progress game synchronously before an update reload, so the
+// restore lands exactly where play left off (the normal save is debounced).
+window.dkFlushGame=function(){ try{ saveGameState(); }catch(e){} };
 window.dkAfterUpdate=function(){                          // called on the fresh load
   try{ flashToast('✓ Updated to the latest version'); }catch(e){}
 };
@@ -3198,6 +3211,8 @@ if ('serviceWorker' in navigator) {
           sessionStorage.setItem('dkLastAutoReload', String(Date.now()));
           sessionStorage.setItem('dkJustUpdated', '1');
         } catch (e) {}
+        // flush the in-progress game so the post-reload restore is exact
+        try { if (typeof window.dkFlushGame === 'function') window.dkFlushGame(); } catch (e) {}
         location.reload();
       }
 
