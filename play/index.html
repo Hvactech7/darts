@@ -911,19 +911,32 @@
     #pidTitle{font-size:25px;letter-spacing:1px;}   /* keeps the title to 2 lines */
     .pid-name{font-size:22px;padding:11px 12px;}
     .pid-num{width:30px;height:30px;font-size:23px;}
-    /* 01 score cards */
-    #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:296px;padding:10px 10px;}
-    #game:not(.cricket) .scoreboard .team .thrower{position:absolute;top:8px;left:10px;right:10px;font-size:20px;line-height:1.15;
-      white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-align:left;min-height:0;}
-    #game:not(.cricket) .scoreboard .team2 .thrower{text-align:right;}
-    #game:not(.cricket) .scoreboard .team .big{font-size:60px;top:52px;}
-    #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:108px;font-size:14px;letter-spacing:1px;}
-    #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{top:108px;font-size:14px;}
-    #game:not(.cricket) .scoreboard .team .team-hist{top:132px;gap:4px;}
-    /* shorter card here — cap the scroller so the newest chip clears its edge */
-    .hist-scroll{max-height:150px;gap:4px;}
-    .histscore{font-size:14px;min-width:30px;padding:2px 5px;}
-    .histlbl{font-size:10px;}
+    /* 01 score cards — REBUILT for phones (2026-08-07). The tablet's corner-
+       tuck layout (everything position:absolute at fixed offsets) collapsed
+       into an overlapping, illegible tower at ~170px card width. On a phone
+       the card is a plain centred COLUMN — name, big score, team — with the
+       turn history as a horizontal scroller along the bottom (newest on the
+       left, matching newest-on-top elsewhere). Short cards, full width used. */
+    /* ⚠️ selectors carry :not(.fat6) to OUT-SPECIFY the mid-file corner-tuck
+       rules (1 id + 5 classes) — with anything weaker they silently lose and
+       the absolute layout comes back (the exact overlap being fixed). */
+    #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:0;height:auto;
+      padding:8px 10px 9px;display:flex;flex-direction:column;align-items:center;
+      text-align:center;gap:2px;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:static;font-size:19px;
+      line-height:1.1;white-space:nowrap;overflow:hidden;max-width:100%;
+      text-align:center;min-height:0;display:block;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team2 .thrower{text-align:center;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .big{position:static;font-size:64px;line-height:1;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .name{position:static;
+      font-size:12px;letter-spacing:1px;opacity:.85;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .small{font-size:11px;min-height:0;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{position:static;width:100%;
+      flex-direction:row;align-items:center;gap:6px;margin-top:3px;}
+    .histlbl{font-size:10px;flex:0 0 auto;margin:0;}
+    .hist-scroll{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;
+      gap:4px;width:100%;min-width:0;padding-bottom:2px;}
+    .histscore{font-size:14px;min-width:34px;padding:3px 6px;flex:0 0 auto;}
     /* board mode */
     .dartfloat{width:46px;gap:8px;top:42%;}
     .dartfloat span{font-size:34px;}
@@ -2263,8 +2276,9 @@ function renderScoreboard(){
       ${histHtml}`;
     el.appendChild(d);
   });
-  // Pin each strip to the newest score, which now sits at the TOP of the list.
-  el.querySelectorAll('.hist-scroll').forEach(s=>{ s.scrollTop=0; });
+  // Pin each strip to the newest score — top of the list on tablets (vertical),
+  // left end on phones (horizontal). Newest is first in the DOM either way.
+  el.querySelectorAll('.hist-scroll').forEach(s=>{ s.scrollTop=0; s.scrollLeft=0; });
 }
 
 function renderFloats(){
@@ -3089,6 +3103,8 @@ window.dkAfterUpdate=function(){                          // called on the fresh
 document.addEventListener('touchmove',function(e){
   for(var el=e.target; el && el!==document.body && el!==document.documentElement; el=el.parentElement){
     if(el.scrollHeight>el.clientHeight){ var oy=getComputedStyle(el).overflowY; if(oy==='auto'||oy==='scroll') return; }
+    // horizontal scrollers too — the phone's turn-history strip scrolls sideways
+    if(el.scrollWidth>el.clientWidth){ var ox=getComputedStyle(el).overflowX; if(ox==='auto'||ox==='scroll') return; }
   }
   e.preventDefault();
 },{passive:false});
