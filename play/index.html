@@ -508,6 +508,9 @@
     font-size:19px;padding:12px 18px;align-self:auto;}
   #game.bdopen #endTurnBtn{display:block !important;flex:1;font-size:29px;}
   #game.bdopen #missBtn{display:none !important;}
+  /* cricket overlay: no Miss button either (Nathan) — Score It with no darts
+     thrown already records 3 misses (endTurnManual pads the turn) */
+  #game.cricket.board-open #missBtn{display:none !important;}
   /* 01 games hide Miss (the calculator/board overlay handles it) — but Fat 6 needs
      this button: it is the ONLY route to f6LifeBtn(), i.e. the only way to drop a
      heart. Excluding .fat6 here fixes that. */
