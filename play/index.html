@@ -337,7 +337,8 @@
   #game.cricket #cricketBoard .cricket .dt-spacer{visibility:hidden;}
   #game.cricket #cricketBoard .cricket .dt-v:active,#game.cricket #cricketBoard .cricket .dt-d:active,#game.cricket #cricketBoard .cricket .dt-t:active{background:rgba(79,124,255,.3);}
   /* ===== Fat 6 (free-for-all Big Six) ===== */
-  #setup.fat6 #modeCard,#setup.fat6 #lineupCard{display:none;}
+  /* Fat 6 is an individuals game — no Mode, no Match-up, and no Pairings */
+  #setup.fat6 #modeCard,#setup.fat6 #lineupCard,#setup.fat6 #groupCard{display:none;}
   #setup.fat6 .teamcol:nth-child(2){display:none;}
   #piddle.fat6 .teamcol:nth-child(2){display:none;}
   #fat6Board{display:none;}
@@ -669,10 +670,25 @@
   #game:not(.cricket):not(.fat6) .scoreboard .team .big{top:46px;font-size:125px;}
   #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{top:60px;}
 
+  /* ==================== STACKED NAME + TEAM ROWS (2026-08-07) ==================== */
+  /* Long player names were colliding with the team label/select in both the
+     Select Players picker and the Player Library. Name on top, team underneath,
+     noticeably smaller. */
+  .nameopt{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;}
+  .nameopt .nopt-name{display:block;line-height:1.05;}
+  .nameopt .nopt-team{font-size:19px;letter-spacing:1.2px;white-space:normal;line-height:1.1;}
+  .librow{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:12px;row-gap:7px;}
+  .librow .lname,.librow .lnameEdit{grid-column:1;grid-row:1;}
+  .librow .teamsel{grid-column:1;grid-row:2;justify-self:start;max-width:100%;
+       font-size:16px;font-weight:600;padding:6px 10px;}
+  .librow button{grid-column:2;grid-row:1 / span 2;align-self:center;}
+
   /* ==================== PHONE (iPhone-width) PASS ==================== */
   @media (max-width:600px){
     /* menu */
-    .nameopt{font-size:25px;padding:10px 12px;gap:6px;}
+    .nameopt{font-size:25px;padding:10px 12px;gap:2px;}
+    .nameopt .nopt-team{font-size:13px;letter-spacing:.8px;}
+    .librow .teamsel{font-size:14px;padding:5px 8px;}
     #azBar{flex-wrap:wrap;gap:3px;}
     #azBar button{flex:0 0 calc(100%/13 - 3px);padding:9px 0;font-size:18px;}
     .teamcol-head{font-size:16px;letter-spacing:1px;padding:8px 4px;}
@@ -769,9 +785,10 @@
       <h2 id="slotsTitle">Line-up</h2>
       <div id="slots" class="row"></div>
       <p class="small center" id="lineupHint" style="margin-top:10px;"></p>
+      <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;margin-top:12px;" disabled>Start Game</button>
     </div>
 
-    <div class="card">
+    <div class="card" id="pickCard">
       <h2>Select Players</h2>
       <div id="azBar"></div>
       <div class="teamcols">
@@ -788,13 +805,13 @@
     </div>
 
     <div class="card" id="groupCard">
-      <h2>👥 Groups</h2>
+      <h2>👥 Pairings</h2>
       <div id="groupChips" class="row"></div>
       <div class="row" style="margin-top:8px;">
-        <input type="text" id="groupName" class="grow" placeholder="Group name…" autocomplete="off">
+        <input type="text" id="groupName" class="grow" placeholder="Pairing name…" autocomplete="off">
         <button class="accent" id="saveGroupBtn">Save</button>
       </div>
-      <p class="small" id="groupHint" style="margin-top:6px;">Save the current line-up as a group, or tap a group to load it.</p>
+      <p class="small" id="groupHint" style="margin-top:6px;">Save the current line-up as a pairing, or tap a pairing to load it.</p>
     </div>
 
     <div class="card hidden" id="duoCard">
@@ -807,7 +824,6 @@
       <p class="small" style="margin-top:6px;">Names save automatically for this pair — next time these two team up, their name comes back.</p>
     </div>
 
-    <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;" disabled>Start Game</button>
   </div>
 
   <!-- ================= QUIT CONFIRM ================= -->
@@ -859,7 +875,7 @@
     </div>
     <div class="card">
       <h2>☁ Backup &amp; Restore</h2>
-      <p class="small" style="margin:0 0 10px;">Players, teams, groups and stats back up to the family relay. One email covers every device.</p>
+      <p class="small" style="margin:0 0 10px;">Players, teams, pairings and stats back up to the family relay. One email covers every device.</p>
       <div class="row" style="margin-bottom:10px;">
         <input type="text" id="bkEmail" class="grow" placeholder="you@email.com" autocomplete="email" inputmode="email">
       </div>
@@ -1185,7 +1201,17 @@ function renderLineup(){
 }
 function updateStart(){
   refreshDuoCard();
-  if(config.game==='fat6'){ document.getElementById('startBtn').disabled = f6Sel.length<2; return; }
+  // Start Game lives at the bottom of the Match-up card — but Fat 6 HIDES that
+  // card (#setup.fat6 #lineupCard{display:none}), so in Fat 6 it slots in just
+  // ABOVE the Select Players card instead.
+  var _sb=document.getElementById('startBtn');
+  if(config.game==='fat6'){
+    var _pick=document.getElementById('pickCard');
+    if(_sb.nextElementSibling!==_pick) _pick.parentElement.insertBefore(_sb,_pick);
+    _sb.disabled = f6Sel.length<2; return;
+  }
+  var _lc=document.getElementById('lineupCard');
+  if(_sb.parentElement!==_lc) _lc.appendChild(_sb);
   const ready=teamSel[0].length===reqFor(0) && teamSel[1].length===reqFor(1);
   document.getElementById('startBtn').disabled=!ready;
 }
@@ -1362,7 +1388,7 @@ async function bkSave(){
     const r=await relayBackup({op:'save',email:em,data:bkPayload()});
     if(r&&r.ok){
       localStorage.setItem(LS_BKFP,bkFingerprint());
-      bkMsg('✓ '+roster.length+' player'+(roster.length===1?'':'s')+' + teams, groups and stats backed up'+(r.emailed?' — confirmation emailed':'')+'. Auto-backup is on.');
+      bkMsg('✓ '+roster.length+' player'+(roster.length===1?'':'s')+' + teams, pairings and stats backed up'+(r.emailed?' — confirmation emailed':'')+'. Auto-backup is on.');
     }else if(r&&r.needVerify){
       bkMode='verify';
       const s=await relayBackup({op:'verify',email:em});
@@ -1414,7 +1440,7 @@ async function bkRestore(){
     bkMode=null; document.getElementById('bkCodeRow').style.display='none';
     try{renderLibrary();}catch(e){} renderColumns(); renderLineup(); updateStart(); renderGroups();
     localStorage.setItem(LS_BKFP,bkFingerprint());
-    bkMsg('✓ Restored — '+added+' player'+(added===1?'':'s')+' added, teams, groups and stats merged.');
+    bkMsg('✓ Restored — '+added+' player'+(added===1?'':'s')+' added, teams, pairings and stats merged.');
   }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
 }
 
@@ -1447,7 +1473,7 @@ function setGroupHint(msg){ const el=document.getElementById('groupHint'); if(el
 function currentLineup(){ return config.game==='fat6' ? f6Sel.slice() : teamSel[0].concat(teamSel[1]); }
 function saveGroupFromLineup(){
   const name=document.getElementById('groupName').value.trim();
-  if(!name){ setGroupHint('Type a group name first.'); return; }
+  if(!name){ setGroupHint('Type a pairing name first.'); return; }
   const members=currentLineup();
   if(members.length<2){ setGroupHint('Pick the players first, then save.'); return; }
   const ex=groupLib.find(g=>g.name.toLowerCase()===name.toLowerCase());
@@ -1466,7 +1492,7 @@ function loadGroup(id){
   else if(m.length===2){ config.mode='2p'; teamSel=[[m[0]],[m[1]]]; }
   else if(m.length===4){ config.mode='2t'; teamSel=[[m[0],m[1]],[m[2],m[3]]]; }
   else if(m.length===3){ config.mode='iron'; teamSel=[[m[0],m[1]],[m[2]]]; }
-  else { setGroupHint('“'+g.name+'” has '+m.length+' players — use Fat 6 for that group.'); return; }
+  else { setGroupHint('“'+g.name+'” has '+m.length+' players — use Fat 6 for that pairing.'); return; }
   document.querySelectorAll('#modeSel button').forEach(b=>b.classList.toggle('on',b.dataset.mode===config.mode));
   renderColumns();renderLineup();updateStart();
   setGroupHint('Loaded “'+g.name+'”.');
