@@ -2619,7 +2619,12 @@ function fitMenu(){
   // FLOOR = at least 4 full name rows in view (Nathan's minimum), measured from
   // a real row so it tracks font/team-line changes.
   setupEl.scrollTop=0;
-  setupEl.style.setProperty('--mz',1);   // always measure from natural size first
+  // Measure from natural size every time — zoom AND the container cap below
+  // must be cleared first, or each pass inherits the last pass's constraints
+  // and the menu can never grow back. Reset and measurement happen in one
+  // synchronous block, so the browser only ever paints the final result.
+  setupEl.style.setProperty('--mz',1);
+  setupEl.style.maxHeight='';
   function contentBottom(){
     var b=0;
     [].slice.call(setupEl.children).forEach(function(k){
@@ -2636,31 +2641,39 @@ function fitMenu(){
   var row=ls.querySelector('.nameopt');
   var rowFULL=row?row.getBoundingClientRect().height:66;   // natural row height
   var FLOOR=Math.ceil(rowFULL*4 + 6*3 + 2);       // 4 full name rows — Nathan's minimum
+  var MIN3=Math.ceil(rowFULL*3 + 6*2 + 2);        // absolute floor before we allow scrolling
   ls.style.maxHeight=FLOOR+'px';
-  // If the chrome is still over budget with the list at its 4-row floor, shrink
-  // the WHOLE menu uniformly with `zoom`. Unlike transform, zoom reduces real
-  // LAYOUT height — which is the only thing that can stop Manage Players from
-  // being pushed off the bottom. The banner is sacred: it shrinks only here,
-  // in proportion with every other element, never alone and never distorted.
-  var mz=1;
-  for(var pass=0; pass<5; pass++){
-    var over=contentBottom() - (avail - 2);
-    if(over<=0) break;
-    var visNeed=(contentBottom()-top), visHave=(avail-2-top);
-    if(visNeed<=0) break;
-    mz=Math.max(0.7, mz*(visHave/visNeed) - 0.004);   // small bias against measurement lag
-    setupEl.style.setProperty('--mz',mz);
+  // ⚠️ EVERY number below is measured at --mz:1 and the answer computed in ONE
+  // shot. Do NOT re-measure after applying zoom: Safari and Chrome disagree on
+  // whether getBoundingClientRect includes an ancestor's zoom, and an iterative
+  // "shrink until it fits" loop reading those rects shrank 5× on Nathan's iPad
+  // (tiny menu, huge empty gap) while looking perfect in the Chrome preview.
+  var need=contentBottom()-top;                   // natural height with the list at FLOOR
+  var have=avail-top-PAD;                         // room we actually have
+  var mz=1, listH=FLOOR;
+  if(need<=have){
+    listH=FLOOR+Math.floor(have-need);            // room to spare → grow the list
+  }else{
+    // Over budget. Shrink the WHOLE menu uniformly with `zoom` (it reduces real
+    // LAYOUT height, unlike transform). The banner is sacred: it changes size
+    // only here, in proportion with every other element, never alone.
+    mz=Math.max(0.85, have/need);                 // gentle cap — never a shrunken-looking menu
+    var stillOver=need*mz-have;                   // what zoom alone couldn't absorb
+    if(stillOver>0) listH=Math.max(MIN3, Math.floor(FLOOR-stillOver/mz));
   }
-  // Hand whatever room is left to the players list (local = zoomed units).
-  var slack=(avail - contentBottom() - PAD)/mz;
-  ls.style.maxHeight=Math.max(FLOOR, Math.floor(FLOOR + slack))+'px';
-  if(contentBottom() > avail-2){                   // expansion overshot — give it back
-    ls.style.maxHeight=FLOOR+'px';
-  }
+  // Identical result → write nothing, so the ResizeObserver has no reason to
+  // fire again and the fit can't ping-pong.
+  var sig=mz.toFixed(4)+'|'+listH;
+  if(fitMenu._sig!==sig){ fitMenu._sig=sig; ls.style.maxHeight=listH+'px'; }
+  setupEl.style.setProperty('--mz', mz);
+  // Cap the scroll container at the visible bottom. Without this, iOS can hand
+  // us a container taller than the screen: content sitting in that hidden strip
+  // overflows nothing, so it never becomes scrollable and simply can't be
+  // reached — the exact trap that clipped Manage Players.
+  setupEl.style.maxHeight=Math.max(160, Math.floor(avail-top))+'px';
   // NEVER hard-lock: a wrong fit with overflow:hidden strands the bottom of the
-  // menu (Nathan hit exactly that — Manage Players clipped and unreachable).
-  // When the content genuinely fits there is nothing to scroll, so 'auto' feels
-  // identical to a lock; when a device surprises us, it self-heals instead.
+  // menu. When the content genuinely fits there is nothing to scroll, so 'auto'
+  // feels identical to a lock; when a device surprises us, it self-heals.
   setupEl.style.overflowY='auto';
 }
 // True bottom of what the user can actually SEE. iOS standalone reports element
