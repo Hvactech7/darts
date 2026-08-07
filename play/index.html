@@ -523,7 +523,16 @@
   #bdCalls .bc:last-child{animation:markpop .35s cubic-bezier(.2,1.5,.4,1);}
   #game.kpmode .dartfloat{display:none;}
   #game.bdopen #backBtn{display:block;position:absolute;top:14px;left:14px;z-index:2;}
-  @media (max-width:600px){ #bdCalls{gap:16px;min-height:44px;} #bdCalls .bc{font-size:44px;} #bdCalls .bc.lng{font-size:29px;}
+  @media (max-width:600px){
+    /* The board overlay is position:fixed over the whole screen, so it ignores
+       the wrap's safe-area padding — the old top-centre calls band sat under
+       the iPhone's notch/Dynamic Island. Now ← Back and the calls share one
+       row, pushed below the island by env(safe-area-inset-top), calls sitting
+       just to the right of the button (Nathan). */
+    #game.bdopen #backBtn{top:calc(env(safe-area-inset-top, 0px) + 10px);left:10px;}
+    #game.bdopen #bdCalls{top:calc(env(safe-area-inset-top, 0px) + 10px);
+      left:136px;right:8px;justify-content:center;align-items:center;min-height:52px;gap:12px;}
+    #bdCalls .bc{font-size:36px;} #bdCalls .bc.lng{font-size:22px;}
     /* A phone can't fit "Undo | Confirm — 117 | Redo" as words: Confirm gets
        squeezed to ~84px and wraps to three lines. Arrows only out here. */
     #game.bdopen #playArea .gamebtns{gap:8px;}
@@ -534,7 +543,7 @@
     #game.bdopen #playArea .gamebtns #endTurnBtn{font-size:20px !important;white-space:nowrap;}
     /* narrow screen: the centred dart calls reach the top-left corner, so ←Back
        sat on top of the first one (same defect as the cricket overlay) */
-    #game.bdopen #backBtn{top:76px;}   /* calls band runs to ~66px with 3 darts */
+    /* (backBtn top now set beside the calls row above, safe-area aware) */
   }
 
   /* A–Z jump bar */
