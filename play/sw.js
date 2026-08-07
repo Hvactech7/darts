@@ -8,7 +8,7 @@
 // refresh, which is what keeps startup instant.
 //
 // Bump CACHE when the file list below changes.
-const CACHE = 'darts-v17';
+const CACHE = 'darts-v18';
 const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
   './dk-bg.jpg'
 ,  './dk-side-blue.jpg',
