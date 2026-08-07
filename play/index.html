@@ -2674,10 +2674,23 @@ function fitMenu(){
   // free space below — it just locks in whatever size it already had.
   var avail=visibleBottom();
   var PAD=16;                                     // breathing room at the bottom edge
-  var row=ls.querySelector('.nameopt');
-  var rowFULL=row?row.getBoundingClientRect().height:66;   // natural row height
-  var FLOOR=Math.ceil(rowFULL*4 + 6*3 + 2);       // 4 full name rows — Nathan's minimum
-  var MIN3=Math.ceil(rowFULL*3 + 6*2 + 2);        // absolute floor before we allow scrolling
+  // Measure the real row PITCH from two live rows — assuming it (rows carry a
+  // margin) lands the cap a hair short and silently costs a whole row.
+  var visRows=[].slice.call(ls.querySelectorAll('.nameopt')).filter(function(r){ return r.offsetParent!==null; });
+  var rowFULL=visRows[0]?visRows[0].getBoundingClientRect().height:66;
+  var pitch=(visRows.length>1)
+    ? (visRows[1].getBoundingClientRect().top-visRows[0].getBoundingClientRect().top)
+    : rowFULL+6;
+  if(!(pitch>rowFULL)) pitch=rowFULL+6;           // single column edge case
+  var gapPx=pitch-rowFULL;
+  function rowsPx(n){ return Math.ceil(n*pitch - gapPx + 2); }
+  // Minimum names in view. Fat 6 is one column of short (name-only) rows, so it
+  // both needs and affords more: Nathan wants at least 6 there, 4 in the
+  // two-column games. If a tight screen can't do it at full size the whole menu
+  // zooms down uniformly (below) rather than dropping a row.
+  var MINROWS=(config.game==='fat6')?6:4;
+  var FLOOR=rowsPx(MINROWS);
+  var MIN3=rowsPx(Math.max(3,MINROWS-1));         // absolute floor before we allow scrolling
   ls.style.maxHeight=FLOOR+'px';
   // ⚠️ EVERY number below is measured at --mz:1 and the answer computed in ONE
   // shot. Do NOT re-measure after applying zoom: Safari and Chrome disagree on
@@ -2691,12 +2704,15 @@ function fitMenu(){
     listH=FLOOR+Math.floor(have-need);            // room to spare → grow the list
   }else{
     // Over budget. Shrink the WHOLE menu uniformly with `zoom` (it reduces real
-    // LAYOUT height, unlike transform). The banner is sacred: it changes size
-    // only here, in proportion with every other element, never alone.
+    // LAYOUT height, unlike transform) so the minimum row count still holds.
+    // The banner is sacred: it changes size only here, in proportion with every
+    // other element, never alone.
     mz=Math.max(0.85, have/need);                 // gentle cap — never a shrunken-looking menu
     var stillOver=need*mz-have;                   // what zoom alone couldn't absorb
     if(stillOver>0) listH=Math.max(MIN3, Math.floor(FLOOR-stillOver/mz));
   }
+  // snap DOWN to whole rows so the cap never shows a sliver of the next name
+  listH=Math.max(rowsPx(2), rowsPx(Math.max(2, Math.floor((listH+gapPx)/pitch))));
   // Identical result → write nothing, so the ResizeObserver has no reason to
   // fire again and the fit can't ping-pong.
   var sig=mz.toFixed(4)+'|'+listH;
