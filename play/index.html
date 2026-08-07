@@ -544,6 +544,11 @@
     /* narrow screen: the centred dart calls reach the top-left corner, so ←Back
        sat on top of the first one (same defect as the cricket overlay) */
     /* (backBtn top now set beside the calls row above, safe-area aware) */
+    /* Use the whole phone screen: the shell stretches to ~15px above the
+       safe-area bottom; #playArea's margin-top:auto sinks the controls into
+       the freed space instead of leaving a dead band under Quit. */
+    #game:not(.cricket):not(.fat6){min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 15px);
+      min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 15px);}
   }
 
   /* A–Z jump bar */
@@ -847,9 +852,9 @@
     #manageTeamsBtn,#libDoneBtn{ padding:10px !important; font-size:16px; margin-top:6px !important; }
   }
   @media (max-width:600px){
-    /* Banner enlarged 2026-08-07 — paid for by removing the Match-up card and
-       the hint line. Phones keep a margin (the wings need room to read). */
-    #setup #appBanner img{ max-width:320px; }
+    /* Phone banner FULL WIDTH, no side wings (Nathan 2026-08-07) — the frame
+       art fills the screen edge to edge instead of splitting with lightning. */
+    #setup #appBanner img{ max-width:100%; }
     #appBanner{ margin-bottom:5px; }
     #resumeBtn{ font-size:15px; padding:8px; margin:0 0 6px; }
     /* paused game on a phone: no height to spare anywhere, so the bar becomes
@@ -865,11 +870,8 @@
       content:'\25B6\FE0E';   /* ▶ forced to text style — iOS otherwise draws the blue emoji */
       font-size:20px; font-family:Rajdhani,sans-serif; letter-spacing:0;
     }
-    /* lightning wings fill the side gaps on phones too — blue left, fire right */
-    #appBanner::before,#appBanner::after{ content:""; position:absolute; top:2px; bottom:2px;
-      width:calc((100% - 320px)/2 + 18px); mix-blend-mode:screen; pointer-events:none; opacity:.95; }
-    #appBanner::before{ left:-4px; background:url("dk-side-blue.jpg") center/cover no-repeat; }
-    #appBanner::after{ right:-4px; background:url("dk-side-red.jpg") center/cover no-repeat; }
+    /* wings removed on phones (Nathan) — the banner is full width now */
+    #appBanner::before,#appBanner::after{ display:none; content:none; }
     #setup h2{ font-size:13px; margin:0 0 4px; letter-spacing:1.6px; }
     #setup .card{ padding:2px 9px 7px; margin-bottom:6px; border-width:8px; border-image-width:8px; }
     #gameSel button{ font-size:12.5px; padding:6px 3px; letter-spacing:.6px; }
@@ -951,7 +953,14 @@
     .dartfloat span{font-size:34px;}
     .dartfloat span.long{font-size:20px;}
     #undoBtn,#redoBtn,#missBtn,#endTurnBtn{font-size:18px;padding:12px 12px;}
-    #inputToggle{font-size:16px;padding:11px 10px;letter-spacing:.5px;margin:0 6px;}
+    #inputToggle{font-size:16px;padding:10px 8px;letter-spacing:.5px;margin:0 4px;}
+    /* the Undo · Dart Board · Redo row must fit a 375px phone at FULL scale —
+       it used to rely on fitScreen's shrink to squeak by, and clipped Redo
+       once the screen-stretch reduced that shrink */
+    #game:not(.cricket):not(.fat6) #playArea .turnbar{gap:8px;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{padding:12px 8px;flex:0 1 auto;min-width:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:0 1 auto;min-width:0;}
     /* calculator */
     .kpSide{flex:0 0 56px;gap:8px;}
     .kpSide button{font-size:26px;}
@@ -2881,7 +2890,7 @@ function fitMenu(){
   // SHRINKS as the list shrinks and the fit can then never see (or reclaim) the
   // free space below — it just locks in whatever size it already had.
   var avail=visibleBottom();
-  var PAD=16;                                     // breathing room at the bottom edge
+  var PAD=15;                                     // breathing room at the bottom edge (Nathan: ~15px)
   // Measure the real row PITCH from two live rows — assuming it (rows carry a
   // margin) lands the cap a hair short and silently costs a whole row.
   var visRows=[].slice.call(ls.querySelectorAll('.nameopt')).filter(function(r){ return r.offsetParent!==null; });
@@ -2919,12 +2928,16 @@ function fitMenu(){
     var stillOver=need*mz-have;                   // what zoom alone couldn't absorb
     if(stillOver>0) listH=Math.max(MIN3, Math.floor(FLOOR-stillOver/mz));
   }
-  // snap DOWN to whole rows so the cap never shows a sliver of the next name
-  listH=Math.max(rowsPx(2), rowsPx(Math.max(2, Math.floor((listH+gapPx)/pitch))));
-  // Identical result → write nothing, so the ResizeObserver has no reason to
-  // fire again and the fit can't ping-pong.
-  var sig=mz.toFixed(4)+'|'+listH;
-  if(fitMenu._sig!==sig){ fitMenu._sig=sig; ls.style.maxHeight=listH+'px'; }
+  // No whole-row snap here: rounding the list DOWN discarded up to a full row
+  // of height (~70px on a phone) as dead space at the bottom of the menu. A
+  // partly visible last row is fine — it signals there's more to scroll.
+  listH=Math.max(rowsPx(2), listH);
+  // ⚠️ ALWAYS write the final height — no change-detection guard. The measure
+  // step above shrinks the list to FLOOR, so a guard that says "same result as
+  // last time, skip the write" LEAVES the list at the floor: every settled
+  // re-fit (timers, ResizeObserver) stomped it to 4 rows and skipped the
+  // restore. Same-value writes cause no resize event, so there is no loop.
+  ls.style.maxHeight=listH+'px';
   setupEl.style.setProperty('--mz', mz);
   // Cap the scroll container at the visible bottom. Without this, iOS can hand
   // us a container taller than the screen: content sitting in that hidden strip
@@ -3019,11 +3032,18 @@ setTimeout(refitAll,300); setTimeout(refitAll,1200);
 // decoding, a row growing) invalidates the measurement — re-fit on the spot.
 (function(){
   if(!window.ResizeObserver) return;
-  var busy=false;
+  var busy=false, again=false;
   var ro=new ResizeObserver(function(){
-    if(busy) return;                       // our own scaling must not re-trigger us
+    // Don't DROP events during our own refit — queue one trailing pass instead.
+    // A refit that runs mid-layout-flux can write transiently wrong sizes, and
+    // dropping the resize it causes leaves the menu stuck in that state (seen:
+    // list at 283px with 87px dead space until anything else nudged a fit).
+    if(busy){ again=true; return; }
     busy=true;
-    requestAnimationFrame(function(){ refitAll(); setTimeout(function(){ busy=false; },80); });
+    requestAnimationFrame(function(){ refitAll(); setTimeout(function(){
+      busy=false;
+      if(again){ again=false; refitAll(); }
+    },80); });
   });
   ['setup','library'].forEach(function(id){
     var el=document.getElementById(id); if(!el) return;
