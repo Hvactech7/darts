@@ -433,6 +433,7 @@
   #game.kpmode #boardwrap{display:none;}
   #game.kpmode .darts{display:none;}
   #game.kpmode .turnbar{justify-content:space-between;}
+  #game.kpmode #kpWrap{max-width:none;}
   #game.kpmode #missBtn{display:none;}
   #game.kpmode #endTurnBtn{display:none;}
   #game.kpmode.pendwin #endTurnBtn{display:block;flex:1;}
@@ -456,7 +457,7 @@
   #game:not(.cricket):not(.fat6) #playArea{margin-top:auto;display:flex;flex-direction:column;}
   #game:not(.cricket):not(.fat6) .scoreboard{position:static;top:auto;margin:0 0 14px;position:relative;z-index:1;}
   #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:322px;}
-  #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:150px;font-size:27px;letter-spacing:2px;opacity:1;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:226px;font-size:27px;letter-spacing:2px;opacity:1;}
   #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;top:124px;font-size:22px;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:742px;margin:0 auto 6px;order:2;}
   #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:1;}
@@ -550,8 +551,8 @@
     /* Use the whole phone screen: the shell stretches to ~15px above the
        safe-area bottom; #playArea's margin-top:auto sinks the controls into
        the freed space instead of leaving a dead band under Quit. */
-    #game:not(.cricket):not(.fat6){min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 15px);
-      min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 15px);}
+    #game:not(.cricket):not(.fat6){min-height:calc(100vh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 8px);
+      min-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 8px);}
   }
 
   /* A–Z jump bar */
@@ -796,7 +797,7 @@
   #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:absolute;top:10px;left:14px;right:14px;
     font-size:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;min-height:0;}
   #game:not(.cricket):not(.fat6) .scoreboard .team2 .thrower{text-align:right;}
-  #game:not(.cricket):not(.fat6) .scoreboard .team .big{top:46px;font-size:125px;}
+  #game:not(.cricket):not(.fat6) .scoreboard .team .big{top:52px;font-size:169px;}   /* +35% (Nathan) */
   #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{top:60px;}
 
   /* ==================== MENU ONE-SCREEN (2026-08-07, Nathan-requested) ==================== */
@@ -855,6 +856,13 @@
     #manageTeamsBtn,#libDoneBtn{ padding:10px !important; font-size:16px; margin-top:6px !important; }
   }
   @media (max-width:600px){
+    /* Maximize every px (Nathan): wrap margins 14→6 sides / 14→8 top+bottom.
+       Everything — banner, cards, keypad — gets the reclaimed width. */
+    .wrap{padding:calc(8px + env(safe-area-inset-top,0px)) calc(6px + env(safe-area-inset-right,0px))
+                  calc(8px + env(safe-area-inset-bottom,0px)) calc(6px + env(safe-area-inset-left,0px));}
+    /* score cards: fill the row and carry bigger type — the top priority */
+    .scoreboard{gap:8px;margin-bottom:8px;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team{width:calc(50% - 4px);}
     /* Phone banner FULL WIDTH, no side wings (Nathan 2026-08-07) — the frame
        art fills the screen edge to edge instead of splitting with lightning. */
     #setup #appBanner img{ max-width:100%; }
@@ -937,20 +945,20 @@
     #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:0;height:auto;
       padding:8px 10px 9px;display:flex;flex-direction:column;align-items:center;
       text-align:center;gap:2px;}
-    #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:static;font-size:19px;
+    #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:static;font-size:22px;
       line-height:1.1;white-space:nowrap;overflow:hidden;max-width:100%;
       text-align:center;min-height:0;display:block;}
     #game:not(.cricket):not(.fat6) .scoreboard .team2 .thrower{text-align:center;}
-    #game:not(.cricket):not(.fat6) .scoreboard .team .big{position:static;font-size:64px;line-height:1;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .big{position:static;font-size:80px;line-height:1;}
     #game:not(.cricket):not(.fat6) .scoreboard .team .name{position:static;
-      font-size:12px;letter-spacing:1px;opacity:.85;}
+      font-size:13px;letter-spacing:1px;opacity:.85;}
     #game:not(.cricket):not(.fat6) .scoreboard .team .small{font-size:11px;min-height:0;}
     #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{position:static;width:100%;
       flex-direction:row;align-items:center;gap:6px;margin-top:3px;}
     .histlbl{font-size:10px;flex:0 0 auto;margin:0;}
     .hist-scroll{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden;
       gap:4px;width:100%;min-width:0;padding-bottom:2px;}
-    .histscore{font-size:14px;min-width:34px;padding:3px 6px;flex:0 0 auto;}
+    .histscore{font-size:16px;min-width:40px;padding:4px 8px;flex:0 0 auto;}
     /* board mode */
     .dartfloat{width:46px;gap:8px;top:42%;}
     .dartfloat span{font-size:34px;}
@@ -962,7 +970,7 @@
        once the screen-stretch reduced that shrink */
     #game:not(.cricket):not(.fat6) #playArea .turnbar{gap:8px;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
-    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{padding:12px 8px;flex:0 1 auto;min-width:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{padding:12px 8px;flex:0 1 auto;min-width:0;white-space:nowrap;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:0 1 auto;min-width:0;}
     /* calculator */
     .kpSide{flex:0 0 56px;gap:8px;}
@@ -2228,7 +2236,7 @@ function renderGame(){
 function fitScreen(){
   var g=document.getElementById('game');
   if(!g) return;
-  if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){ g.style.transform=''; return; }
+  if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){ g.style.transform=''; g.style.width=''; g.style.marginLeft=''; return; }
   g.style.transform='none'; g.style.transformOrigin='top center';
   var wrap=document.querySelector('.wrap');
   var _cs=getComputedStyle(wrap);
@@ -2240,10 +2248,22 @@ function fitScreen(){
     var _a0=wrap.clientHeight-pad-4, _n0=wrap.scrollHeight-pad, _over=_n0-_a0;
     if(_over>0) _bw.style.marginTop=(8-Math.min(_over,330))+'px';
   } else if(_bw){ _bw.style.marginTop=''; }
+  g.style.width=''; g.style.marginLeft='';          // measure at natural width first
   var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
   var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
   var s = need>0 ? Math.min(1, avail/need) : 1;
-  g.style.transform = s<0.999 ? 'scale('+s.toFixed(4)+')' : 'none';
+  if(s<0.999){
+    // The shrink is needed for HEIGHT only — without compensation it throws
+    // away WIDTH too (at 0.86 on an iPad that was ~50px of dead margin per
+    // side, Nathan's complaint). Widen the layout by 1/s so the scaled result
+    // still fills the wrap edge to edge: cards and keypad get the width back.
+    var extra=100/s-100;
+    g.style.width=(100+extra).toFixed(2)+'%';
+    g.style.marginLeft=(-extra/2).toFixed(2)+'%';   // centre the widened box first
+    g.style.transform='scale('+s.toFixed(4)+')';
+  }else{
+    g.style.transform='none';
+  }
 }
 window.addEventListener('resize', fitScreen);
 window.addEventListener('orientationchange', function(){ setTimeout(fitScreen,250); });
@@ -2908,7 +2928,7 @@ function fitMenu(){
   // SHRINKS as the list shrinks and the fit can then never see (or reclaim) the
   // free space below — it just locks in whatever size it already had.
   var avail=visibleBottom();
-  var PAD=15;                                     // breathing room at the bottom edge (Nathan: ~15px)
+  var PAD=8;                                      // breathing room at the bottom edge (Nathan: 8px)
   // Measure the real row PITCH from two live rows — assuming it (rows carry a
   // margin) lands the cap a hair short and silently costs a whole row.
   var visRows=[].slice.call(ls.querySelectorAll('.nameopt')).filter(function(r){ return r.offsetParent!==null; });
