@@ -440,8 +440,11 @@
   #kpDisplay{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 16px;
     background:linear-gradient(180deg,rgba(0,0,10,.78),rgba(20,16,50,.55));border:1px solid rgba(255,255,255,.1);
     border-radius:12px;margin-bottom:10px;box-shadow:inset 0 2px 8px rgba(0,0,0,.6);min-height:64px;}
-  #kpVal{font-family:var(--num);font-size:96px;font-weight:700;line-height:1;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #kpVal.long{font-size:62px;}
+  /* The equation is never cut off: kpFit() measures it and scales the type down
+     to fit whatever room is left. No ellipsis — that would hide what you typed.
+     --kpsize is set by kpFit; the value here is the full-size starting point. */
+  #kpVal{font-family:var(--num);font-size:var(--kpsize,96px);font-weight:700;line-height:1;color:var(--txt);
+    white-space:nowrap;overflow:hidden;flex:1 1 auto;min-width:0;}
   #kpHint{font-family:var(--num);font-size:42px;font-weight:600;color:var(--muted);white-space:nowrap;}
   #kpHint.bust{color:var(--danger);}
   #kpGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px;}
@@ -933,8 +936,7 @@
     #kpGrid{gap:7px;}
     #kpGrid button{font-size:32px;padding:11px 0;}
     #kpGrid button.kpop{font-size:49px;}
-    #kpVal{font-size:55px;}
-    #kpVal.long{font-size:31px;}
+    #kpVal{--kpsize:55px;}
     #kpHint{font-size:20px;}
     #kpDisplay{min-height:46px;padding:8px 12px;margin-bottom:8px;}
     #kpOK{font-size:22px;padding:12px;}
@@ -1115,7 +1117,7 @@
     <div class="scoreboard" id="scoreboard"></div>
     <div id="cricketBoard"></div>
     <div id="fat6Board"></div>
-    <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button><button id="cricketConfirmBtn" class="confirm-btn">Confirm ▶</button></div>
+    <div id="scoreActions"><button id="scoreUndoBtn" class="warn">↶ Undo</button><button id="scoreRedoBtn" class="warn">↷ Redo</button><button id="cricketConfirmBtn" class="confirm-btn">✓ Score It</button></div>
 
     <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
@@ -1148,7 +1150,7 @@
       </div>
       <div class="gamebtns">
         <button class="ghost" id="missBtn">Miss / 0</button>
-        <button class="confirm-btn" id="endTurnBtn">Confirm ▶</button>
+        <button class="confirm-btn" id="endTurnBtn">✓ Score It</button>
       </div>
     </div>
 
@@ -2049,7 +2051,7 @@ function commitTurn(){
   renderGame();
 }
 
-function endTurnManual(){            // the "Confirm ▶" button
+function endTurnManual(){            // the "✓ Score It" button
   if(G && G.isFat6) return;          // Fat 6: turn passes only via target tap / elimination
   if(G.over)return;
   if(G.pendingWin){ declareWin(G.pendingWin.teamIdx,G.pendingWin.detail); closeBoard(); closeBoard01(); return; }
@@ -2170,16 +2172,19 @@ function renderGame(){
   var _cc=document.getElementById('cricketConfirmBtn'); if(_cc) _cc.disabled=false;
   const confirmBtn=document.getElementById('endTurnBtn');
   confirmBtn.disabled=G.over;
+  // Every score confirmation reads "✓ Score It" (Nathan) — the calculator's
+  // wording, used everywhere now. Winning the leg is a different action and
+  // keeps its own label.
   if(G.pendingWin) confirmBtn.textContent='🏆 Confirm Winner';
   else if(document.getElementById('game').classList.contains('bdopen') && !G.isCricket && !G.isFat6){
     const _tot=G.darts.reduce((s,d)=>s+((d.bust||d.noCount)?0:d.score),0);
-    confirmBtn.textContent=G.darts.some(d=>d.bust)?'✓ Confirm — BUST':('✓ Confirm — '+_tot);
+    confirmBtn.textContent=G.darts.some(d=>d.bust)?'✓ Score It — BUST':('✓ Score It — '+_tot);
   }
-  else confirmBtn.textContent='Confirm ▶';
+  else confirmBtn.textContent='✓ Score It';
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
   var _ccw=document.getElementById('cricketConfirmBtn');
-  if(_ccw){ _ccw.textContent=G.pendingWin?'🏆 Confirm Winner':'Confirm ▶';
+  if(_ccw){ _ccw.textContent=G.pendingWin?'🏆 Confirm Winner':'✓ Score It';
     _ccw.classList.toggle('primary',!!G.pendingWin); _ccw.classList.toggle('confirm-btn',!G.pendingWin); }
   document.getElementById('game').classList.toggle('pendwin',!!G.pendingWin);
   kpRender();
@@ -2602,20 +2607,45 @@ function kpEval(expr){
   });
   return tot;
 }
+// Shrink the equation until the WHOLE thing fits the display — never truncate.
+// Measured, not guessed from character count: "1+1+1" and "180×3" are the same
+// length but nowhere near the same width.
+function kpFit(){
+  const el=document.getElementById('kpVal'); if(!el) return;
+  const hint=document.getElementById('kpHint');
+  el.style.removeProperty('--kpsize');            // reset first, then measure the base
+  if(hint) hint.style.display='';
+  if(el.clientWidth<=0) return;                   // display hidden (board overlay / cricket)
+  const base=parseFloat(getComputedStyle(el).fontSize)||96;
+  let need=el.scrollWidth, avail=el.clientWidth;
+  if(need<=avail) return;
+  let size=Math.floor(base*avail/need);
+  // Before shrinking to something unreadable, let the secondary "= total" go —
+  // the equation itself is what must always be legible. BUST / max-180 stay:
+  // those are warnings, not decoration.
+  if(size<26 && hint && hint.textContent && hint.className!=='bust'){
+    hint.style.display='none';
+    avail=el.clientWidth; need=el.scrollWidth;    // re-measure after the reflow
+    size=need>avail ? Math.floor(base*avail/need) : base;
+  }
+  if(size<base) el.style.setProperty('--kpsize', Math.max(10,size)+'px');
+}
 function kpRender(){
   const elV=document.getElementById('kpVal'), elH=document.getElementById('kpHint');
   if(!elV) return;
   const shown=kpExpr||'0';
   elV.textContent=shown.replace(/x/g,'×');
-  elV.classList.toggle('long', shown.length>7);
   const v=kpEval(kpExpr);
+  // The "→ N left" readout is gone (Nathan) — that room belongs to the equation.
+  // Only the two warnings and the running total remain.
   if(kpAllowed() && !G.over){
     const rem=curTeam().score-v;
-    const eq=/[+x]/.test(kpExpr) ? ('= '+v+'  ') : '';
-    if(v>180){ elH.textContent=eq+'max 180'; elH.className='bust'; }
-    else if(rem<0||rem===1){ elH.textContent=eq+'→ BUST'; elH.className='bust'; }
-    else { elH.textContent=eq+'→ '+rem+' left'; elH.className=''; }
+    const eq=/[+x]/.test(kpExpr) ? ('= '+v) : '';
+    if(v>180){ elH.textContent='max 180'; elH.className='bust'; }
+    else if(rem<0||rem===1){ elH.textContent='BUST'; elH.className='bust'; }
+    else { elH.textContent=eq; elH.className=''; }
   } else elH.textContent='';
+  kpFit();
   const ok=document.getElementById('kpOK'); if(ok) ok.disabled = kpEval(kpExpr)>180 || !kpAllowed() || (G&&(G.over||!!G.pendingWin));
 }
 function kpCommit(total){
