@@ -517,6 +517,10 @@
      reduces real LAYOUT height, so a tight screen can't push Manage Players off
      the bottom. Everything scales together; the banner keeps its exact shape. */
   #setup > *{ zoom:var(--mz,1); }
+  /* Same uniform shrink for the locked Player Library (set by fitLibrary) */
+  #library > *{ zoom:var(--lz,1); }
+  /* the roster is the only scroller on that screen */
+  #libList{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
   #appBanner{ margin:2px 0 12px; position:relative; }
   @media (min-width:601px){
     #appBanner::before,#appBanner::after{ content:""; position:absolute; top:4px; bottom:4px;
@@ -741,7 +745,14 @@
     #library h2{ font-size:16px; margin:0 0 6px; }
     #library .card{ padding:2px 12px 9px; margin-bottom:8px; }
     #library .card p.small{ margin:4px 0 8px; font-size:13px; }
-    #bkSaveBtn,#bkRestoreBtn{ padding:11px !important; font-size:16px; }
+    /* Backup card: compact (Nathan) — the blurb is gone and the email field no
+       longer needs roster-sized type. Tap targets stay ≥40px. */
+    #bkCard h2{ margin:0 0 4px; }
+    #bkCard input[type=text]{ padding:8px 12px; font-size:17px; }
+    #bkSaveBtn,#bkRestoreBtn{ padding:9px !important; font-size:15px; }
+    /* add-player row trimmed to match — height here is a roster row we lose */
+    #newPlayer{ padding:9px 12px; font-size:18px; }
+    #addPlayer{ padding:9px 16px !important; font-size:15px; }
     #manageTeamsBtn,#libDoneBtn{ padding:10px !important; font-size:16px; margin-top:6px !important; }
   }
   @media (max-width:600px){
@@ -778,6 +789,14 @@
     .th-team{ padding:1px 4px !important; font-size:10.5px !important; }
     #pickHeads{ margin-bottom:4px; }
     #manageBtn{ margin-top:7px !important; padding:7px 10px; font-size:12.5px; }
+    /* Backup card: compact here too. nowrap keeps "Back up now" on ONE line —
+       wrapping doubled the button height and undid the shrink. */
+    #bkCard h2{ margin:0 0 4px; }
+    #bkCard input[type=text]{ padding:8px 10px; font-size:15px; }
+    #bkSaveBtn,#bkRestoreBtn{ padding:9px 4px !important; font-size:12px; letter-spacing:.4px; white-space:nowrap; }
+    /* add-player row trimmed — every 70px here is a whole roster row */
+    #newPlayer{ padding:8px 10px; font-size:16px; }
+    #addPlayer{ padding:8px 12px !important; font-size:13px; }
   }
 
   /* ==================== STACKED NAME + TEAM ROWS (2026-08-07) ==================== */
@@ -969,27 +988,26 @@
   <div id="library" class="hidden">
     <div class="card">
       <h2>Player Library</h2>
-      <div class="row" style="margin-bottom:14px;">
+      <div class="row" style="margin-bottom:8px;">
         <input type="text" id="newPlayer" class="grow" placeholder="Add a player name…" autocomplete="off">
         <button class="accent" id="addPlayer">Add</button>
       </div>
       <div id="libList"></div>
-      <p class="small" style="margin-top:6px;">Names are saved on this device.</p>
     </div>
-    <div class="card">
+    <div class="card" id="bkCard">
       <h2>☁ Backup &amp; Restore</h2>
-      <p class="small" style="margin:0 0 10px;">Players, teams, pairings and stats back up to the family relay. One email covers every device.</p>
-      <div class="row" style="margin-bottom:10px;">
+      <div class="row" style="margin-bottom:8px;">
         <input type="text" id="bkEmail" class="grow" placeholder="you@email.com" autocomplete="email" inputmode="email">
       </div>
-      <div class="row" id="bkCodeRow" style="display:none;margin-bottom:10px;">
+      <div class="row" id="bkCodeRow" style="display:none;margin-bottom:8px;">
         <input type="text" id="bkCode" class="grow" placeholder="6-digit code from the email" inputmode="numeric" maxlength="6">
       </div>
       <div class="row">
         <button class="primary grow" id="bkSaveBtn">☁ Back up now</button>
         <button class="accent grow" id="bkRestoreBtn">⤓ Restore</button>
       </div>
-      <p class="small" id="bkMsg" style="margin-top:8px;min-height:18px;"></p>
+      <!-- status line only takes space when it has something to say -->
+      <p class="small" id="bkMsg" style="margin:6px 0 0;"></p>
     </div>
     <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
@@ -2650,9 +2668,11 @@ function fitMenu(){
     return b;
   }
   var top=setupEl.getBoundingClientRect().top;
-  // Budget = the smaller of the container's content box and what's actually
-  // on screen — iOS standalone inflates the former (see visibleBottom).
-  var avail=Math.min(top+setupEl.clientHeight, visibleBottom());
+  // Budget = the real visible screen bottom. Do NOT fold in the container's own
+  // clientHeight: these screens are content-height blocks, so that number
+  // SHRINKS as the list shrinks and the fit can then never see (or reclaim) the
+  // free space below — it just locks in whatever size it already had.
+  var avail=visibleBottom();
   var PAD=16;                                     // breathing room at the bottom edge
   var row=ls.querySelector('.nameopt');
   var rowFULL=row?row.getBoundingClientRect().height:66;   // natural row height
@@ -2704,12 +2724,55 @@ function visibleBottom(){
 }
 // Same lock for the Player Library: pinned while everything fits, and it
 // gracefully returns to scrolling once the roster outgrows the screen.
+// One locked screen, exactly like the menu: the roster list (#libList) is the
+// only thing that scrolls, and it absorbs whatever height the fixed chrome
+// (add row, Backup card, Manage Teams, Done) leaves behind — about 7 rows on an
+// iPad. Same analytic, measure-before-zoom rule as fitMenu: never read geometry
+// after applying zoom, and never overflow:hidden (that strands content).
 function fitLibrary(){
   var lib=document.getElementById('library');
   if(!lib || lib.classList.contains('hidden')) return;
-  // Same rule as the menu: always scrollable, never strandable. It reads as a
-  // lock whenever the roster fits, and stays usable when it doesn't.
-  lib.style.overflowY='auto';
+  var list=document.getElementById('libList');
+  if(!list){ lib.style.overflowY='auto'; return; }
+  lib.scrollTop=0;
+  lib.style.setProperty('--lz',1);
+  lib.style.maxHeight='';
+  function contentBottom(){
+    var b=0;
+    [].slice.call(lib.children).forEach(function(k){
+      if(getComputedStyle(k).display==='none') return;
+      var r=k.getBoundingClientRect(); if(r.bottom>b) b=r.bottom;
+    });
+    return b;
+  }
+  var top=lib.getBoundingClientRect().top;
+  var avail=visibleBottom();     // see the note in fitMenu — screen bottom, not clientHeight
+  var PAD=6;                     // small cushion: every px here can cost a whole row
+  // Measure the real row PITCH (height + margin) from two live rows — assuming
+  // it lands the cap a fraction of a pixel short and silently costs a row.
+  var rows=list.querySelectorAll('.librow');
+  var rowH=rows[0]?rows[0].getBoundingClientRect().height:58;
+  var pitch=(rows.length>1)
+    ? (rows[1].getBoundingClientRect().top-rows[0].getBoundingClientRect().top)
+    : rowH+8;
+  var gap=Math.max(0,pitch-rowH);
+  function rowsToPx(n){ return Math.ceil(n*pitch - gap + 2); }   // +2 cushion
+  var FLOOR=rowsToPx(3);                          // never fewer than 3 rows in view
+  list.style.maxHeight=FLOOR+'px';
+  var need=contentBottom()-top, have=avail-top-PAD;
+  var lz=1, listH=FLOOR;
+  if(need<=have){
+    listH=FLOOR+Math.floor(have-need);            // hand the leftover to the list
+  }else{
+    lz=Math.max(0.85, have/need);                 // chrome alone is over: shrink uniformly
+    var over=need*lz-have;
+    if(over>0) listH=Math.max(rowsToPx(2), Math.floor(FLOOR-over/lz));
+  }
+  // snap DOWN to a whole number of rows so the cap never shows a sliver
+  list.style.maxHeight=rowsToPx(Math.max(2, Math.floor((listH+gap)/pitch)))+'px';
+  lib.style.setProperty('--lz', lz);
+  lib.style.maxHeight=Math.max(160, Math.floor(avail-top))+'px';
+  lib.style.overflowY='auto';                     // self-heals; nothing to scroll when it fits
 }
 window.addEventListener('resize', function(){ fitMenu(); fitLibrary(); });
 window.addEventListener('orientationchange', function(){ setTimeout(function(){ fitMenu(); fitLibrary(); },120); });
@@ -2813,7 +2876,15 @@ document.addEventListener('touchmove',function(e){
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('SW registration failed', e); });
+    // updateViaCache:'none' — never let the browser's HTTP cache hand us a
+    // stale sw.js; that alone can delay an update by a launch or two.
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
+      reg.update();
+      // A PWA can sit backgrounded for days; check again whenever it comes back.
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) reg.update();
+      });
+    }).catch(function (e) { console.warn('SW registration failed', e); });
   });
 }
 </script>
