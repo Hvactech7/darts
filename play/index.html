@@ -699,6 +699,21 @@
     #listScroll .nopt-team{ font-size:17px; }
     /* Player Library: bigger name + team fill the row (same row height — the ✕
        still sets it), and small trims so the whole screen locks without scrolling */
+    /* paused-game bar: slim, so the menu still locks with it present */
+    #resumeBtn{ font-size:18px; padding:9px; margin:0 0 8px; }
+    /* mid-width tablets: buy the bar's height back from the banner */
+    .hasResume #appBanner img{ max-width:230px; }
+    /* wide tablets (768 iPad and up): park the bar in the empty wing beside
+       the banner — costs zero height, so the 4-row lock is untouched */
+    @media (min-width:740px){
+      #setup{ position:relative; }
+      .hasResume #appBanner img{ max-width:360px; }
+      #setup.hasResume #resumeBtn{
+        position:absolute; left:10px; top:62px; width:auto; margin:0;
+        max-width:calc((100% - 360px)/2 - 18px);
+        font-size:16px; padding:10px 12px; z-index:5;
+      }
+    }
     #library .librow .lname{ font-size:30px; }
     #library .librow .teamsel{ font-size:20px; padding:7px 10px; max-width:250px; margin-right:40px; }
     #library h2{ font-size:16px; margin:0 0 6px; }
@@ -710,6 +725,20 @@
   @media (max-width:600px){
     #setup #appBanner img{ max-width:200px; }
     #appBanner{ margin-bottom:5px; }
+    #resumeBtn{ font-size:15px; padding:8px; margin:0 0 6px; }
+    /* paused game on a phone: no height to spare anywhere, so the bar becomes
+       a compact ⏸▶ pill floating in the wing beside the banner (zero height) */
+    #setup{ position:relative; }
+    #setup.hasResume #resumeBtn{
+      position:absolute; left:2px; top:26px; width:auto; margin:0;
+      font-size:0; padding:8px 12px; z-index:5;
+      background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);
+      background-position:0 0; background-size:auto;
+    }
+    #setup.hasResume #resumeBtn::before{
+      content:'\25B6\FE0E';   /* ▶ forced to text style — iOS otherwise draws the blue emoji */
+      font-size:20px; font-family:Rajdhani,sans-serif; letter-spacing:0;
+    }
     /* lightning wings fill the side gaps on phones too — blue left, fire right */
     #appBanner::before,#appBanner::after{ content:""; position:absolute; top:2px; bottom:2px;
       width:calc((100% - 200px)/2 + 18px); mix-blend-mode:screen; pointer-events:none; opacity:.95; }
@@ -1320,7 +1349,8 @@ document.getElementById('manageBtn').onclick=()=>{
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('library').classList.remove('hidden');
   renderLibrary();
-  document.getElementById('newPlayer').focus();
+  // no autofocus — popping the keyboard uninvited covers the screen; tap the
+  // field when you actually want to type
 };
 document.getElementById('libDoneBtn').onclick=()=>{
   document.getElementById('library').classList.add('hidden');
@@ -1334,7 +1364,7 @@ document.getElementById('manageTeamsBtn').onclick=()=>{
   document.getElementById('library').classList.add('hidden');
   document.getElementById('teamLibrary').classList.remove('hidden');
   renderTeamLibrary();
-  document.getElementById('newTeam').focus();
+  // no autofocus here either — same keyboard rule as the Player Library
 };
 document.getElementById('teamDoneBtn').onclick=()=>{
   document.getElementById('teamLibrary').classList.add('hidden');
@@ -2431,7 +2461,17 @@ document.getElementById('endTurnBtn').onclick=endTurnManual;
 document.getElementById('quitBtn').onclick=()=>{ if(G && !G.over) document.getElementById('confirmQuit').classList.remove('hidden'); else toMenu(); };
 let pausedSig=null;
 function gameSig(){ return JSON.stringify({g:config.game,m:config.mode,t:teamSel,f:config.game==='fat6'?f6Sel:null}); }
-function refreshResume(){ const b=document.getElementById('resumeBtn'); if(b) b.classList.toggle('hidden', !(G && !G.over)); }
+function refreshResume(){
+  const b=document.getElementById('resumeBtn'); if(!b) return;
+  const show=!!(G && !G.over);
+  const was=!b.classList.contains('hidden');
+  b.classList.toggle('hidden', !show);
+  // hasResume drives the CSS that makes room for the bar (wing placement /
+  // smaller banner) so the one-screen lock still holds while a game is paused
+  const su=document.getElementById('setup');
+  if(su) su.classList.toggle('hasResume', show);
+  if(was!==show && typeof fitMenu==='function') fitMenu();
+}
 document.getElementById('newGameBtn').onclick=()=>{           // ☰ Menu: pause the game, open setup
   if(G && !G.over) pausedSig=gameSig();
   toMenu();
@@ -2579,6 +2619,8 @@ function fitMenu(){
   var rowH=row?row.getBoundingClientRect().height:66;
   var FLOOR=Math.ceil(rowH*4 + 6*3 + 2), PAD=16;   // real breathing room at the bottom edge
   setupEl.scrollTop=0;
+  var bimg=document.querySelector('#appBanner img');
+  if(bimg) bimg.style.maxHeight='';   // measure from the full-size banner each pass
   ls.style.maxHeight=FLOOR+'px';
   var avail=setupEl.getBoundingClientRect().top+setupEl.clientHeight;   // content-box bottom
   function contentBottom(){
@@ -2588,6 +2630,16 @@ function fitMenu(){
       var r=k.getBoundingClientRect(); if(r.bottom>b) b=r.bottom;
     });
     return b;
+  }
+  // Real iPads report less height than the preview (status bar / safe area).
+  // If the chrome is over budget at the 4-row floor, the decorative banner is
+  // the one thing allowed to give — squeeze it (never below 82px) before even
+  // thinking about falling back to a scrolling menu.
+  var over=contentBottom() - (avail - 2);
+  if(over>0 && bimg){
+    var bh=bimg.getBoundingClientRect().height;
+    var target=Math.max(82, Math.floor(bh-over-2));
+    if(target<bh) bimg.style.maxHeight=target+'px';
   }
   var h=Math.max(FLOOR, Math.floor(FLOOR + (avail - contentBottom() - PAD)));
   ls.style.maxHeight=h+'px';
@@ -2617,6 +2669,50 @@ window.addEventListener('load', fitMenu);
 (function(){
   var bimg=document.querySelector('#appBanner img');
   if(bimg && !bimg.complete) bimg.addEventListener('load', fitMenu);
+})();
+// Real-iPad hardening: a cold standalone launch lays out before the embedded
+// fonts arrive and before the viewport settles, so the first measurements lie.
+// Re-fit on every "numbers may have changed" signal.
+function refitAll(){ fitMenu(); fitLibrary(); }
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(refitAll);
+window.addEventListener('pageshow', refitAll);
+setTimeout(refitAll,300); setTimeout(refitAll,1200);
+// ---- iOS keyboard guard ----------------------------------------------------
+// The locked screens (overflow hidden) block iOS's native scroll-the-focused-
+// field-above-the-keyboard move. While a field is focused: unlock its screen
+// and keep the field centered; when the keyboard goes away, re-fit → re-lock.
+(function(){
+  var SCREENS=['setup','library','teamLibrary'], kbEl=null;
+  function screenOf(t){
+    for(var i=0;i<SCREENS.length;i++){
+      var s=document.getElementById(SCREENS[i]);
+      if(s && s.contains(t)) return s;
+    }
+    return null;
+  }
+  function reveal(){
+    if(!kbEl || !kbEl.isConnected) return;
+    try{ kbEl.scrollIntoView({block:'center'}); }catch(_){ kbEl.scrollIntoView(); }
+  }
+  document.addEventListener('focusin', function(e){
+    var t=e.target;
+    if(!t || !t.matches || !t.matches('input,textarea,select')) return;
+    var s=screenOf(t); if(!s) return;
+    kbEl=t;
+    s.style.overflowY='auto';
+    setTimeout(reveal,60);
+    setTimeout(reveal,350);   // again once the keyboard has finished sliding up
+  });
+  document.addEventListener('focusout', function(){
+    kbEl=null;
+    setTimeout(function(){
+      var a=document.activeElement;
+      if(a && a.matches && a.matches('input,textarea,select')) return;  // hopped fields
+      refitAll();
+    },250);
+  });
+  if(window.visualViewport)
+    window.visualViewport.addEventListener('resize', function(){ if(kbEl) setTimeout(reveal,60); });
 })();
 
 //============================ INIT ============================
