@@ -197,9 +197,16 @@
        padding:11px 4px;font-weight:700;font-size:31px;min-height:46px;
        box-shadow:inset 0 2px 6px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.05);}
   .dart.long{font-size:20px;line-height:1.15;display:flex;align-items:center;justify-content:center;}
+  /* the empty-slot dash lives here so it is TIED to the .empty class — a slot
+     holding a score has no way to paint one behind the text */
   .dart.empty{color:var(--muted);font-weight:500;}
+  .dart.empty::before{content:'–';}
+  .dart:not(.empty)::before{content:none;}
   .dart.bust{color:var(--danger);border-color:rgba(255,64,104,.5);box-shadow:0 0 12px rgba(255,64,104,.3);}
-  .dart.nocount{color:var(--muted);text-decoration:line-through;}
+  /* "did not count" (cricket: a non-scoring number, or one already closed).
+     NO line-through — it ran straight through the digits and made the score
+     unreadable. Dimmed instead, which reads the same without obscuring it. */
+  .dart.nocount{color:var(--muted);opacity:.6;font-weight:600;}
   .boardwrap{display:flex;justify-content:center;position:relative;padding:2px 0;}
   svg.board{width:100%;max-width:610px;height:auto;touch-action:manipulation;display:block;
        filter:saturate(1.2) drop-shadow(0 0 24px rgba(79,124,255,.4));}
@@ -285,8 +292,37 @@
   #game.cricket #cricketBoard .cricket .chead .head2.active .pname{text-shadow:none;}
   #game.cricket #cricketBoard .cricket .chead .head2.active{background:linear-gradient(160deg,rgba(255,212,0,.26),rgba(255,212,0,.04));box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,212,0,.16);}
 
+  /* ===== Cricket header: grow the name boxes toward the mini board =====
+     The centre column has to stay wide enough for the target rows (D 20 T), so
+     in the HEADER row it is far wider than the little board it holds — leaving
+     dead space on both sides while names get clipped. Each team's box now
+     spills into that space: the highlight is repainted by ::before across the
+     full widened area (so there's no seam), and the text lines widen to match.
+     --cgrow is measured live in sizeCricketHeads(). */
+  #game.cricket #cricketBoard .cricket .chead .mcell{position:relative;overflow:visible;background:none !important;box-shadow:none !important;}
+  #game.cricket #cricketBoard .cricket .chead .mcell > *{position:relative;z-index:1;}
+  #game.cricket #cricketBoard .cricket .chead .mcell::before{content:'';position:absolute;top:0;bottom:0;left:0;right:0;z-index:0;pointer-events:none;border-radius:8px;}
+  #game.cricket #cricketBoard .cricket .chead .head1::before{right:calc(-1 * var(--cgrow,0px));}
+  #game.cricket #cricketBoard .cricket .chead .head2::before{left:calc(-1 * var(--cgrow,0px));}
+  #game.cricket #cricketBoard .cricket .chead .head1.active::before{
+    background:linear-gradient(160deg,rgba(125,165,255,.45),rgba(79,124,255,.10));
+    box-shadow:inset 6px 0 0 #7da5ff,inset 0 0 32px rgba(125,165,255,.34);}
+  #game.cricket #cricketBoard .cricket .chead .head2.active::before{
+    background:linear-gradient(160deg,rgba(255,122,46,.26),rgba(25,17,8,.92));
+    box-shadow:inset -5px 0 0 var(--yellow),inset 0 0 26px rgba(255,122,46,.16);}
+  #game.cricket .chead .head1 .tlabel,#game.cricket .chead .head1 .pname,#game.cricket .chead .head1 .cpts{
+    width:calc(100% + var(--cgrow,0px));}
+  #game.cricket .chead .head2 .tlabel,#game.cricket .chead .head2 .pname,#game.cricket .chead .head2 .cpts{
+    width:calc(100% + var(--cgrow,0px));margin-left:calc(-1 * var(--cgrow,0px));}
+  /* the centre cell's own border/background showed through the translucent
+     highlight as a seam where the box crosses the old column edge */
+  #game.cricket #cricketBoard .cricket .chead .spine{border-left:0;border-right:0;background:transparent;}
   #game.cricket #cricketBoard .cricket .chead .mcell{vertical-align:middle;padding-bottom:0;}
   .chead .pname{font-family:var(--display);font-size:38px;font-weight:800;line-height:1.05;white-space:nowrap;overflow:hidden;}
+  /* long names step down to fit the widened box rather than being cut off */
+  .chead .pname.long{font-size:29px;}
+  .chead .pname.xlong{font-size:23px;letter-spacing:0;}
+  .chead .pname.xxlong{font-size:17px;letter-spacing:0;}
   .chead .tlabel{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
   #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
 
@@ -442,12 +478,22 @@
      with it — nothing to correct a mis-tap with. Keep the bar, drop only the
      pieces the overlay replaces (input toggle + dart slots; the calls strip at
      the top already shows the darts), and pin Undo/Redo to the bottom corners. */
-  #game.bdopen .turnbar{display:flex !important;position:absolute;left:14px;right:14px;bottom:82px;
-    margin:0;justify-content:space-between;align-items:center;z-index:2;pointer-events:none;}
-  #game.bdopen .turnbar #undoBtn,#game.bdopen .turnbar #redoBtn{
-    display:block;pointer-events:auto;margin:0;flex:0 0 auto;border-radius:20px;}
-  #game.bdopen .turnbar #inputToggle,#game.bdopen .turnbar .darts{display:none !important;}
-  #game.bdopen #playArea .gamebtns{display:flex;margin:8px auto 0;max-width:520px;width:100%;}
+  #game.bdopen .turnbar{display:none !important;}
+  /* Undo ▸ Confirm ▸ Redo share ONE flex row (openBoard01 moves the two buttons
+     in here and closeBoard01 puts them back). Letting flexbox own the layout —
+     rather than absolutely positioning the old bar — is what keeps them level,
+     symmetric and never overlapping at any width; the absolute version drifted
+     below Confirm on a phone and fought the 01 layout's own turnbar rules. */
+  #game.bdopen #playArea .gamebtns{display:flex;gap:10px;align-items:center;
+    margin:8px auto 0;max-width:660px;width:100%;}
+  /* the 01 turnbar sets order 1/2/3 on these — reassert it for this row, or
+     Confirm (order 0) jumps to the far left */
+  #game.bdopen #playArea .gamebtns #undoBtn{order:0 !important;}
+  #game.bdopen #playArea .gamebtns #endTurnBtn{order:1 !important;flex:1 1 auto;min-width:0;align-self:auto;}
+  #game.bdopen #playArea .gamebtns #redoBtn{order:2 !important;}
+  #game.bdopen #playArea .gamebtns #undoBtn,#game.bdopen #playArea .gamebtns #redoBtn{
+    display:block !important;flex:0 0 auto;margin:0 !important;border-radius:20px;
+    font-size:19px;padding:12px 18px;align-self:auto;}
   #game.bdopen #endTurnBtn{display:block !important;flex:1;font-size:29px;}
   #game.bdopen #missBtn{display:none !important;}
   /* 01 games hide Miss (the calculator/board overlay handles it) — but Fat 6 needs
@@ -465,7 +511,19 @@
   #bdCalls .bc:last-child{animation:markpop .35s cubic-bezier(.2,1.5,.4,1);}
   #game.kpmode .dartfloat{display:none;}
   #game.bdopen #backBtn{display:block;position:absolute;top:14px;left:14px;z-index:2;}
-  @media (max-width:600px){ #bdCalls{gap:16px;min-height:44px;} #bdCalls .bc{font-size:44px;} #bdCalls .bc.lng{font-size:29px;} }
+  @media (max-width:600px){ #bdCalls{gap:16px;min-height:44px;} #bdCalls .bc{font-size:44px;} #bdCalls .bc.lng{font-size:29px;}
+    /* A phone can't fit "Undo | Confirm — 117 | Redo" as words: Confirm gets
+       squeezed to ~84px and wraps to three lines. Arrows only out here. */
+    #game.bdopen #playArea .gamebtns{gap:8px;}
+    #game.bdopen #playArea .gamebtns #undoBtn,#game.bdopen #playArea .gamebtns #redoBtn{
+      font-size:0 !important;padding:12px 14px !important;}
+    #game.bdopen #playArea .gamebtns #undoBtn::before{content:'\21B6';font-size:26px;font-family:var(--body);}
+    #game.bdopen #playArea .gamebtns #redoBtn::before{content:'\21B7';font-size:26px;font-family:var(--body);}
+    #game.bdopen #playArea .gamebtns #endTurnBtn{font-size:20px !important;white-space:nowrap;}
+    /* narrow screen: the centred dart calls reach the top-left corner, so ←Back
+       sat on top of the first one (same defect as the cricket overlay) */
+    #game.bdopen #backBtn{top:76px;}   /* calls band runs to ~66px with 3 darts */
+  }
 
   /* A–Z jump bar */
   #azBar{display:flex;flex-wrap:nowrap;gap:2px;margin:0 0 10px;}
@@ -2216,8 +2274,10 @@ function renderDarts(){
       d.textContent=dart.bust?'BUST':dart.label;
       if(dart.noCount && !dart.bust) d.title='did not count';
     }else{
+      // Placeholder is drawn by CSS (.dart.empty::before), NOT text: a slot that
+      // has a score can then never show a dash behind it, whatever else happens.
       d.className='dart empty';
-      d.textContent='–';
+      d.textContent='';
     }
     el.appendChild(d);
   }
@@ -2232,9 +2292,13 @@ function renderCricket(){
   const el=document.getElementById('cricketBoard');
   const t1=G.teams[0], t2=G.teams[1];
   const nm=t=>esc(config.mode==='2p'?t.members[0]:t.name);
+  // The header box is much wider now, so a long name gets a size step-down
+  // instead of being chopped — Nathan doesn't want truncated names.
+  // Sizing is decided by MEASUREMENT in sizeCricketHeads(), not a character
+  // count — the box width varies with the screen and Cinzel is wide.
   const pname=t=>{ let n=shortName(t.members[t.memberIdx]);
-    if(n.length>10){ const p=t.members[t.memberIdx].trim().split(/\s+/); if(p.length>2) n=p[0]+' '+p[p.length-1][0].toUpperCase(); }
-    return esc(n.length>10 ? n.slice(0,9)+'.' : n); };
+    if(n.length>14){ const p=t.members[t.memberIdx].trim().split(/\s+/); if(p.length>2) n=p[0]+' '+p[p.length-1][0].toUpperCase(); }
+    return esc(n); };
   const tlabel=i=>{ const t=G.teams[i]; if(config.mode==='iron'&&t.members.length===1) return '\ud83e\uddbe Ironman'; const duo=t.members.length===2?duoTeamName(t.members):''; const tm=duo||teamOfPlayer(t.members[t.memberIdx]); return esc(tm || (config.mode==='2p'?('Player '+(i+1)):t.name)); };
   const thr=(t,i)=>{ const active=(G.cur===i && !G.over), multi=t.members.length>1;
     if(multi) return `<div class="thrower-line">${active?'▸ ':''}${esc(shortName(t.members[t.memberIdx]))}</div>`;
@@ -2260,7 +2324,40 @@ function renderCricket(){
   el.innerHTML=html;
   _prevCMarks=[Object.assign({},t1.marks),Object.assign({},t2.marks)];
   const _hb=el.querySelector('.hdr-throw'); if(_hb) _hb.addEventListener('click',openBoard);
+  sizeCricketHeads();
 }
+// How far each team's header box may grow toward the mini board. Measured from
+// the live layout so it tracks the board size and breakpoint instead of relying
+// on a hard-coded offset.
+function sizeCricketHeads(){
+  const board=document.getElementById('cricketBoard'); if(!board) return;
+  const h1=board.querySelector('.chead .head1'), mini=board.querySelector('.hdr-throw');
+  if(!h1||!mini) return;
+  // While the board overlay is open this whole header is display:none, and a
+  // turn confirmed from there re-renders it BEFORE the overlay closes — every
+  // rect would read 0 and wipe the growth. Keep what we have and re-run on close.
+  if(mini.getBoundingClientRect().width===0) return;
+  // ⚠️ Reset FIRST: the widened boxes feed back into this measurement, so
+  // measuring while the previous growth is applied collapses it to zero on the
+  // next render (same trap as measuring after applying zoom in fitMenu).
+  board.style.setProperty('--cgrow','0px');
+  const gap=mini.getBoundingClientRect().left - h1.getBoundingClientRect().right;
+  board.style.setProperty('--cgrow', Math.max(0, Math.round(gap-8))+'px');
+  // Then fit each name to the (now final) box width by stepping the type down.
+  // Measured, not guessed: box width changes with the screen and Cinzel is wide.
+  const STEPS=['long','xlong','xxlong'];
+  board.querySelectorAll('.chead .pname').forEach(function(el){
+    el.classList.remove.apply(el.classList, STEPS);
+    // A phone's header column is barely wider than the name itself; stepping the
+    // type down there just makes it small AND still clipped, so leave it big.
+    if(el.clientWidth<120) return;
+    for(let i=0;i<STEPS.length && el.scrollWidth>el.clientWidth+1;i++){
+      el.classList.remove.apply(el.classList, STEPS);
+      el.classList.add(STEPS[i]);
+    }
+  });
+}
+window.addEventListener('resize', function(){ if(typeof sizeCricketHeads==='function') sizeCricketHeads(); });
 function markSVG(m,team){                 // double-ended sword blades: 1 = blade, 2 = crossed blades, 3 = crossed in the gold seal
   if(m<=0)return '';
   const CORE=team===0?'#dcefff':'#ffe6b0', EDGE=team===0?'#3f7fc4':'#c86a28';
@@ -2391,6 +2488,7 @@ function placeCricketBack(){
 function closeBoard(){
   document.getElementById('game').classList.remove('board-open');
   var b=document.getElementById('backBtn'); if(b) b.style.top='';
+  sizeCricketHeads();          // header was display:none while the overlay was up
   fitScreen();
 }
 function backBoard(){
@@ -2455,10 +2553,19 @@ function applyInputMode(){
 function openBoard01(){                        // temporary full-screen board for one turn
   if(!kpAllowed()||G.over||G.pendingWin) return;
   document.getElementById('game').classList.add('bdopen');
+  // Undo ▸ Confirm ▸ Redo as one row, so flexbox keeps them level and centred
+  var row=document.querySelector('#playArea .gamebtns');
+  var u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn'),
+      c=document.getElementById('endTurnBtn');
+  if(row&&u&&r&&c){ row.insertBefore(u,c); row.appendChild(r); }
   fitScreen();
 }
 function closeBoard01(){
   document.getElementById('game').classList.remove('bdopen');
+  // put Undo/Redo back where the normal 01 layout expects them
+  var bar=document.querySelector('#playArea .turnbar');
+  var u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn');
+  if(bar&&u&&r){ bar.appendChild(u); bar.appendChild(r); }
   fitScreen();
 }
 function renderBdCalls(){                      // live dart calls across the top of the board overlay
