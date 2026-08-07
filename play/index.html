@@ -185,6 +185,11 @@
   .team1.active .big{color:var(--blue);text-shadow:0 2px 3px rgba(0,0,20,.7),0 0 12px rgba(79,124,255,.8),0 0 34px rgba(79,124,255,.45);}
   .team2.active .big{color:var(--yellow);text-shadow:0 2px 3px rgba(20,10,0,.7),0 0 12px rgba(255,212,0,.75),0 0 34px rgba(255,212,0,.4);}
   .team-hist{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;flex-shrink:0;}
+  /* the strip lists EVERY turn and scrolls; capped at roughly five chips so the
+     score card keeps the height it has always had */
+  .hist-scroll{display:flex;flex-direction:column;gap:5px;max-height:206px;
+    overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;}
   .histlbl{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);text-align:center;margin-bottom:1px;}
   .histscore{font-family:var(--display);background:linear-gradient(180deg,rgba(0,0,10,.75),rgba(20,16,50,.55));border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:5px 10px;
        box-shadow:inset 0 2px 5px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.05);
@@ -215,6 +220,10 @@
   .board .num{font-family:var(--display);fill:#fff;font-size:21px;font-weight:700;pointer-events:none;text-anchor:middle;dominant-baseline:central;}
   .gamebtns{display:flex;gap:10px;margin-top:12px;}
   .gamebtns button{flex:1;}
+  /* the session row is now a single button — centre it instead of stretching it
+     across the whole width */
+  #sessionBtns{justify-content:center;}
+  #sessionBtns button{flex:0 0 auto;min-width:240px;}
   /* cricket */
   .cricket{width:100%;border-collapse:collapse;table-layout:fixed;}
   .cricket td,.cricket th{padding:12px 6px;text-align:center;border-bottom:1px solid var(--line);}
@@ -908,6 +917,8 @@
     #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:108px;font-size:14px;letter-spacing:1px;}
     #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{top:108px;font-size:14px;}
     #game:not(.cricket) .scoreboard .team .team-hist{top:132px;gap:4px;}
+    /* shorter card here — cap the scroller so the newest chip clears its edge */
+    .hist-scroll{max-height:150px;gap:4px;}
     .histscore{font-size:14px;min-width:30px;padding:2px 5px;}
     .histlbl{font-size:10px;}
     /* board mode */
@@ -1141,8 +1152,8 @@
       </div>
     </div>
 
-    <div class="gamebtns">
-      <button class="ghost" id="newGameBtn">☰ Menu</button>
+    <!-- ☰ Menu removed 2026-08-07 (Nathan) — Quit to Menu alone, centred. -->
+    <div class="gamebtns" id="sessionBtns">
       <button class="warn" id="quitBtn">Quit to Menu</button>
     </div>
   </div>
@@ -2228,13 +2239,14 @@ function renderScoreboard(){
     if(needsIn) sub='⚠ needs double to start';
     let histHtml='';
     if(!G.isCricket){
-      const _hn=!G.isCricket?5:4;                            // tall 01 cards show 5
-      const h=t.history.slice(-_hn);             // chronological: oldest top, newest bottom
-      const last=h.length-1;
-      histHtml='<div class="team-hist"><div class="histlbl">last</div>'
-        + (h.length ? h.map((s,idx)=>`<span class="histscore${idx===last?' latest':''}">${s}</span>`).join('')
+      // EVERY turn is listed, NEWEST FIRST (top) and older ones below; the strip
+      // is a scroller capped at ~5 chips so the card keeps its size, and
+      // renderScoreboard pins it back to the top afterwards.
+      const h=t.history.slice().reverse();
+      histHtml='<div class="team-hist"><div class="histlbl">last</div><div class="hist-scroll">'
+        + (h.length ? h.map((s,idx)=>`<span class="histscore${idx===0?' latest':''}">${s}</span>`).join('')
                     : '<span class="histscore histempty">—</span>')
-        + '</div>';
+        + '</div></div>';
     }
     d.innerHTML=`
       <div class="team-main">
@@ -2246,6 +2258,8 @@ function renderScoreboard(){
       ${histHtml}`;
     el.appendChild(d);
   });
+  // Pin each strip to the newest score, which now sits at the TOP of the list.
+  el.querySelectorAll('.hist-scroll').forEach(s=>{ s.scrollTop=0; });
 }
 
 function renderFloats(){
@@ -2652,10 +2666,8 @@ function refreshResume(){
   if(su) su.classList.toggle('hasResume', show);
   if(was!==show && typeof fitMenu==='function') fitMenu();
 }
-document.getElementById('newGameBtn').onclick=()=>{           // ☰ Menu: pause the game, open setup
-  if(G && !G.over) pausedSig=gameSig();
-  toMenu();
-};
+// (☰ Menu button removed 2026-08-07 — its binding went with it, or the missing
+// element would null-crash the whole script at load.)
 document.getElementById('resumeBtn').onclick=()=>{
   if(!G || G.over) return;
   if(gameSig()===pausedSig){                                  // nothing changed — resume exactly
