@@ -701,13 +701,12 @@
        still sets it), and small trims so the whole screen locks without scrolling */
     /* paused-game bar: slim, so the menu still locks with it present */
     #resumeBtn{ font-size:18px; padding:9px; margin:0 0 8px; }
-    /* mid-width tablets: buy the bar's height back from the banner */
-    .hasResume #appBanner img{ max-width:230px; }
     /* wide tablets (768 iPad and up): park the bar in the empty wing beside
-       the banner — costs zero height, so the 4-row lock is untouched */
-    @media (min-width:740px){
+       the banner — costs zero height, so the 4-row lock is untouched.
+       NEVER shrink or distort the banner to make room — it scales only with
+       the whole menu (fitMenu transform), keeping its exact proportions. */
+    @media (min-width:690px){
       #setup{ position:relative; }
-      .hasResume #appBanner img{ max-width:360px; }
       #setup.hasResume #resumeBtn{
         position:absolute; left:10px; top:62px; width:auto; margin:0;
         max-width:calc((100% - 360px)/2 - 18px);
@@ -2619,8 +2618,7 @@ function fitMenu(){
   var rowH=row?row.getBoundingClientRect().height:66;
   var FLOOR=Math.ceil(rowH*4 + 6*3 + 2), PAD=16;   // real breathing room at the bottom edge
   setupEl.scrollTop=0;
-  var bimg=document.querySelector('#appBanner img');
-  if(bimg) bimg.style.maxHeight='';   // measure from the full-size banner each pass
+  setupEl.style.transform='';           // measure at natural size every pass
   ls.style.maxHeight=FLOOR+'px';
   var avail=setupEl.getBoundingClientRect().top+setupEl.clientHeight;   // content-box bottom
   function contentBottom(){
@@ -2631,20 +2629,22 @@ function fitMenu(){
     });
     return b;
   }
-  // Real iPads report less height than the preview (status bar / safe area).
-  // If the chrome is over budget at the 4-row floor, the decorative banner is
-  // the one thing allowed to give — squeeze it (never below 82px) before even
-  // thinking about falling back to a scrolling menu.
-  var over=contentBottom() - (avail - 2);
-  if(over>0 && bimg){
-    var bh=bimg.getBoundingClientRect().height;
-    var target=Math.max(82, Math.floor(bh-over-2));
-    if(target<bh) bimg.style.maxHeight=target+'px';
-  }
   var h=Math.max(FLOOR, Math.floor(FLOOR + (avail - contentBottom() - PAD)));
   ls.style.maxHeight=h+'px';
-  // lock the page when everything fits; fall back to scrolling on tiny viewports
-  setupEl.style.overflowY = (contentBottom() <= avail+2) ? 'hidden' : 'auto';
+  // Real iPads report less height than the preview (status bar / safe area).
+  // If the chrome is over budget at the 4-row floor, scale the WHOLE menu down
+  // by the few percent needed — same trick the game screen's fitScreen uses.
+  // The banner is sacred: it only ever shrinks in proportion with everything
+  // else, never alone and never distorted.
+  var top=setupEl.getBoundingClientRect().top;
+  var need=contentBottom()-top, have=avail-top-2, sc=1;
+  if(need>have && need>0){
+    sc=Math.max(0.8, have/need);
+    setupEl.style.transformOrigin='50% 0';
+    setupEl.style.transform='scale('+sc+')';
+  }
+  // lock the page when everything (scaled) fits; scroll only as a last resort
+  setupEl.style.overflowY = (top + need*sc <= avail+2) ? 'hidden' : 'auto';
 }
 // Same lock for the Player Library: pinned while everything fits, and it
 // gracefully returns to scrolling once the roster outgrows the screen.
