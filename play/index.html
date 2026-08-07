@@ -2075,9 +2075,9 @@ function applyFat6(value,mult,region){
   if(value<=0) return;                     // no per-dart misses in outcome mode
   // FAT n and SKINNY n are DIFFERENT targets — same number, different band.
   G.target={v:value,m:mult,r:region};
-  const nm=fat6TargetLabel();
   f6NextPlayer();
-  flashToast('New target: '+nm);
+  // no "New target" toast (Nathan) — the big TARGET readout at the top already
+  // shows it, and the popup sat right over the Lose-a-life button
 }
 function f6LifeBtn(){
   if(!G || !G.isFat6 || G.over) return;
