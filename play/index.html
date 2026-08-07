@@ -2508,7 +2508,11 @@ function buildBoard(){
   BOARD_SVG=ns(svg,'bc-');                    // cricket-header copy
   const wrap=document.getElementById('boardwrap');
   wrap.innerHTML=ns(svg,'bm-');               // main play board
-  wrap.querySelector('svg').addEventListener('click',e=>{
+  // pointerdown, NOT click: a click only fires after the finger LIFTS, plus
+  // iOS synthesis lag — the score should land the instant the board is touched.
+  // pointerdown covers mouse too, so no click listener remains (no double-fire).
+  wrap.querySelector('svg').addEventListener('pointerdown',e=>{
+    if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
     const el=e.target.closest('[data-v]');
     if(!el)return;
     throwDart(parseInt(el.dataset.v,10),parseInt(el.dataset.m,10),el.dataset.r);
@@ -2534,7 +2538,18 @@ function placeCricketBack(){
   if(!g.classList.contains('cricket')||!g.classList.contains('board-open')){ back.style.top=''; return; }
   var pa=document.getElementById('playArea');
   var rr=row.getBoundingClientRect(), pr=pa.getBoundingClientRect();
-  if(rr.height>0) back.style.top=Math.round(rr.bottom-pr.top+8)+'px';
+  if(rr.height<=0) return;
+  // On tablets the dart-score row hugs the top, so Back goes just BELOW it.
+  // On phones the overlay column is vertically centred, leaving open space
+  // ABOVE the row — putting Back below it there parks it on the board. Use the
+  // space above when it exists (safe-area aware via the wrap's real padding).
+  var safeTop=parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingTop)||10;
+  var backH=back.getBoundingClientRect().height||52;
+  if(rr.top-pr.top > safeTop+backH+16){
+    back.style.top=Math.round(safeTop+8)+'px';       // room above — top-left corner
+  }else{
+    back.style.top=Math.round(rr.bottom-pr.top+8)+'px';
+  }
 }
 function closeBoard(){
   document.getElementById('game').classList.remove('board-open');
@@ -3118,7 +3133,10 @@ window.dkAfterUpdate=function(){                          // called on the fresh
 (function(){
   var cb=document.getElementById('cricketBoard');
   if(!cb) return;
-  cb.addEventListener('click',function(e){
+  // pointerdown for the same reason as the board svg — score on touch, not on
+  // finger-lift (click waits for touchend + iOS synthesis lag).
+  cb.addEventListener('pointerdown',function(e){
+    if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
     var el=e.target.closest('.tgtrow [data-v]');
     if(!el) return;
     if(!G || !G.isCricket || G.over) return;
