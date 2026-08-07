@@ -343,8 +343,9 @@
   #game.cricket #cricketBoard .cricket .dt-v:active,#game.cricket #cricketBoard .cricket .dt-d:active,#game.cricket #cricketBoard .cricket .dt-t:active{background:rgba(79,124,255,.3);}
   /* ===== Fat 6 (free-for-all Big Six) ===== */
   /* Fat 6 is an individuals game — no Mode, no Match-up, and no Pairings */
-  #setup.fat6 #lineupCard{display:none;}
-  #setup.fat6 #pickHeads .head2,#setup.fat6 #col2{display:none;}
+  /* Fat 6 is a free-for-all: no sides, so the head boxes and the 1v1 hint go */
+  #setup.fat6 #pickHeads{display:none;}
+  #setup.fat6 #col2{display:none;}
   #piddle.fat6 .teamcol:nth-child(2){display:none;}
   #fat6Board{display:none;}
   #game.fat6 #fat6Board{display:block;}
@@ -558,6 +559,22 @@
     background:linear-gradient(180deg,#241a10,#171008); box-shadow:inset 0 1px 0 rgba(255,255,255,.1); }
   .teamcol-head.head1{ color:#8fc7ff; border-color:#3d709f; text-shadow:0 0 12px rgba(74,168,255,.8); }
   .teamcol-head.head2{ color:#ffae5a; border-color:#a3421a; text-shadow:0 0 12px rgba(255,122,46,.85); }
+  /* The head IS the match-up now: label/pair-name on top, picked names under.
+     Its height is FIXED (sized for the fullest state) so nothing shifts as
+     players are picked and unpicked. */
+  #pickHeads .teamcol-head{ display:flex; flex-direction:column; justify-content:center; gap:2px; }
+  .th-label{ font-size:.62em; letter-spacing:1.4px; opacity:.85; line-height:1.15; }
+  .th-names{ font-family:var(--num); font-weight:700; letter-spacing:.5px; line-height:1.15;
+    white-space:nowrap; color:#cdbc95; text-shadow:none; }
+  .th-names.long{ font-size:.78em; }
+  .th-names.xlong{ font-size:.62em; letter-spacing:0; }
+  .teamcol-head.filled .th-names{ color:inherit; text-shadow:inherit; }
+  .teamcol-head.empty .th-names{ opacity:.45; font-weight:600; }
+  /* pair-name input replaces the label line, so the box height never changes */
+  .th-team{ display:none; width:86%; margin:0 auto; text-align:center;
+    font-family:'Cinzel',serif; font-weight:700; letter-spacing:1px; }
+  .teamcol-head.duo .th-label{ display:none; }
+  .teamcol-head.duo .th-team{ display:block; }
   .nameopt{ border:1.5px solid #4a3d28; border-radius:6px; background:linear-gradient(180deg,#221a10,#181107);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 3px 6px rgba(0,0,0,.4); }
   #col1 .nameopt.picked{ border:2px solid #4aa8ff; color:#bcdcff; background:linear-gradient(180deg,#14293f,#0d1b2c);
@@ -683,19 +700,21 @@
   /* With the Mode card gone, the menu locks to a single screen (fitMenu) and only
      the players list scrolls. Moderate trims only — full filigree stays. */
   @media (min-width:601px){
-    #setup #appBanner img{ max-width:360px; }
-    #appBanner::before,#appBanner::after{ width:calc((100% - 360px)/2 + 26px); }
+    /* Banner enlarged 2026-08-07 — paid for by removing the Match-up card and
+       the hint line. 540 is the largest that still renders at FULL size (no
+       menu-wide zoom) on a 768×1024 iPad with real safe-area insets. */
+    #setup #appBanner img{ max-width:540px; }
+    #appBanner::before,#appBanner::after{ width:calc((100% - 540px)/2 + 26px); }
     #appBanner{ margin-bottom:6px; }
     #setup h2{ font-size:15px; margin:0 0 5px; }
     #setup .card{ padding:2px 12px 8px; margin-bottom:7px; }
     #gameSel button{ font-size:15px; padding:7px 6px; }
-    #slots .pickslot{ padding:6px 10px; min-height:0; font-size:16px; line-height:1.25; }
-    #slots .pickslot .small{ font-size:12px; }
-    #lineupHint{ margin-top:4px !important; font-size:13px; }
-    #startBtn{ font-size:17px !important; padding:9px !important; margin-top:5px !important; }
+    #startBtn{ font-size:17px !important; padding:9px !important; margin:0 0 7px !important; }
     #azBar button{ padding:3px 0; font-size:13px; }
-    #duoRow input{ padding:5px 10px; font-size:14px; }
-    .teamcol-head{ font-size:12.5px; padding:4px 4px; }
+    /* Match-up lives here now: fixed-height heads holding each side's picks */
+    .teamcol-head{ font-size:20px; padding:5px 6px; }
+    #pickHeads .teamcol-head{ height:62px; }
+    .th-team{ padding:2px 6px !important; font-size:12.5px !important; }
     #pickHeads{ margin-bottom:4px; }
     #manageBtn{ margin-top:7px !important; padding:7px 14px; font-size:13.5px; }
     /* list rows a touch tighter so 4 fit — names still by far the biggest text */
@@ -713,8 +732,8 @@
       #setup{ position:relative; }
       #setup.hasResume #resumeBtn{
         position:absolute; left:10px; top:62px; width:auto; margin:0;
-        max-width:calc((100% - 360px)/2 - 18px);
-        font-size:16px; padding:10px 12px; z-index:5;
+        max-width:calc((100% - 540px)/2 - 18px);
+        font-size:15px; padding:9px 10px; z-index:5;
       }
     }
     #library .librow .lname{ font-size:30px; }
@@ -726,7 +745,9 @@
     #manageTeamsBtn,#libDoneBtn{ padding:10px !important; font-size:16px; margin-top:6px !important; }
   }
   @media (max-width:600px){
-    #setup #appBanner img{ max-width:200px; }
+    /* Banner enlarged 2026-08-07 — paid for by removing the Match-up card and
+       the hint line. Phones keep a margin (the wings need room to read). */
+    #setup #appBanner img{ max-width:320px; }
     #appBanner{ margin-bottom:5px; }
     #resumeBtn{ font-size:15px; padding:8px; margin:0 0 6px; }
     /* paused game on a phone: no height to spare anywhere, so the bar becomes
@@ -744,18 +765,17 @@
     }
     /* lightning wings fill the side gaps on phones too — blue left, fire right */
     #appBanner::before,#appBanner::after{ content:""; position:absolute; top:2px; bottom:2px;
-      width:calc((100% - 200px)/2 + 18px); mix-blend-mode:screen; pointer-events:none; opacity:.95; }
+      width:calc((100% - 320px)/2 + 18px); mix-blend-mode:screen; pointer-events:none; opacity:.95; }
     #appBanner::before{ left:-4px; background:url("dk-side-blue.jpg") center/cover no-repeat; }
     #appBanner::after{ right:-4px; background:url("dk-side-red.jpg") center/cover no-repeat; }
     #setup h2{ font-size:13px; margin:0 0 4px; letter-spacing:1.6px; }
     #setup .card{ padding:2px 9px 7px; margin-bottom:6px; border-width:8px; border-image-width:8px; }
     #gameSel button{ font-size:12.5px; padding:6px 3px; letter-spacing:.6px; }
-    #slots .pickslot{ padding:5px 8px; min-height:0; font-size:13px; line-height:1.25; }
-    #slots .pickslot .small{ font-size:10.5px; }
-    #lineupHint{ margin-top:3px !important; font-size:11px; }
-    #duoRow input{ padding:6px 8px; font-size:13px; }
-    #startBtn{ font-size:15px !important; padding:8px !important; margin-top:5px !important; }
-    .teamcol-head{ font-size:11.5px; padding:4px 3px; letter-spacing:.6px; }
+    #startBtn{ font-size:15px !important; padding:8px !important; margin:0 0 6px !important; }
+    /* Match-up lives here now: fixed-height heads holding each side's picks */
+    .teamcol-head{ font-size:15px; padding:4px 4px; letter-spacing:.6px; }
+    #pickHeads .teamcol-head{ height:48px; }
+    .th-team{ padding:1px 4px !important; font-size:10.5px !important; }
     #pickHeads{ margin-bottom:4px; }
     #manageBtn{ margin-top:7px !important; padding:7px 10px; font-size:12.5px; }
   }
@@ -866,25 +886,28 @@
 
 
 
-    <div class="card" id="lineupCard">
-      <h2 id="slotsTitle">Line-up</h2>
-      <div id="slots" class="row"></div>
-      <p class="small center" id="lineupHint" style="margin-top:10px;"></p>
-      <div class="row hidden" id="duoRow" style="margin-top:4px;">
-        <input type="text" id="duoName1" class="grow" placeholder="Team 1 name…" list="teamNameList" autocomplete="off" title="Names save automatically for this pair">
-        <input type="text" id="duoName2" class="grow" placeholder="Team 2 name…" list="teamNameList" autocomplete="off" title="Names save automatically for this pair">
-      </div>
-      <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;margin-top:12px;" disabled>Start Game</button>
-    </div>
+    <!-- Match-up card removed 2026-08-07: the picked names now live in the
+         Select Players column heads, and the height goes to the banner. -->
+    <button class="primary" id="startBtn" style="width:100%;font-size:23px;padding:16px;margin:0 0 10px;" disabled>Start Game</button>
 
     <div class="card" id="pickCard">
       <h2>Select Players</h2>
       <div id="azBar"></div>
       <!-- Heads sit outside the scroller; BOTH columns live inside ONE scroll
-           container (#listScroll), so they can never drift out of sync. -->
+           container (#listScroll), so they can never drift out of sync.
+           Each head is a FIXED-HEIGHT box (never resizes as names come and go)
+           showing that side's picks, plus the pair-name input once it has 2. -->
       <div class="teamcols" id="pickHeads">
-        <div class="teamcol-head head1">Team 1</div>
-        <div class="teamcol-head head2">Team 2</div>
+        <div class="teamcol-head head1" id="head1">
+          <span class="th-label" id="thLabel1">Team 1</span>
+          <input type="text" id="duoName1" class="th-team" placeholder="team name…" list="teamNameList" autocomplete="off" title="Names save automatically for this pair">
+          <span class="th-names" id="thNames1">pick below</span>
+        </div>
+        <div class="teamcol-head head2" id="head2">
+          <span class="th-label" id="thLabel2">Team 2</span>
+          <input type="text" id="duoName2" class="th-team" placeholder="team name…" list="teamNameList" autocomplete="off" title="Names save automatically for this pair">
+          <span class="th-names" id="thNames2">pick below</span>
+        </div>
       </div>
       <div id="listScroll">
         <div class="namelist" id="col1"></div>
@@ -897,9 +920,9 @@
          groupLib/loadGroup remain in code, dormant, and "groups" stays in the
          Pi backup payload for compatibility.) -->
 
-    <!-- Team-name inputs live INSIDE the Match-up card (refreshDuoCard slots
-         #duoRow in above Start Game) — no separate card, keeps the menu one
-         screen. The old #duoCard shell stays only as the hidden datalist home. -->
+    <!-- Team-name inputs live INSIDE each Select Players column head (they
+         replace that side's "Team N" label once it has 2 picks, so the head
+         never changes height). #duoCard remains only as the datalist home. -->
     <div class="hidden" id="duoCard">
       <datalist id="teamNameList"></datalist>
     </div>
@@ -1089,9 +1112,9 @@ function teamOf(name){
   return -1;
 }
 function renderColumns(){
-  const _h1=document.querySelector('#setup .teamcol-head.head1');
+  // NOTE: the head boxes are owned by renderLineup now (they hold each side's
+  // picks). Never write their textContent here — that wipes their inner spans.
   if(config.game==='fat6'){
-    if(_h1) _h1.textContent='Players';
     const el=document.getElementById('col1');
     el.innerHTML='';
     document.getElementById('col2').innerHTML='';
@@ -1108,9 +1131,6 @@ function renderColumns(){
     renderAZ();
     return;
   }
-  if(_h1) _h1.textContent=config.mode==='iron'?'Team 1 · pick 2':'Team 1';
-  const _h2=document.querySelector('#setup .teamcol-head.head2');
-  if(_h2) _h2.textContent=config.mode==='iron'?'Ironman · pick 1':'Team 2';
   [0,1].forEach(t=>{
     const el=document.getElementById(t===0?'col1':'col2');
     el.innerHTML='';
@@ -1274,47 +1294,40 @@ function toggleName(name,team){
   } // owner===other team → un-pressable, ignore
   renderColumns();renderLineup();updateStart();
 }
+// The Select Players column heads ARE the match-up: each shows its side's picks
+// as they happen. Their height is fixed by CSS, so picking never shifts layout.
 function renderLineup(){
   inferMode();
   const a=teamSel[0].length, b=teamSel[1].length;
   const settled = a>=1 && b>=1;                    // both sides have picked something
-  document.getElementById('slotsTitle').textContent=
-    !settled?'Match-up':(config.mode==='iron'?'Ironman Match':(config.mode==='2t'?'Teams':'Match-up'));
-  const el=document.getElementById('slots');
-  el.innerHTML='';
   [0,1].forEach(t=>{
     const names=teamSel[t];
+    const head=document.getElementById('head'+(t+1));
     // Ironman = the side standing alone (only once the other side has 2)
-    const label=(settled&&config.mode==='iron'&&names.length===1)?'🦾 Ironman':'Team '+(t+1);
-    const d=document.createElement('div');
-    d.className='grow pickslot slot'+(t+1)+(names.length?' filled':'');
-    d.style.minWidth='120px';
-    const body=names.length?names.map(n=>esc(shortName(n))).join(' & '):'pick below';
-    d.innerHTML=`<div class="center"><div class="small">${label}</div><div>${body}</div></div>`;
-    el.appendChild(d);
+    document.getElementById('thLabel'+(t+1)).textContent=
+      (settled&&config.mode==='iron'&&names.length===1)?'🦾 Ironman':'Team '+(t+1);
+    const el=document.getElementById('thNames'+(t+1));
+    el.textContent = names.length ? names.map(n=>shortName(n)).join(' & ') : 'pick below';
+    // one line, always: step the type down instead of wrapping or truncating
+    const len=el.textContent.length;
+    el.classList.toggle('long', len>13 && len<=19);
+    el.classList.toggle('xlong', len>19);
+    head.classList.toggle('filled', names.length>0);
+    head.classList.toggle('empty', names.length===0);
   });
-  document.getElementById('lineupHint').textContent=
-    settled&&config.mode==='iron'?'Two against one — the Ironman stands alone. Everyone throws one at a time in bull order.'
-    :settled&&config.mode==='2t'?'Teammates alternate throwers each round.'
-    :'Pick 1 or 2 per side — 1v1, 2v2, or 2 + 1 = Ironman.';
 }
 function updateStart(){
   inferMode();
   refreshDuoCard();
-  // Start Game lives at the bottom of the Match-up card — but Fat 6 HIDES that
-  // card (#setup.fat6 #lineupCard{display:none}), so in Fat 6 it slots in just
-  // ABOVE the Select Players card instead.
+  // Start Game sits just above the Select Players card in every mode now — no
+  // relocation needed since the Match-up card is gone.
   var _sb=document.getElementById('startBtn');
   if(config.game==='fat6'){
-    var _pick=document.getElementById('pickCard');
-    if(_sb.nextElementSibling!==_pick) _pick.parentElement.insertBefore(_sb,_pick);
     _sb.disabled = f6Sel.length<2; fitMenu(); return;
   }
-  var _lc=document.getElementById('lineupCard');
-  if(_sb.parentElement!==_lc) _lc.appendChild(_sb);
   // Any 1-or-2 per side is a playable combo: 1+1, 2+2, or 2+1 Ironman.
   const a=teamSel[0].length, b=teamSel[1].length;
-  document.getElementById('startBtn').disabled=!(a>=1 && b>=1);
+  _sb.disabled=!(a>=1 && b>=1);
   fitMenu();
 }
 
@@ -1597,19 +1610,22 @@ function loadGroup(id){
   setGroupHint('Loaded “'+g.name+'”.');
 }
 function refreshDuoCard(){
-  const row=document.getElementById('duoRow'); if(!row)return;
+  const i1=document.getElementById('duoName1'), i2=document.getElementById('duoName2');
+  if(!i1||!i2) return;
   // A side gets a team-name input whenever IT has 2 picks (works for 2v2 and
   // for an Ironman duo on either side — duoTeamName keys are side-agnostic).
-  const show = config.game!=='fat6' && (teamSel[0].length===2 || teamSel[1].length===2);
-  const i1=document.getElementById('duoName1'), i2=document.getElementById('duoName2');
-  i1.style.display=teamSel[0].length===2?'':'none';
-  i2.style.display=teamSel[1].length===2?'':'none';
-  row.classList.toggle('hidden',!show);
-  // space-neutral on the locked menu: the hint line gives way to the inputs
-  var _lh=document.getElementById('lineupHint'); if(_lh) _lh.style.display=show?'none':'';
-  if(!show)return;
-  if(document.activeElement!==i1) i1.value=duoTeamName(teamSel[0]);
-  if(document.activeElement!==i2) i2.value=duoTeamName(teamSel[1]);
+  // It replaces that head's "Team N" label, so the box height never changes.
+  let any=false;
+  [0,1].forEach(t=>{
+    const duo = config.game!=='fat6' && teamSel[t].length===2;
+    document.getElementById('head'+(t+1)).classList.toggle('duo', duo);
+    if(duo){
+      any=true;
+      const inp=t===0?i1:i2;
+      if(document.activeElement!==inp) inp.value=duoTeamName(teamSel[t]);
+    }
+  });
+  if(!any) return;
   const names=[...new Set([...teamLib,...Object.values(duoTeams)])].filter(Boolean);
   document.getElementById('teamNameList').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
 }
