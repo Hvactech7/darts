@@ -512,6 +512,10 @@
     background:
       linear-gradient(180deg, rgba(5,7,14,.30), rgba(5,7,14,.12) 30%, rgba(4,5,10,.44) 78%, rgba(2,3,7,.68)),
       url("dk-bg.jpg") center top / cover no-repeat, #070a12; }
+  /* Uniform menu shrink (set by fitMenu). `zoom` — not transform — because it
+     reduces real LAYOUT height, so a tight screen can't push Manage Players off
+     the bottom. Everything scales together; the banner keeps its exact shape. */
+  #setup > *{ zoom:var(--mz,1); }
   #appBanner{ margin:2px 0 12px; position:relative; }
   @media (min-width:601px){
     #appBanner::before,#appBanner::after{ content:""; position:absolute; top:4px; bottom:4px;
@@ -2614,13 +2618,8 @@ function fitMenu(){
   // POSITIVE slack — measure the real content bottom from the children instead.
   // FLOOR = at least 4 full name rows in view (Nathan's minimum), measured from
   // a real row so it tracks font/team-line changes.
-  var row=ls.querySelector('.nameopt');
-  var rowH=row?row.getBoundingClientRect().height:66;
-  var FLOOR=Math.ceil(rowH*4 + 6*3 + 2), PAD=16;   // real breathing room at the bottom edge
   setupEl.scrollTop=0;
-  setupEl.style.transform='';           // measure at natural size every pass
-  ls.style.maxHeight=FLOOR+'px';
-  var avail=setupEl.getBoundingClientRect().top+setupEl.clientHeight;   // content-box bottom
+  setupEl.style.setProperty('--mz',1);   // always measure from natural size first
   function contentBottom(){
     var b=0;
     [].slice.call(setupEl.children).forEach(function(k){
@@ -2629,36 +2628,59 @@ function fitMenu(){
     });
     return b;
   }
-  var h=Math.max(FLOOR, Math.floor(FLOOR + (avail - contentBottom() - PAD)));
-  ls.style.maxHeight=h+'px';
-  // Real iPads report less height than the preview (status bar / safe area).
-  // If the chrome is over budget at the 4-row floor, scale the WHOLE menu down
-  // by the few percent needed — same trick the game screen's fitScreen uses.
-  // The banner is sacred: it only ever shrinks in proportion with everything
-  // else, never alone and never distorted.
   var top=setupEl.getBoundingClientRect().top;
-  var need=contentBottom()-top, have=avail-top-2, sc=1;
-  if(need>have && need>0){
-    sc=Math.max(0.8, have/need);
-    setupEl.style.transformOrigin='50% 0';
-    setupEl.style.transform='scale('+sc+')';
+  // Budget = the smaller of the container's content box and what's actually
+  // on screen — iOS standalone inflates the former (see visibleBottom).
+  var avail=Math.min(top+setupEl.clientHeight, visibleBottom());
+  var PAD=16;                                     // breathing room at the bottom edge
+  var row=ls.querySelector('.nameopt');
+  var rowFULL=row?row.getBoundingClientRect().height:66;   // natural row height
+  var FLOOR=Math.ceil(rowFULL*4 + 6*3 + 2);       // 4 full name rows — Nathan's minimum
+  ls.style.maxHeight=FLOOR+'px';
+  // If the chrome is still over budget with the list at its 4-row floor, shrink
+  // the WHOLE menu uniformly with `zoom`. Unlike transform, zoom reduces real
+  // LAYOUT height — which is the only thing that can stop Manage Players from
+  // being pushed off the bottom. The banner is sacred: it shrinks only here,
+  // in proportion with every other element, never alone and never distorted.
+  var mz=1;
+  for(var pass=0; pass<5; pass++){
+    var over=contentBottom() - (avail - 2);
+    if(over<=0) break;
+    var visNeed=(contentBottom()-top), visHave=(avail-2-top);
+    if(visNeed<=0) break;
+    mz=Math.max(0.7, mz*(visHave/visNeed) - 0.004);   // small bias against measurement lag
+    setupEl.style.setProperty('--mz',mz);
   }
-  // lock the page when everything (scaled) fits; scroll only as a last resort
-  setupEl.style.overflowY = (top + need*sc <= avail+2) ? 'hidden' : 'auto';
+  // Hand whatever room is left to the players list (local = zoomed units).
+  var slack=(avail - contentBottom() - PAD)/mz;
+  ls.style.maxHeight=Math.max(FLOOR, Math.floor(FLOOR + slack))+'px';
+  if(contentBottom() > avail-2){                   // expansion overshot — give it back
+    ls.style.maxHeight=FLOOR+'px';
+  }
+  // NEVER hard-lock: a wrong fit with overflow:hidden strands the bottom of the
+  // menu (Nathan hit exactly that — Manage Players clipped and unreachable).
+  // When the content genuinely fits there is nothing to scroll, so 'auto' feels
+  // identical to a lock; when a device surprises us, it self-heals instead.
+  setupEl.style.overflowY='auto';
+}
+// True bottom of what the user can actually SEE. iOS standalone reports element
+// heights that run past the visible window (and the keyboard shrinks it further),
+// so every fit clamps to this rather than trusting clientHeight alone.
+function visibleBottom(){
+  var vv=window.visualViewport;
+  var h=vv ? (vv.height+vv.offsetTop) : window.innerHeight;
+  var wrap=document.querySelector('.wrap');
+  var sab=wrap ? parseFloat(getComputedStyle(wrap).paddingBottom)||0 : 0;
+  return Math.min(h, window.innerHeight) - sab;
 }
 // Same lock for the Player Library: pinned while everything fits, and it
 // gracefully returns to scrolling once the roster outgrows the screen.
 function fitLibrary(){
   var lib=document.getElementById('library');
   if(!lib || lib.classList.contains('hidden')) return;
-  lib.scrollTop=0;
-  var avail=lib.getBoundingClientRect().top+lib.clientHeight;
-  var b=0;
-  [].slice.call(lib.children).forEach(function(k){
-    if(getComputedStyle(k).display==='none') return;
-    var r=k.getBoundingClientRect(); if(r.bottom>b) b=r.bottom;
-  });
-  lib.style.overflowY = (b<=avail-4) ? 'hidden' : 'auto';
+  // Same rule as the menu: always scrollable, never strandable. It reads as a
+  // lock whenever the roster fits, and stays usable when it doesn't.
+  lib.style.overflowY='auto';
 }
 window.addEventListener('resize', function(){ fitMenu(); fitLibrary(); });
 window.addEventListener('orientationchange', function(){ setTimeout(function(){ fitMenu(); fitLibrary(); },120); });
@@ -2677,6 +2699,22 @@ function refitAll(){ fitMenu(); fitLibrary(); }
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(refitAll);
 window.addEventListener('pageshow', refitAll);
 setTimeout(refitAll,300); setTimeout(refitAll,1200);
+// Anything that changes size after a fit (fonts swapping in, the banner
+// decoding, a row growing) invalidates the measurement — re-fit on the spot.
+(function(){
+  if(!window.ResizeObserver) return;
+  var busy=false;
+  var ro=new ResizeObserver(function(){
+    if(busy) return;                       // our own scaling must not re-trigger us
+    busy=true;
+    requestAnimationFrame(function(){ refitAll(); setTimeout(function(){ busy=false; },80); });
+  });
+  ['setup','library'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    [].slice.call(el.children).forEach(function(k){ ro.observe(k); });
+  });
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', refitAll);
+})();
 // ---- iOS keyboard guard ----------------------------------------------------
 // The locked screens (overflow hidden) block iOS's native scroll-the-focused-
 // field-above-the-keyboard move. While a field is focused: unlock its screen
