@@ -459,6 +459,11 @@
   #game:not(.cricket):not(.fat6) .scoreboard{position:static;top:auto;margin:0 0 14px;position:relative;z-index:1;}
   #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:322px;}
   #game:not(.cricket):not(.fat6) .scoreboard .team .name{top:226px;font-size:27px;letter-spacing:2px;opacity:1;}
+  /* the 301 "needs double to start" hint had no position of its own, so it sat
+     at the card's top-left corner — hidden BEHIND the thrower name. Pin it to
+     the free strip at the bottom of the card, under the team name. */
+  #game:not(.cricket):not(.fat6) .scoreboard .team .small{position:absolute;left:14px;right:14px;bottom:8px;
+    text-align:center;font-size:19px;min-height:0;}
   #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;top:124px;font-size:22px;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:742px;margin:0 auto 6px;order:2;}
   #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:1;}
@@ -953,7 +958,7 @@
     #game:not(.cricket):not(.fat6) .scoreboard .team .big{position:static;font-size:80px;line-height:1;}
     #game:not(.cricket):not(.fat6) .scoreboard .team .name{position:static;
       font-size:13px;letter-spacing:1px;opacity:.85;}
-    #game:not(.cricket):not(.fat6) .scoreboard .team .small{font-size:11px;min-height:0;}
+    #game:not(.cricket):not(.fat6) .scoreboard .team .small{position:static;font-size:11px;min-height:0;}
     #game:not(.cricket):not(.fat6) .scoreboard .team .team-hist{position:static;width:100%;
       flex-direction:row;align-items:center;gap:6px;margin-top:3px;}
     .histlbl{font-size:10px;flex:0 0 auto;margin:0;}
@@ -1478,12 +1483,23 @@ function updateStart(){
 }
 
 //============================ SETUP EVENTS ============================
+// The pill row must always AGREE with config.game — it can be set from a tap,
+// from a restored in-progress game, or from the remembered last game. Sync is
+// one function so no path can drift (the bug: a reload restored a cricket game,
+// the menu pill still showed the static 501 default, Start launched cricket).
+function syncGamePill(){
+  [...document.getElementById('gameSel').children].forEach(c=>c.classList.toggle('on',c.dataset.game===config.game));
+  document.getElementById('setup').classList.toggle('fat6',config.game==='fat6');
+}
+function setGame(g){
+  config.game=g;
+  try{ localStorage.setItem('darts_lastgame_v1',g); }catch(e){}
+  syncGamePill();
+  renderColumns();renderLineup();updateStart();
+}
 document.getElementById('gameSel').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
-  config.game=b.dataset.game;
-  [...e.currentTarget.children].forEach(c=>c.classList.toggle('on',c===b));
-  document.getElementById('setup').classList.toggle('fat6',config.game==='fat6');
-  renderColumns();renderLineup();updateStart();
+  setGame(b.dataset.game);
 });
 /* (Mode picker removed — the mode is inferred from the picks:
    1+1 = 1v1, 2+2 = 2v2, 2+1 either way round = Ironman.) */
@@ -2855,6 +2871,7 @@ function toMenu(){
   document.getElementById('game').classList.add('hidden');
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('setup').classList.remove('hidden');
+  syncGamePill();      // menu always reopens showing the game that was just played
   renderColumns();renderLineup();updateStart();
 }
 
@@ -2908,6 +2925,7 @@ function restoreGameState(){
   if(!s.ts || (Date.now()-s.ts)>GAME_TTL){ clearGameState(); return false; }
   try{
     config.game=s.cfg.game; config.mode=s.cfg.mode;
+    syncGamePill();      // the menu pill must match the restored game, not the HTML default
     teamSel=s.teamSel||[[],[]]; f6Sel=s.f6Sel||[];
     // Re-run the real starters so the DOM, mode classes and board are set up
     // exactly as they would be normally, then swap the saved state back in.
@@ -3171,6 +3189,12 @@ setTimeout(refitAll,300); setTimeout(refitAll,1200);
 //============================ INIT ============================
 resetSelection();
 renderColumns();renderLineup();updateStart();
+// A fresh launch opens on the last game played (Nathan) — the pill row keeps
+// whatever was chosen last time instead of snapping back to 501.
+try{
+  var _lg=localStorage.getItem('darts_lastgame_v1');
+  if(_lg && _lg!==config.game && document.querySelector('#gameSel button[data-game="'+_lg+'"]')) setGame(_lg);
+}catch(e){}
 restoreGameState();          // bring back an in-progress game after an app restart
 
 // ---- update hand-off (used by the service-worker registration below) --------
