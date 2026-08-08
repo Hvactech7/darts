@@ -2218,19 +2218,22 @@ function renderGame(){
   var _cc=document.getElementById('cricketConfirmBtn'); if(_cc) _cc.disabled=false;
   const confirmBtn=document.getElementById('endTurnBtn');
   confirmBtn.disabled=G.over;
-  // Every score confirmation reads "✓ Score It" (Nathan) — the calculator's
-  // wording, used everywhere now. Winning the leg is a different action and
-  // keeps its own label.
+  // Confirm wording tells the player what pressing it MEANS right now (Nathan):
+  // nothing entered = a missed turn ("Miss", or "Miss/Bust" in 01 when the
+  // score is low enough that a bust is possible); anything entered = "Score It".
+  // Winning the leg is a different action and keeps its own label.
   if(G.pendingWin) confirmBtn.textContent='🏆 Confirm Winner';
   else if(document.getElementById('game').classList.contains('bdopen') && !G.isCricket && !G.isFat6){
     const _tot=G.darts.reduce((s,d)=>s+((d.bust||d.noCount)?0:d.score),0);
-    confirmBtn.textContent=G.darts.some(d=>d.bust)?'✓ Score It — BUST':('✓ Score It — '+_tot);
+    confirmBtn.textContent=G.darts.length===0 ? missLabel01()
+      : (G.darts.some(d=>d.bust)?'✓ Score It — BUST':('✓ Score It — '+_tot));
   }
+  else if(G.isCricket) confirmBtn.textContent=(G.darts&&G.darts.length)?'✓ Score It':'Miss';
   else confirmBtn.textContent='✓ Score It';
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
   var _ccw=document.getElementById('cricketConfirmBtn');
-  if(_ccw){ _ccw.textContent=G.pendingWin?'🏆 Confirm Winner':'✓ Score It';
+  if(_ccw){ _ccw.textContent=G.pendingWin?'🏆 Confirm Winner':((G.darts&&G.darts.length)?'✓ Score It':'Miss');
     _ccw.classList.toggle('primary',!!G.pendingWin); _ccw.classList.toggle('confirm-btn',!G.pendingWin); }
   document.getElementById('game').classList.toggle('pendwin',!!G.pendingWin);
   kpRender();
@@ -2401,7 +2404,12 @@ function renderCricket(){
   html+='</table></div>';
   el.innerHTML=html;
   _prevCMarks=[Object.assign({},t1.marks),Object.assign({},t2.marks)];
-  const _hb=el.querySelector('.hdr-throw'); if(_hb) _hb.addEventListener('click',openBoard);
+  // pointerdown like every other control — open on touch, never on finger-lift
+  const _hb=el.querySelector('.hdr-throw');
+  if(_hb) _hb.addEventListener('pointerdown',e=>{
+    if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
+    openBoard();
+  });
   sizeCricketHeads();
 }
 // How far each team's header box may grow toward the mini board. Measured from
@@ -2630,6 +2638,12 @@ function kpCanBackspace(){
   var _g=document.getElementById('game');
   return _g.classList.contains('kpmode') && !_g.classList.contains('bdopen') && !!kpExpr;
 }
+// Empty-input confirm label for 01: pressing it records a scoreless turn, which
+// covers a plain miss — and a bust, when the score is low enough that one is
+// possible (≤181: 180 leaves 1, and anything over the remainder goes negative).
+function missLabel01(){
+  return curTeam().score<=181 ? 'Miss/Bust' : 'Miss';
+}
 document.getElementById('undoBtn').onclick=()=>{
   // char-backspace only where the calculator is actually visible — in the board
   // overlay this would invisibly eat a restored equation instead of undoing darts
@@ -2665,7 +2679,7 @@ function openBoard01(){                        // temporary full-screen board fo
   var u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn'),
       c=document.getElementById('endTurnBtn');
   if(row&&u&&r&&c){ row.insertBefore(u,c); row.appendChild(r); }
-  fitScreen();
+  renderGame();          // the confirm label depends on bdopen (Miss vs Score It)
 }
 function closeBoard01(){
   document.getElementById('game').classList.remove('bdopen');
@@ -2739,6 +2753,10 @@ function kpRender(){
   } else elH.textContent='';
   kpFit();
   const ok=document.getElementById('kpOK'); if(ok) ok.disabled = kpEval(kpExpr)>180 || !kpAllowed() || (G&&(G.over||!!G.pendingWin));
+  // Empty calculator = pressing confirm records a miss (or covers a bust when
+  // one is possible) — say so. Anything typed = it scores.
+  if(ok) ok.textContent = kpExpr ? '✓ Score It'
+    : (kpAllowed()&&G&&!G.over&&!G.pendingWin ? missLabel01() : '✓ Score It');
 }
 function kpCommit(total){
   if(!kpAllowed()||G.over||G.pendingWin) return;
