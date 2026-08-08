@@ -2338,7 +2338,13 @@ function renderGame(){
 function fitScreen(){
   var g=document.getElementById('game');
   if(!g) return;
-  if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){ g.style.transform=''; g.style.width=''; g.style.marginLeft=''; return; }
+  var _bsvg=(document.getElementById('boardwrap')||{querySelector:function(){return null;}}).querySelector('svg');
+  if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){
+    g.style.transform=''; g.style.width=''; g.style.marginLeft='';
+    if(_bsvg){ _bsvg.style.width=''; _bsvg.style.maxWidth=''; _bsvg.style.marginLeft=''; _bsvg.style.flex='';
+      var _bw0=document.getElementById('boardwrap'); if(_bw0) _bw0.style.marginTop=''; }
+    return;
+  }
   g.style.transform='none'; g.style.transformOrigin='top center';
   var wrap=document.querySelector('.wrap');
   var _cs=getComputedStyle(wrap);
@@ -2351,9 +2357,48 @@ function fitScreen(){
     if(_over>0) _bw.style.marginTop=(8-Math.min(_over,330))+'px';
   } else if(_bw){ _bw.style.marginTop=''; }
   g.style.width=''; g.style.marginLeft='';          // measure at natural width first
+  if(_bsvg){ _bsvg.style.width=''; _bsvg.style.maxWidth=''; _bsvg.style.marginLeft=''; _bsvg.style.flex='';
+    var _bw1=document.getElementById('boardwrap'); if(_bw1) _bw1.style.marginTop=''; }
   var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
   var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
   var s = need>0 ? Math.min(1, avail/need) : 1;
+  // Fat 6 board +12% RENDERED (Nathan). A plain max-width bump self-defeats:
+  // the taller board shrinks s and eats most of the gain. Instead iterate in
+  // PIXELS: aim the natural width at target/s, re-measure, repeat — converges
+  // in a couple of passes. Centring is exact px math inside #boardwrap. Only
+  // when the screen is height-limited — at s=1 the board already fills width.
+  if(g.classList.contains('fat6') && _bsvg && s<0.999 && window.innerWidth>600){
+    // >600 = tablet only: the 70px tuck clearance was measured against the
+    // TABLET header — on a phone the circle plows into FAT 6 and the chips
+    var _bw=document.getElementById('boardwrap');
+    var _wrapW=wrap.clientWidth;
+    var _target=Math.min(1.12*_bsvg.getBoundingClientRect().width*s, _wrapW-8);  // rendered px wanted, never wider than the screen
+    // the circle's dead top corners overlap the header row's dead middle —
+    // tucking the board up 70px buys most of the size without shrinking text
+    // (70 measured safe: the circle clears the white FAT 6 and the chips)
+    _bw.style.marginTop='-70px';
+    for(var _i=0;_i<6;_i++){
+      var _px=_target/s;                                       // natural px that scale to the target
+      _bsvg.style.width=Math.round(_px)+'px';
+      _bsvg.style.maxWidth='none';
+      _bsvg.style.flex='0 0 auto';        // #boardwrap is display:flex — stop it shrinking the board back
+      // centre on the GAME's midline in unscaled coords — #boardwrap is a
+      // narrow flex item, its own box cannot be trusted for centring
+      var _bwRect=_bw.getBoundingClientRect(), _gRect=g.getBoundingClientRect();
+      _bsvg.style.marginLeft=Math.round((_gRect.left+_gRect.width/2)-_bwRect.left-_px/2)+'px';
+      need=wrap.scrollHeight-pad;
+      s = need>0 ? Math.min(1, avail/need) : 1;
+    }
+    // whatever the flex container does with the margins, measure the residual
+    // mis-centring and cancel it — twice, because applying a margin can shift
+    // the flex layout under the first measurement
+    for(var _c=0;_c<2;_c++){
+      var _bR=_bsvg.getBoundingClientRect(), _gR2=g.getBoundingClientRect();
+      var _delta=(_gR2.left+_gR2.width/2)-(_bR.left+_bR.width/2);
+      _bsvg.style.marginLeft=Math.round(parseFloat(_bsvg.style.marginLeft||'0')+_delta)+'px';
+    }
+    var _pxPinned=true;   // board width is now absolute px — widening #game can't grow it
+  }
   // ⚠️ The width compensation must NOT run while the main board is on screen:
   // svg.board height is proportional to width, so widening by 1/s makes the
   // board 1/s taller and the scale never actually fits (fat6's Lose-a-life sat
@@ -2361,7 +2406,10 @@ function fitScreen(){
   // uniform scale is both correct and how they fitted before v2.11.
   var _mainBoard=document.getElementById('boardwrap');
   var _boardShown=_mainBoard && _mainBoard.offsetParent!==null && _mainBoard.getBoundingClientRect().height>0;
-  if(s<0.999 && !_boardShown){
+  // px-pinned board (fat6 boost): the compensation is safe again — the board
+  // cannot grow with the widened box, and the header corners reach the true
+  // screen edges (Nathan: the point and player were floating inboard)
+  if(s<0.999 && (!_boardShown || (typeof _pxPinned!=='undefined' && _pxPinned))){
     // The shrink is needed for HEIGHT only — without compensation it throws
     // away WIDTH too (at 0.86 on an iPad that was ~50px of dead margin per
     // side, Nathan's complaint). Widen the layout by 1/s so the scaled result
@@ -2374,6 +2422,17 @@ function fitScreen(){
     g.style.transform='scale('+s.toFixed(4)+')';    // uniform shrink, board included
   }else{
     g.style.transform='none';
+  }
+  // FINAL fat6 board centring: everything above works in layout units, but what
+  // matters is the RENDERED midline — measure the visual offset after the
+  // transform is in place and cancel it exactly (Nathan could see the drift)
+  if(typeof _pxPinned!=='undefined' && _pxPinned && _bsvg){
+    for(var _c2=0;_c2<3;_c2++){
+      var _bV=_bsvg.getBoundingClientRect();
+      var _dV=(window.innerWidth/2)-(_bV.left+_bV.width/2);
+      if(Math.abs(_dV)<1.5) break;
+      _bsvg.style.marginLeft=Math.round(parseFloat(_bsvg.style.marginLeft||'0')+_dV/s)+'px';
+    }
   }
 }
 window.addEventListener('resize', fitScreen);
