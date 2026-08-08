@@ -228,7 +228,7 @@
      the old bottom row only remains for Fat 6. In the 01 board overlay the
      turnbar's undo/redo are moved into .gamebtns, so the leftover bar (just
      Quit) must not float there. */
-  #game.cricket #sessionBtns,#game.kpmode #sessionBtns{display:none;}
+  #game.cricket #sessionBtns,#game.kpmode #sessionBtns,#game.fat6 #sessionBtns{display:none;}
   #game.bdopen #playArea .turnbar{display:none !important;}
   #sessionBtns button{flex:0 0 auto;min-width:240px;}
   /* cricket */
@@ -410,8 +410,16 @@
   /* Fat 6 hides the input toggle and dart row, so Undo/Redo were left sitting
      next to each other in the bottom-left. Push them to opposite corners under
      the board — Undo left, Redo right, level with each other. */
-  #game.fat6 #playArea .turnbar{ width:100%; justify-content:space-between; }
-  .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 8px;}
+  #game.fat6 #playArea .turnbar{ width:100%; justify-content:flex-start; gap:10px; align-items:center; }
+  /* the sketch-era :not(.cricket) rules give undo order:-1/redo order:1 and a
+     -58px pull — neutralise ALL of it here or the row scrambles */
+  #game.fat6 #playArea .turnbar #quitBtn{ order:0; }
+  #game.fat6 #playArea .turnbar #undoBtn{ order:1; margin-left:auto; margin-top:0; }   /* pushes the Undo+Redo pair right */
+  #game.fat6 #playArea .turnbar #redoBtn{ order:2; margin-top:0; }
+  #game.fat6 #playArea .turnbar #undoBtn,
+  #game.fat6 #playArea .turnbar #redoBtn{ font-size:16px; padding:8px 14px; }
+  .f6-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 2px;}
+  .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin:0;flex:0 1 auto;}
   .f6-p{border:2px solid rgba(255,255,255,.10);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;
     background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%),rgba(20,16,50,.6);
     box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);}
@@ -419,10 +427,11 @@
   .f6-p .lv{font-family:var(--num);font-size:22px;letter-spacing:2px;color:#ff5d72;line-height:1.2;text-shadow:0 0 8px rgba(255,77,106,.8),0 1px 2px rgba(0,0,0,.6);}
   .f6-p.active{border-color:var(--blue);background:rgba(79,124,255,.14);box-shadow:0 0 16px rgba(79,124,255,.3);}
   .f6-p.out{opacity:.4;filter:grayscale(1);}
-  .f6-target{text-align:center;margin:0 0 2px;}
+  .f6-target{text-align:left;margin:0;flex:0 0 auto;}
   .f6-target .lbl{font-family:var(--display);font-size:16px;color:var(--muted);letter-spacing:3px;}
-  .f6-target .val{font-family:var(--num);font-size:94px;font-weight:700;line-height:1;color:var(--yellow);
-    text-shadow:0 3px 4px rgba(20,10,0,.8),0 0 14px rgba(255,212,0,.8),0 0 44px rgba(255,212,0,.4);}
+  .f6-target .val{font-family:var(--num);font-size:94px;font-weight:700;line-height:1;color:#fff;
+    text-shadow:0 3px 4px rgba(0,0,0,.8),0 0 14px rgba(255,255,255,.55),0 0 44px rgba(255,255,255,.25);}
+  .f6-who{font-family:var(--display);font-size:25px;font-weight:800;color:var(--blue-lt);margin-top:2px;}
   .f6-target .val.long{font-size:55px;line-height:1.1;padding-top:10px;}
   .f6-phase{text-align:center;font-family:var(--display);font-size:25px;font-weight:800;color:var(--blue-lt);margin:2px 0 4px;min-height:24px;}
   .f6-phase.set{color:var(--yellow);text-shadow:0 0 14px rgba(255,212,0,.4);}
@@ -476,7 +485,15 @@
   #game:not(.cricket):not(.fat6) .scoreboard .team .small{position:absolute;left:14px;right:14px;bottom:8px;
     text-align:center;font-size:19px;min-height:0;}
   #game:not(.cricket):not(.fat6):not(.kpmode) .scoreboard .team .name{left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;top:124px;font-size:22px;}
-  #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:742px;margin:0 auto 6px;order:2;}
+  /* Quit | Dart Board | Undo | Redo as a CENTRED group (Nathan): space-between
+     across a 100%-wide bar rode the width-compensated #game box off the right
+     edge of the screen. A centred group's width is content-defined, so it can
+     never outgrow the visible wrap. All four share one height; Undo and Redo
+     are pinned to identical widths (Dart Board stays naturally wider). */
+  #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;margin:0 auto 6px;order:2;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar>button{height:54px;padding-top:0;padding-bottom:0;box-sizing:border-box;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{width:130px;flex:0 0 auto;padding-left:0;padding-right:0;}
   #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:2;}
   #game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:3;}
   #game:not(.cricket):not(.fat6) #playArea #quitBtn{order:0;white-space:nowrap;}
@@ -748,7 +765,7 @@
   /* Fat 6 on tablets: the target text was eating ~115px and ~107px sat unused
      under the buttons. Trim the type, let the board take the reclaimed height. */
   @media (min-width:601px){
-    #game.fat6 svg.board{ max-width:90%; }
+    #game.fat6 svg.board{ max-width:99%; }   /* +10% (Nathan) */
     /* compact the chips so 5-6 players still fit on ONE row — a second row
        costs ~73px and forces fitScreen to shrink the whole board */
     #game.fat6 .f6-players{ margin-bottom:4px; gap:6px; }
@@ -763,17 +780,18 @@
     #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) ~ .f6-p .nm{ font-size:19px; }
     #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) .lv,
     #game.fat6 .f6-players > .f6-p:nth-last-child(n+6) ~ .f6-p .lv{ font-size:17px; letter-spacing:0; }
-    #game.fat6 .f6-target{ margin-bottom:0; }
-    #game.fat6 .f6-target .lbl{ font-size:13px; letter-spacing:2.5px; }
-    #game.fat6 .f6-target .val{ font-size:58px; }
-    #game.fat6 .f6-target .val.long{ font-size:38px; line-height:1.05; padding-top:4px; }
+    #game.fat6 .f6-target{ margin-bottom:0; }   /* corner layout since v2.18 */
+    #game.fat6 .f6-target .lbl{ font-size:16px; letter-spacing:2.5px; }
+    #game.fat6 .f6-target .val{ font-size:120px; }   /* enlarged in the corner, white (Nathan) */
+    #game.fat6 .f6-target .val.long{ font-size:50px; line-height:1.05; padding-top:4px; }
+    #game.fat6 .f6-who{ font-size:24px; }
     #game.fat6 .f6-phase{ font-size:19px; margin:0 0 2px; min-height:20px; }
     /* Undo/Redo are rare in Fat 6 — shrink them. "Lose a life" is pressed every
        missed turn, so it stays big. */
     #game.fat6 #turnbar button{ font-size:19px; padding:10px 16px; }
     #game.fat6 #missBtn{ font-size:24px; padding:13px 20px; }
   }
-  .f6-target .val{ color:#ffae5a; text-shadow:0 3px 4px rgba(20,10,0,.8),0 0 14px rgba(255,122,46,.85),0 0 44px rgba(255,122,46,.4); }
+  .f6-target .val{ color:#fff; text-shadow:0 3px 4px rgba(0,0,0,.8),0 0 14px rgba(255,255,255,.55),0 0 44px rgba(255,255,255,.25); }   /* white (Nathan) — was theme ember-orange */
   .f6-phase{ color:#e8c876; }
   /* win screen */
   .winbanner .big{ font-family:'Cinzel',serif; color:#e8c876; text-shadow:0 2px 0 #000, 0 0 20px rgba(232,200,118,.45); }
@@ -985,11 +1003,14 @@
     #inputToggle{font-size:16px;padding:10px 8px;letter-spacing:.5px;margin:0 4px;}
     /* 4-up bottom row (Quit | Dart Board | Undo | Redo) on a phone: compact Quit
        and Dart Board, and Undo/Redo collapse to arrows (same treatment as the
-       board overlay) — four labelled buttons cannot share 375px */
-    #game:not(.cricket):not(.fat6) #playArea #quitBtn{font-size:13px;padding:10px 8px;}
-    #game:not(.cricket):not(.fat6) #playArea #inputToggle{font-size:18px;padding:10px 10px;margin:0 4px;}
+       board overlay) — four labelled buttons cannot share 375px. Same centred
+       group as the tablet: one shared height, Undo = Redo exactly. */
+    #game:not(.cricket):not(.fat6) #playArea .turnbar{gap:8px;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar>button{height:46px;}
+    #game:not(.cricket):not(.fat6) #playArea #quitBtn{font-size:13px;padding:0 8px;}
+    #game:not(.cricket):not(.fat6) #playArea #inputToggle{font-size:18px;padding:0 10px;margin:0;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
-    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{font-size:0;padding:10px 14px;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{font-size:0;width:52px;padding:0;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn::before{content:'\21B6';font-size:24px;font-family:var(--body);}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn::before{content:'\21B7';font-size:24px;font-family:var(--body);}
     /* cricket's row of four: Quit compact, Undo/Redo arrow-only, Score It keeps
@@ -1034,7 +1055,8 @@
     .f6-p{min-width:76px;padding:5px 8px;}
     .f6-p .nm{font-size:18px;}
     .f6-p .lv{font-size:16px;letter-spacing:1px;}
-    .f6-target .val{font-size:57px;}
+    .f6-target .val{font-size:72px;}
+    .f6-who{font-size:18px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
     /* the -58px pull (from the 01 layout) tucks Undo/Redo under the board — fine
@@ -1042,6 +1064,14 @@
        is small enough that they collide. There's ample slack here, so drop it. */
     #game.fat6 #playArea #undoBtn,
     #game.fat6 #playArea #redoBtn{ margin-top:0; }
+    /* fat6 phone row: full labels filled the whole width, so the margin-left:auto
+       that parks Undo+Redo on the right had nothing to distribute. Arrows (like
+       every other phone row) + compact one-line Quit free the space. */
+    #game.fat6 #playArea .turnbar #quitBtn{ font-size:13px; padding:0 8px; height:40px; white-space:nowrap; }
+    #game.fat6 #playArea .turnbar #undoBtn,
+    #game.fat6 #playArea .turnbar #redoBtn{ font-size:0; width:52px; padding:0; height:40px; }
+    #game.fat6 #playArea .turnbar #undoBtn::before{ content:'\21B6'; font-size:22px; font-family:var(--body); }
+    #game.fat6 #playArea .turnbar #redoBtn::before{ content:'\21B7'; font-size:22px; font-family:var(--body); }
   }
 
 </style>
@@ -1975,6 +2005,9 @@ function startFat6(order){
   // `bdopen` (which pins #playArea as a fullscreen overlay).
   g.classList.remove('cricket','board-open','kpmode','bdopen','pendwin');
   g.classList.add('fat6');
+  // #kpWrap is hidden by its own class, not by kpmode \u2014 an 01 game un-hides it
+  // and nothing here put it back, so the calculator sat above the fat6 board
+  document.getElementById('kpWrap').classList.add('hidden');
   document.getElementById('missBtn').textContent='\ud83d\udc94 Lose a life';
   buildBoard();
   renderGame();
@@ -2255,8 +2288,9 @@ function placeSessionButtons(){
     var tb=document.querySelector('#playArea .turnbar');
     if(tb&&q.parentElement!==tb) tb.insertBefore(q,tb.firstChild);
   }else{
-    var sb=document.getElementById('sessionBtns');
-    if(sb&&q.parentElement!==sb) sb.appendChild(q);
+    // Fat 6 (Nathan): Quit on the LEFT, Undo+Redo paired on the RIGHT
+    var tb2=document.querySelector('#playArea .turnbar'), ud=document.getElementById('undoBtn');
+    if(tb2&&ud&&ud.parentElement===tb2&&q.nextSibling!==ud) tb2.insertBefore(q,ud);
   }
 }
 function renderGame(){
@@ -2320,7 +2354,14 @@ function fitScreen(){
   var avail=wrap.clientHeight - pad - 4;            // visible minus .wrap padding (+4px safety)
   var need=wrap.scrollHeight - pad;                 // full content incl. negative-top scoreboard
   var s = need>0 ? Math.min(1, avail/need) : 1;
-  if(s<0.999){
+  // ⚠️ The width compensation must NOT run while the main board is on screen:
+  // svg.board height is proportional to width, so widening by 1/s makes the
+  // board 1/s taller and the scale never actually fits (fat6's Lose-a-life sat
+  // clipped below the fold). Board screens fill their width already — a plain
+  // uniform scale is both correct and how they fitted before v2.11.
+  var _mainBoard=document.getElementById('boardwrap');
+  var _boardShown=_mainBoard && _mainBoard.offsetParent!==null && _mainBoard.getBoundingClientRect().height>0;
+  if(s<0.999 && !_boardShown){
     // The shrink is needed for HEIGHT only — without compensation it throws
     // away WIDTH too (at 0.86 on an iPad that was ~50px of dead margin per
     // side, Nathan's complaint). Widen the layout by 1/s so the scaled result
@@ -2329,6 +2370,8 @@ function fitScreen(){
     g.style.width=(100+extra).toFixed(2)+'%';
     g.style.marginLeft=(-extra/2).toFixed(2)+'%';   // centre the widened box first
     g.style.transform='scale('+s.toFixed(4)+')';
+  }else if(s<0.999){
+    g.style.transform='scale('+s.toFixed(4)+')';    // uniform shrink, board included
   }else{
     g.style.transform='none';
   }
@@ -2339,13 +2382,17 @@ window.addEventListener('orientationchange', function(){ setTimeout(fitScreen,25
 function renderFat6(){
   const el=document.getElementById('fat6Board');
   const p=G.players[G.cur];
-  let html='<div class="f6-players">'+G.players.map((q,i)=>{
+  // header row (Nathan): target big in the upper-LEFT corner, player chips
+  // with their hearts in the upper-RIGHT
+  const _tl=fat6TargetLabel();
+  let html='<div class="f6-head">';
+  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val${_tl.length>7?' long':''}">${_tl}</div>`
+      + `<div class="f6-who">${G.over?'':esc(shortName(p.name))}</div></div>`;
+  html+='<div class="f6-players">'+G.players.map((q,i)=>{
     const lv=q.out?'💀':'♥'.repeat(q.lives);
     return `<div class="f6-p${(i===G.cur&&!G.over)?' active':''}${q.out?' out':''}"><div class="nm">${esc(shortName(q.name))}</div><div class="lv">${lv}</div></div>`;
   }).join('')+'</div>';
-  const _tl=fat6TargetLabel();
-  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val${_tl.length>7?' long':''}">${_tl}</div></div>`;
-  html+=`<div class="f6-phase">${G.over?'':('▸ '+esc(shortName(p.name))+' — throwing at '+fat6TargetLabel())}</div>`;
+  html+='</div>';
   el.innerHTML=html;
 }
 
