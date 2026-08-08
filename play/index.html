@@ -105,6 +105,7 @@
        background:rgba(10,7,30,.6);color:var(--txt);font-family:var(--body);font-size:22px;font-weight:600;}
   input[type=text]:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,124,255,.18);}
   button{font-family:var(--display);cursor:pointer;border:none;border-radius:12px;font-size:20px;font-weight:700;letter-spacing:.5px;
+       touch-action:manipulation;   /* rapid double-taps must never turn into a zoom gesture */
        padding:13px 16px;color:var(--txt);
        background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),rgba(34,28,82,.85);
        border:1px solid rgba(255,255,255,.10);
@@ -1943,7 +1944,8 @@ function snapshot(){
   return JSON.stringify({teams:G.teams,cur:G.cur,darts:G.darts,
     turnStartScore:G.turnStartScore,turnStartOpened:G.turnStartOpened,
     turnLocked:G.turnLocked,pendingWin:G.pendingWin,round:G.round,over:G.over,
-    players:G.players,target:G.target,phase:G.phase,ironOrder:G.ironOrder,ironPos:G.ironPos});
+    players:G.players,target:G.target,phase:G.phase,ironOrder:G.ironOrder,ironPos:G.ironPos,
+    kx:(typeof kpExpr==='string'?kpExpr:'')});   // calculator expression at capture — undo brings it back
 }
 function pushHistory(){history.push(snapshot());redoStack.length=0;if(history.length>200)history.shift();}
 function applyState(s){
@@ -1954,6 +1956,7 @@ function applyState(s){
     if(G.players && G.players[G.cur] && G.players[G.cur].out){ f6NextPlayer(); }  // never leave an eliminated player as current
   }
   G.ironOrder=s.ironOrder||null;G.ironPos=s.ironPos||0;
+  if(typeof kpExpr==='string') kpExpr=s.kx||'';   // Score It → Undo shows the equation again
   if(G.over){G.over=false;}
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
@@ -1968,6 +1971,7 @@ function redo(){
   if(redoStack.length===0)return;
   history.push(snapshot());
   applyState(JSON.parse(redoStack.pop()));
+  if(typeof kpExpr==='string' && kpExpr){ kpExpr=''; kpRender(); }  // turn is committed again
 }
 
 // register one dart: value=number(0 for miss, 25 for bull), mult=1/2/3
@@ -2207,7 +2211,7 @@ function renderGame(){
   renderScoreboard();
   if(G.isCricket)renderCricket();
   renderDarts();
-  document.getElementById('undoBtn').disabled=history.length===0;
+  document.getElementById('undoBtn').disabled=history.length===0 && !kpCanBackspace();
   var _sub=document.getElementById('scoreUndoBtn'); if(_sub) _sub.disabled=history.length===0;
   var _r1=document.getElementById('redoBtn'); if(_r1) _r1.disabled=redoStack.length===0;
   var _r2=document.getElementById('scoreRedoBtn'); if(_r2) _r2.disabled=redoStack.length===0;
@@ -2543,7 +2547,12 @@ function buildBoard(){
   const mini=document.getElementById('miniBoard');
   if(mini){
     mini.innerHTML='<div class="mini-inner">'+ns(svg,'bn-')+'<div class="mini-label">\u25b8 Tap board to throw</div></div>';
-    mini.querySelector('.mini-inner').addEventListener('click',openBoard);
+    // pointerdown like everything else — the overlay should open on touch,
+    // not on finger-lift (and never get eaten by a slightly-slid tap)
+    mini.querySelector('.mini-inner').addEventListener('pointerdown',function(e){
+      if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
+      openBoard();
+    });
   }
 }
 function openBoard(){
@@ -2614,8 +2623,17 @@ function flashToast(msg){
 }
 
 //============================ GAME BUTTONS ============================
+// Undo doubles as a char-backspace while the calculator is visible, so it must
+// stay ENABLED whenever there is an expression to eat — even with empty history
+// (first turn of a game, or right after an undo restored the equation).
+function kpCanBackspace(){
+  var _g=document.getElementById('game');
+  return _g.classList.contains('kpmode') && !_g.classList.contains('bdopen') && !!kpExpr;
+}
 document.getElementById('undoBtn').onclick=()=>{
-  if(document.getElementById('game').classList.contains('kpmode') && kpExpr){ kpExpr=kpExpr.slice(0,-1); kpRender(); return; }
+  // char-backspace only where the calculator is actually visible — in the board
+  // overlay this would invisibly eat a restored equation instead of undoing darts
+  if(kpCanBackspace()){ kpExpr=kpExpr.slice(0,-1); kpRender(); return; }
   undo();
 };
 document.getElementById('backBtn').onclick=backBoard;
@@ -2703,6 +2721,10 @@ function kpFit(){
 function kpRender(){
   const elV=document.getElementById('kpVal'), elH=document.getElementById('kpHint');
   if(!elV) return;
+  // typing changes kpExpr without a renderGame, so the backspace role of the
+  // Undo button has to be reflected here too
+  const _ub=document.getElementById('undoBtn');
+  if(_ub) _ub.disabled=history.length===0 && !kpCanBackspace();
   const shown=kpExpr||'0';
   elV.textContent=shown.replace(/x/g,'×');
   const v=kpEval(kpExpr);
@@ -2720,6 +2742,7 @@ function kpRender(){
 }
 function kpCommit(total){
   if(!kpAllowed()||G.over||G.pendingWin) return;
+  if(!kpExpr || kpEval(kpExpr)!==total) kpExpr=String(total);  // quick keys: undo restores "41"
   pushHistory();
   const t=curTeam();
   const rem=t.score-total;
@@ -3191,6 +3214,43 @@ document.addEventListener('touchmove',function(e){
   }
   e.preventDefault();
 },{passive:false});
+</script>
+<script>
+// INSTANT BUTTONS (Nathan): taps visibly pressed a button but never registered.
+// iOS only fires click after the finger LIFTS, and cancels it outright if the
+// finger slid a few px mid-tap — the button "jostles" but nothing happens.
+// Fire every button the moment it is touched instead: the same cure the
+// dartboard got, now app-wide. The one exception is a button sitting inside a
+// container that can actually scroll right now — there a touch may be the
+// START of a scroll, not a tap, so those keep the native click.
+(function(){
+  function inScroller(el){
+    for(el=el.parentElement; el && el!==document.body; el=el.parentElement){
+      if(el.scrollHeight>el.clientHeight+1 || el.scrollWidth>el.clientWidth+1){
+        var o=getComputedStyle(el);
+        if(/auto|scroll/.test(o.overflowY+o.overflowX)) return true;
+      }
+    }
+    return false;
+  }
+  document.addEventListener('pointerdown',function(e){
+    if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
+    var b=e.target && e.target.closest ? e.target.closest('button') : null;
+    if(!b || b.disabled) return;
+    if(b.id==='addPlayer' || b.id==='addTeam') return;   // already have their own instant handlers
+    if(inScroller(b)) return;
+    b.__dkTapped=true;             // mark so the trailing native click gets swallowed
+    b.click();                     // run the button's normal handler NOW
+  },true);
+  // The native click still arrives on finger-lift (when iOS deigns to send it);
+  // without this it would run the handler a second time. Synthetic clicks —
+  // including the one we just dispatched above — pass through untouched.
+  document.addEventListener('click',function(e){
+    if(!e.isTrusted) return;
+    var b=e.target && e.target.closest ? e.target.closest('button') : null;
+    if(b && b.__dkTapped){ b.__dkTapped=false; e.stopImmediatePropagation(); e.preventDefault(); }
+  },true);
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator) {
