@@ -1205,6 +1205,21 @@
       <!-- status line only takes space when it has something to say -->
       <p class="small" id="bkMsg" style="margin:6px 0 0;"></p>
     </div>
+    <div class="card" id="shareCard">
+      <h2>🤝 Share With a Friend</h2>
+      <div class="row">
+        <button class="primary grow" id="shareOfferBtn">📤 Share Library</button>
+        <button class="accent grow" id="shareTakeBtn">📥 Receive</button>
+      </div>
+      <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
+        <span id="shareCodeVal" style="font-family:var(--num);font-size:46px;font-weight:700;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);"></span>
+      </div>
+      <div class="row" id="shareTakeRow" style="display:none;margin-top:8px;">
+        <input type="text" id="shareCodeIn" class="grow" placeholder="6-digit code from your friend" inputmode="numeric" maxlength="6">
+        <button class="primary" id="shareGoBtn">Add</button>
+      </div>
+      <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
+    </div>
     <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
   </div>
@@ -1421,7 +1436,9 @@ function renderLibrary(){
     el.innerHTML='<p class="small">No players yet. Add one above.</p>';
     return;
   }
-  roster.forEach(name=>{
+  // ALWAYS alphabetical (Nathan) — display order only, same principle as the
+  // picker columns: storage order stays untouched, every handler keys by name
+  roster.slice().sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).forEach(name=>{
     const row=document.createElement('div');
     row.className='librow';
     const opts=['<option value="">— no team —</option>']
@@ -1639,6 +1656,64 @@ document.getElementById('duoName2').addEventListener('input',e=>{ if(teamSel[1].
 renderGroups();refreshDuoCard();
 document.getElementById('bkSaveBtn').onclick=bkSave;
 document.getElementById('bkRestoreBtn').onclick=bkRestore;
+
+// ---- Share With a Friend: hand the library to the device next to you -------
+// A 6-digit code through the relay (iOS Safari has no Bluetooth for web apps).
+// Deliberately shares IDENTITY only — players, teams, pairings — never stats:
+// the receiving device's history stays its own. Merge is ADD-ONLY.
+function sharePayload(){ return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, v:1}; }
+function shareMsg(t){ const el=document.getElementById('shareMsg'); if(el) el.textContent=t; if(typeof fitLibrary==='function') fitLibrary(); }
+function shareMergeIn(d){
+  let added=0;
+  const have=new Set(roster.map(n=>n.toLowerCase()));
+  (d.players||[]).forEach(n=>{
+    n=String(n||'').trim().slice(0,40);
+    if(n && !have.has(n.toLowerCase())){ roster.push(n); have.add(n.toLowerCase()); added++; }
+  });
+  (d.teams||[]).forEach(t=>{ t=String(t||'').trim().slice(0,40);
+    if(t && !teamLib.some(x=>x.toLowerCase()===t.toLowerCase())) teamLib.push(t); });
+  Object.keys(d.pteams||{}).forEach(k=>{      // never overwrite an existing assignment
+    if(!(k in playerTeams) && roster.includes(k)) playerTeams[k]=String(d.pteams[k]||'').slice(0,40); });
+  Object.keys(d.duoTeams||{}).forEach(k=>{ if(!(k in duoTeams)) duoTeams[k]=String(d.duoTeams[k]||'').slice(0,40); });
+  saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams();
+  renderLibrary(); if(typeof renderColumns==='function') renderColumns();
+  if(typeof bkQueue==='function') bkQueue();   // the enlarged library backs itself up
+  return added;
+}
+async function shareOffer(){
+  document.getElementById('shareTakeRow').style.display='none';
+  shareMsg('Getting a share code…');
+  try{
+    const r=await relayBackup({op:'offer', data:sharePayload()});
+    if(r&&r.ok&&r.code){
+      document.getElementById('shareCodeVal').textContent=r.code;
+      document.getElementById('shareCodeShow').style.display='flex';
+      shareMsg('Read this code to your friend — good for 15 minutes.');
+    } else shareMsg((r&&r.error)||'Could not get a code.');
+  }catch(e){ shareMsg('Could not connect — check your signal and try again.'); }
+}
+function shareTakeToggle(){
+  document.getElementById('shareCodeShow').style.display='none';
+  document.getElementById('shareTakeRow').style.display='flex';
+  shareMsg('Type the 6-digit code your friend reads out, then tap Add.');
+}
+async function shareGo(){
+  const code=(document.getElementById('shareCodeIn').value||'').trim();
+  if(!/^\d{6}$/.test(code)){ shareMsg('That code should be 6 digits.'); return; }
+  shareMsg('Fetching…');
+  try{
+    const r=await relayBackup({op:'take', code});
+    if(r&&r.ok&&r.data){
+      const n=shareMergeIn(r.data);
+      shareMsg(n===0?'Nothing new — you already had everyone.':('Added '+n+' new player'+(n===1?'':'s')+'.'));
+      document.getElementById('shareCodeIn').value='';
+      document.getElementById('shareTakeRow').style.display='none';
+    } else shareMsg((r&&r.error)||'Could not fetch that share.');
+  }catch(e){ shareMsg('Could not connect — check your signal and try again.'); }
+}
+document.getElementById('shareOfferBtn').onclick=shareOffer;
+document.getElementById('shareTakeBtn').onclick=shareTakeToggle;
+document.getElementById('shareGoBtn').onclick=shareGo;
 (function(){ const em=localStorage.getItem(LS_BKEMAIL); if(em) document.getElementById('bkEmail').value=em; })();
 
 //============================ STATS LEDGER ============================
