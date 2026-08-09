@@ -71,26 +71,23 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     url("lp-bg.jpg") center top / cover no-repeat, #070a12;}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
-/* ===== split hero (from C) ===== */
-.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;
-  max-width:1180px;margin:0 auto;padding:58px 26px 30px;min-height:78vh}
-@media(max-width:900px){.hero{grid-template-columns:1fr;gap:26px;text-align:center;padding-top:38px;min-height:0}}
-.art{position:relative;overflow:hidden}
-.art .glow{position:absolute;inset:-8% -14%;z-index:0;pointer-events:none;mix-blend-mode:screen;opacity:.72;
-  background:url("lp-blue.jpg") left center/50% 100% no-repeat, url("lp-red.jpg") right center/50% 100% no-repeat;
-  -webkit-mask-image:radial-gradient(ellipse at center,#000 34%,transparent 76%);
-  mask-image:radial-gradient(ellipse at center,#000 34%,transparent 76%)}
-.art img{position:relative;z-index:1;display:block;width:100%;border-radius:9px;
-  filter:drop-shadow(0 18px 40px rgba(0,0,0,.9))}
-.pitch h1{font-family:var(--display);font-weight:900;font-size:clamp(30px,4.6vw,50px);line-height:1.08;
-  letter-spacing:1px;margin:0 0 16px;color:var(--gold-lt);text-transform:uppercase;
+/* ===== hero: banner centred in full-height lightning wings, every width ===== */
+.hero{position:relative;text-align:center;padding:46px 20px 14px}
+.hero .wings{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.hero .wings i{position:absolute;top:0;bottom:0;width:24%;max-width:430px;mix-blend-mode:screen;opacity:.9}
+.hero .wings i.l{left:0;background:url("lp-blue.jpg") center/cover no-repeat}
+.hero .wings i.r{right:0;background:url("lp-red.jpg") center/cover no-repeat}
+@media(max-width:700px){.hero .wings{display:none}}
+.hero img.banner{position:relative;z-index:1;display:block;width:100%;max-width:760px;margin:0 auto;
+  border-radius:9px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.9))}
+.pitch{position:relative;z-index:1}
+.pitch h1{font-family:var(--display);font-weight:900;font-size:clamp(24px,3.2vw,40px);line-height:1.14;
+  letter-spacing:1.5px;margin:26px 0 14px;color:var(--gold-lt);text-transform:uppercase;
   text-shadow:0 2px 0 #000,0 5px 16px rgba(0,0,0,.9)}
-.pitch h1 em{font-style:normal;display:block;color:var(--fire-lt)}
-.pitch p{font-size:clamp(17px,2.2vw,21px);max-width:520px;margin:0 0 24px;opacity:.94;
+.pitch h1 em{font-style:normal;color:var(--fire-lt)}
+.pitch p{font-size:clamp(17px,2.2vw,21px);max-width:640px;margin:0 auto 24px;opacity:.94;
   text-shadow:0 2px 8px rgba(0,0,0,.85)}
-@media(max-width:900px){.pitch p{margin-left:auto;margin-right:auto}}
-.cta-row{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:14px}
-@media(max-width:900px){.cta-row{justify-content:center}}
+.cta-row{display:flex;gap:13px;flex-wrap:wrap;margin-bottom:14px;justify-content:center}
 .btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--display);
   font-weight:700;letter-spacing:1.6px;font-size:17.5px;padding:15px 30px;border-radius:8px;
   background:linear-gradient(180deg,#3d3a36,#23201c 55%,#181512);border:1.5px solid #57504a;color:var(--txt);
@@ -181,9 +178,10 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
 </head><body>
 
 <section class="hero">
-  <div class="art"><div class="glow"></div><img src="lp-banner.jpg" alt="Dart Keeper"></div>
+  <div class="wings"><i class="l"></i><i class="r"></i></div>
+  <img class="banner" src="lp-banner.jpg" alt="Dart Keeper">
   <div class="pitch">
-    <h1>Keep the score.<em>Settle the argument.</em></h1>
+    <h1>Keep the score. <em>Settle the argument.</em></h1>
     <p>A proper dartboard scorekeeper for the tablet on the wall — four games, real teams,
        lifetime stats, and not one second of setup.</p>
     <div class="cta-row">
