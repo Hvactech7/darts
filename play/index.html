@@ -490,14 +490,19 @@
      edge of the screen. A centred group's width is content-defined, so it can
      never outgrow the visible wrap. All four share one height; Undo and Redo
      are pinned to identical widths (Dart Board stays naturally wider). */
-  #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:center;gap:14px;width:100%;margin:0 auto 6px;order:2;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;margin:0 auto 6px;order:2;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar>button{height:54px;padding-top:0;padding-bottom:0;box-sizing:border-box;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
-  #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{width:130px;flex:0 0 auto;padding-left:0;padding-right:0;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{width:105px;flex:0 0 auto;padding-left:0;padding-right:0;
+    font-size:16px;white-space:nowrap;}
+  /* symmetry (Nathan): Quit = Undo+Redo+gap exactly, so the wider Dart Board
+     sits on the true centreline of the row */
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #quitBtn{width:224px;flex:0 0 auto;padding-left:0;padding-right:0;white-space:nowrap;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:1 1 auto;min-width:0;}   /* fills between the aligned flanks */
   #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:2;}
   #game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:3;}
-  #game:not(.cricket):not(.fat6) #playArea #quitBtn{order:0;white-space:nowrap;}
-  #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:1;margin:0 10px;white-space:nowrap;}
+  #game:not(.cricket):not(.fat6) #playArea #quitBtn{order:0;}
+  #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:1;margin:0;white-space:nowrap;}
 
   /* small accent buttons: no rivets — they crowd the short labels */
   #addPlayer,#saveGroupBtn,#addTeam{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
@@ -1007,10 +1012,10 @@
        group as the tablet: one shared height, Undo = Redo exactly. */
     #game:not(.cricket):not(.fat6) #playArea .turnbar{gap:8px;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar>button{height:46px;}
-    #game:not(.cricket):not(.fat6) #playArea #quitBtn{font-size:13px;padding:0 8px;}
-    #game:not(.cricket):not(.fat6) #playArea #inputToggle{font-size:18px;padding:0 10px;margin:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #quitBtn{font-size:12px;padding:0 2px;width:104px;letter-spacing:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{font-size:15px;padding:0 2px;margin:0;flex:1 1 auto;min-width:0;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
-    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{font-size:0;width:52px;padding:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{font-size:0;width:48px;padding:0;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn::before{content:'\21B6';font-size:24px;font-family:var(--body);}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn::before{content:'\21B7';font-size:24px;font-family:var(--body);}
     /* cricket's row of four: Quit compact, Undo/Redo arrow-only, Score It keeps
