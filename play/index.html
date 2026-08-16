@@ -744,10 +744,15 @@
      players are picked and unpicked. */
   #pickHeads .teamcol-head{ display:flex; flex-direction:column; justify-content:center; gap:2px; }
   .th-label{ font-size:.62em; letter-spacing:1.4px; opacity:.85; line-height:1.15; }
+  /* +25% (Nathan) — applied to every rung of the ladder, so a long pair of names
+     still steps down but stays a quarter bigger than it used to be. */
   .th-names{ font-family:var(--num); font-weight:700; letter-spacing:.5px; line-height:1.15;
-    white-space:nowrap; color:#cdbc95; text-shadow:none; }
-  .th-names.long{ font-size:.78em; }
-  .th-names.xlong{ font-size:.62em; letter-spacing:0; }
+    white-space:nowrap; color:#cdbc95; text-shadow:none; font-size:1.25em; }
+  .th-names.long{ font-size:.975em; }
+  .th-names.xlong{ font-size:.775em; letter-spacing:0; }
+  /* a very long pair ("Christine B & Bartholomew F") still has to fit the
+     PHONE's narrower box, where +25% overflows it — one more rung down. */
+  .th-names.xxlong{ font-size:.62em; letter-spacing:0; }
   .teamcol-head.filled .th-names{ color:inherit; text-shadow:inherit; }
   .teamcol-head.empty .th-names{ opacity:.45; font-weight:600; }
   /* pair-name input replaces the label line, so the box height never changes */
@@ -1622,7 +1627,8 @@ function renderLineup(){
     // one line, always: step the type down instead of wrapping or truncating
     const len=el.textContent.length;
     el.classList.toggle('long', len>13 && len<=19);
-    el.classList.toggle('xlong', len>19);
+    el.classList.toggle('xlong', len>19 && len<=26);
+    el.classList.toggle('xxlong', len>26);
     head.classList.toggle('filled', names.length>0);
     head.classList.toggle('empty', names.length===0);
   });
