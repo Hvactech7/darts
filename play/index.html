@@ -152,7 +152,7 @@
   .teamcol-head.head1{color:var(--blue);border-color:rgba(79,124,255,.4);box-shadow:0 0 14px rgba(79,124,255,.18);}
   .teamcol-head.head2{color:var(--yellow);border-color:rgba(255,212,0,.4);box-shadow:0 0 14px rgba(255,212,0,.18);}
   .namelist{display:flex;flex-direction:column;gap:4px;max-height:292px;overflow-y:auto;padding-right:4px;}
-  .nameopt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
+  .nameopt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);touch-action:manipulation;
        cursor:pointer;font-weight:700;font-size:44px;word-break:break-word;transition:transform .05s;}
   .nameopt:active{transform:scale(.97);}
   .nameopt.sel1{border-color:var(--blue);background:rgba(79,124,255,.16);color:var(--blue);box-shadow:0 0 14px rgba(79,124,255,.3);}
@@ -1609,9 +1609,14 @@ function renderLineup(){
   [0,1].forEach(t=>{
     const names=teamSel[t];
     const head=document.getElementById('head'+(t+1));
-    // Ironman = the side standing alone (only once the other side has 2)
-    document.getElementById('thLabel'+(t+1)).textContent=
-      (settled&&config.mode==='iron'&&names.length===1)?'🦾 Ironman':'Team '+(t+1);
+    // "Team 1"/"Team 2" is gone (Nathan) — the box shows the picks and nothing
+    // else. The colour of the box already says which side it is. Ironman is the
+    // one label worth keeping: it is not a restatement of the side, it says how
+    // this game is being played.
+    const _lbl=document.getElementById('thLabel'+(t+1));
+    const _iron=(settled&&config.mode==='iron'&&names.length===1);
+    _lbl.textContent=_iron?'🦾 Ironman':'';
+    _lbl.style.display=_iron?'':'none';
     const el=document.getElementById('thNames'+(t+1));
     el.textContent = names.length ? names.map(n=>shortName(n)).join(' & ') : 'pick below';
     // one line, always: step the type down instead of wrapping or truncating
@@ -3826,6 +3831,42 @@ window.dkAfterUpdate=function(){                          // called on the fresh
 })();
 </script>
 <script>
+// ---- instant name picking -------------------------------------------------
+// Picking ran on `click`, which on iOS waits for the finger to LIFT and then for
+// the double-tap-zoom timer — the same lag the buttons had before v2.12. The
+// v2.12 layer only covers <button>, and a name row is a <div>.
+// It can NOT fire on pointerdown like the dartboard does: this list scrolls, and
+// pressing to scroll would pick whoever was under the finger. So it commits on
+// pointerup when the finger hasn't travelled — how a native list behaves, minus
+// the wait.
+(function(){
+  var ls=document.getElementById('listScroll'); if(!ls) return;
+  var sx=0, sy=0, sel=null, st=0, swallowUntil=0;
+  ls.addEventListener('pointerdown',function(e){
+    if(e.isPrimary===false || (e.button!==undefined && e.button>0)){ sel=null; return; }
+    sel=e.target.closest && e.target.closest('.nameopt');
+    sx=e.clientX; sy=e.clientY; st=performance.now();
+  },true);
+  ls.addEventListener('pointercancel',function(){ sel=null; },true);   // scroll took over
+  ls.addEventListener('pointerup',function(e){
+    var el=sel; sel=null;
+    if(!el) return;
+    if(!e.target.closest || e.target.closest('.nameopt')!==el) return;  // finger moved off the row
+    if(Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10) return;  // that was a scroll
+    if(performance.now()-st>800) return;                                // a long press, not a tap
+    if(typeof el.onclick!=='function') return;                          // e.g. a row owned by the other team
+    swallowUntil=performance.now()+700;
+    el.onclick(e);
+  },true);
+  // The pick re-renders the whole column, so the element that was tapped is GONE
+  // by the time the real click lands — the flag has to live on the container, or
+  // the click hits the freshly-built row underneath and toggles the pick back.
+  ls.addEventListener('click',function(e){
+    if(performance.now()<swallowUntil && e.target.closest && e.target.closest('.nameopt')){
+      e.stopImmediatePropagation(); e.preventDefault();
+    }
+  },true);
+})();
 document.addEventListener('touchmove',function(e){
   for(var el=e.target; el && el!==document.body && el!==document.documentElement; el=el.parentElement){
     if(el.scrollHeight>el.clientHeight){ var oy=getComputedStyle(el).overflowY; if(oy==='auto'||oy==='scroll') return; }
