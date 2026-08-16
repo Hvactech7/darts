@@ -217,6 +217,9 @@
   svg.board{width:100%;max-width:610px;height:auto;touch-action:manipulation;display:block;
        filter:saturate(1.2) drop-shadow(0 0 24px rgba(79,124,255,.4));}
   .board path,.board circle{cursor:pointer;stroke:#080510;stroke-width:1;}
+  /* the sisal board draws real metal wires over the seams, so the scoring
+     shapes themselves must not paint their own outline (id beats the rule above) */
+  #boardwrap .board.sisal path[data-v],#boardwrap .board.sisal circle[data-v]{stroke:none;}
   .board path:active,.board circle:active{filter:brightness(1.7);}
   .board .num{font-family:var(--display);fill:#fff;font-size:21px;font-weight:700;pointer-events:none;text-anchor:middle;dominant-baseline:central;}
   .gamebtns{display:flex;gap:10px;margin-top:12px;}
@@ -604,6 +607,29 @@
 
   /* pause/resume + quit confirm */
   #resumeBtn{width:100%;font-size:25px;padding:16px;margin:0 0 12px;}
+  /* ---- Add to Home Screen splash (browser only, never once installed) ---- */
+  #a2hs{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+    background:rgba(3,2,1,.82);padding:16px;overflow-y:auto;}
+  #a2hs.hidden{display:none;}
+  #a2hs .card{max-width:460px;width:100%;margin:auto;text-align:center;}
+  #a2hs img.ic{width:84px;height:84px;border-radius:18px;display:block;margin:2px auto 10px;
+    box-shadow:0 10px 26px rgba(0,0,0,.8);}
+  #a2hs h2{justify-content:center;}
+  #a2hs .lead{margin:2px 0 14px;font-size:17px;opacity:.92;}
+  #a2hs ol{margin:0;padding:0;list-style:none;text-align:left;}
+  #a2hs ol li{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px;font-size:17px;line-height:1.35;}
+  #a2hs ol li .n{flex:0 0 auto;width:27px;height:27px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--display);font-weight:700;font-size:14px;color:#1a1206;
+    background:radial-gradient(circle at 34% 30%,#e8c876,#8a6b2b 72%,#5b430f);box-shadow:0 2px 6px rgba(0,0,0,.7);}
+  #a2hs .shr{display:inline-block;vertical-align:-4px;margin:0 2px;}
+  #a2hs .why{font-size:15px;color:var(--muted);margin:12px 0 0;line-height:1.5;}
+  #a2hs .acts{display:flex;gap:10px;margin-top:16px;}
+  #a2hs .acts button{flex:1;}
+  @media (max-width:600px){
+    #a2hs .card{max-width:none;}
+    #a2hs img.ic{width:64px;height:64px;}
+    #a2hs ol li,#a2hs .lead{font-size:16px;}
+  }
   #confirmQuit{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
   #confirmQuit.hidden{display:none;}
   #confirmQuit .card{max-width:430px;margin:20px;width:100%;}
@@ -1145,6 +1171,20 @@
   </div>
 
   <!-- ================= QUIT CONFIRM ================= -->
+  <div id="a2hs" class="hidden">
+    <div class="card">
+      <img class="ic" src="darts-icon-180.png" alt="">
+      <h2>Put It On Your Home Screen</h2>
+      <p class="lead" id="a2hsLead">Dart Keeper runs best as an app — full screen, no browser bars, and it works with no signal at the board.</p>
+      <ol id="a2hsSteps"></ol>
+      <p class="why">Your players and stats stay on this device either way.</p>
+      <div class="acts">
+        <button class="ghost" id="a2hsLater">Not now</button>
+        <button class="primary" id="a2hsGo">Install</button>
+      </div>
+    </div>
+  </div>
+
   <div id="confirmQuit" class="hidden">
     <div class="card">
       <h2>Quit this game?</h2>
@@ -2776,20 +2816,73 @@ function buildBoard(){
     <radialGradient id="dropSh" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy+14}" r="264">
       <stop offset=".82" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
   </defs>`;
-  const svg=`<svg class="board" viewBox="0 0 536 536" xmlns="http://www.w3.org/2000/svg">
-     ${defs}
+  // ---- SISAL SURFACE (main play board only) ------------------------------
+  // Real bristle boards are compressed sisal bundles seen END-ON: a fine
+  // speckle of fibre ends, crevices between bundles, old dart pricks, and a
+  // METAL spider sitting proud of the surface. All of it is procedural — no
+  // image bytes, perfectly aligned at any size — and every layer is
+  // pointer-events:none so the segments underneath stay tappable.
+  // ⚠️ ONLY the big board gets this: the 92px cricket-header and mini copies
+  // would pay the same filter cost for texture nobody can see, and the header
+  // copy re-renders every single turn.
+  const tex=(id,type,freq,oct,seed,expo,color)=>
+    `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">`
+    +`<feTurbulence type="${type}" baseFrequency="${freq}" numOctaves="${oct}" seed="${seed}" result="n"/>`
+    +`<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  .34 .34 .34 0 0" result="a"/>`
+    +`<feComponentTransfer in="a" result="s"><feFuncA type="gamma" exponent="${expo}" amplitude="1" offset="0"/></feComponentTransfer>`
+    +`<feFlood flood-color="${color}" result="c"/><feComposite in="c" in2="s" operator="in"/></filter>`;
+  const texDefs=`<defs>`
+    + tex('fibre','fractalNoise','1.15',3,11,'3.2','#2b2318')
+    + tex('fibreLite','fractalNoise','1.5',2,29,'3.6','#fff7e6')
+    + tex('mottle','fractalNoise','0.026',3,5,'2.6','#241d12')
+    + tex('cracks','turbulence','0.3',2,19,'5','#15110a')
+    + tex('holes','fractalNoise','0.8',1,43,'9','#0c0a06')
+    + `<radialGradient id="wearG" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">`
+    + `<stop offset="0" stop-color="#000" stop-opacity=".14"/><stop offset=".3" stop-color="#000" stop-opacity=".03"/>`
+    + `<stop offset=".65" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".09"/></radialGradient>`
+    + `<linearGradient id="wireG" x1="0" y1="0" x2="0" y2="1">`
+    + `<stop offset="0" stop-color="#e8eef6"/><stop offset=".45" stop-color="#98a3b0"/>`
+    + `<stop offset=".55" stop-color="#6d7783"/><stop offset="1" stop-color="#aab4c0"/></linearGradient>`
+    + `<clipPath id="playClip"><circle cx="${cx}" cy="${cy}" r="238"/></clipPath></defs>`;
+  const R=(f,o)=>`<rect x="30" y="30" width="476" height="476" filter="url(#${f})" opacity="${o}"/>`;
+  const texLayers=`<g clip-path="url(#playClip)" pointer-events="none">`
+    + R('mottle','.34') + R('fibre','.62') + R('fibreLite','.46') + R('cracks','.5') + R('holes','.6')
+    + `<circle cx="${cx}" cy="${cy}" r="238" fill="url(#wearG)" style="stroke:none"/></g>`;
+  // metal spider: dark seat, bright wire, top glint. Strokes go in STYLE
+  // attributes because the stylesheet's `.board circle{stroke:#080510}` would
+  // otherwise beat plain presentation attributes and flatten every wire.
+  const rings=[rBull,rBullOut,rTripleIn,rTripleOut,rDoubleIn,rDoubleOut];
+  const spokes=[];
+  for(let i=0;i<20;i++){
+    const a=(i*wedge-wedge/2)*Math.PI/180;
+    spokes.push([cx+rBullOut*Math.sin(a), cy-rBullOut*Math.cos(a),
+                 cx+rDoubleOut*Math.sin(a), cy-rDoubleOut*Math.cos(a)]);
+  }
+  const SEAT='style="stroke:#0a0a0c;stroke-width:2.6;opacity:.55;fill:none"';
+  const WIRE='style="stroke:url(#wireG);stroke-width:1.7;fill:none"';
+  const GLNT='style="stroke:#fff;stroke-width:.55;opacity:.33;fill:none"';
+  let sp='';
+  rings.forEach(r=>{ sp+=`<circle cx="${cx}" cy="${cy+0.8}" r="${r}" ${SEAT}/>`; });
+  spokes.forEach(k=>{ sp+=`<line x1="${f(k[0])}" y1="${f(k[1]+0.8)}" x2="${f(k[2])}" y2="${f(k[3]+0.8)}" ${SEAT}/>`; });
+  rings.forEach(r=>{ sp+=`<circle cx="${cx}" cy="${cy}" r="${r}" ${WIRE}/>`; });
+  spokes.forEach(k=>{ sp+=`<line x1="${f(k[0])}" y1="${f(k[1])}" x2="${f(k[2])}" y2="${f(k[3])}" ${WIRE}/>`; });
+  rings.forEach(r=>{ sp+=`<circle cx="${cx}" cy="${cy-0.5}" r="${r}" ${GLNT}/>`; });
+  const spider=`<g pointer-events="none">${sp}</g>`;
+  const mkSVG=(real)=>`<svg class="board${real?' sisal':''}" viewBox="0 0 536 536" xmlns="http://www.w3.org/2000/svg">
+     ${defs}${real?texDefs:''}
      <circle cx="${cx}" cy="${cy+11}" r="264" fill="url(#dropSh)" pointer-events="none"/>
      <circle cx="${cx}" cy="${cy}" r="264" fill="url(#rimG)"/>
      <circle cx="${cx}" cy="${cy}" r="258" fill="url(#surroundG)" stroke="#0c0e12" stroke-width="1"/>
      <circle cx="${cx}" cy="${cy}" r="239.5" fill="#171514"/>
-     ${paths}${labels}
+     ${paths}${real?texLayers+spider:''}${labels}
      <circle cx="${cx}" cy="${cy}" r="238" fill="url(#boardLight)" pointer-events="none"/>
      <circle cx="${cx}" cy="${cy}" r="258" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="1.2" pointer-events="none"/>
    </svg>`;
+  const svg=mkSVG(false);
   const ns=(s,p)=>s.split('id="').join('id="'+p).split('url(#').join('url(#'+p);
   BOARD_SVG=ns(svg,'bc-');                    // cricket-header copy
   const wrap=document.getElementById('boardwrap');
-  wrap.innerHTML=ns(svg,'bm-');               // main play board
+  wrap.innerHTML=ns(mkSVG(true),'bm-');       // main play board — the textured one
   // pointerdown, NOT click: a click only fires after the finger LIFTS, plus
   // iOS synthesis lag — the score should land the instant the board is touched.
   // pointerdown covers mouse too, so no click listener remains (no double-fire).
@@ -3474,6 +3567,75 @@ try{
   if(_lg && _lg!==config.game && document.querySelector('#gameSel button[data-game="'+_lg+'"]')) setGame(_lg);
 }catch(e){}
 restoreGameState();          // bring back an in-progress game after an app restart
+
+// ---- ADD TO HOME SCREEN --------------------------------------------------
+// Shown the first time the app is opened IN A BROWSER. Android/Chrome can do
+// it for real (beforeinstallprompt); iOS has no such API and never will, so
+// there it is illustrated instructions. Never shown once installed.
+var dkInstallEvt=null;
+function dkStandalone(){
+  try{
+    if(window.navigator.standalone===true) return true;                    // iOS
+    if(window.matchMedia && matchMedia('(display-mode: standalone)').matches) return true;
+    if(window.matchMedia && matchMedia('(display-mode: fullscreen)').matches) return true;
+  }catch(e){}
+  return false;
+}
+function dkIsIOS(){
+  var ua=navigator.userAgent||'';
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+function dkSnoozed(){ try{ return Date.now() < (+localStorage.getItem('dk_a2hs_snooze')||0); }catch(e){ return false; } }
+function dkSnooze(days){ try{ localStorage.setItem('dk_a2hs_snooze', String(Date.now()+days*864e5)); }catch(e){} }
+var SHARE_ICON='<svg class="shr" width="19" height="19" viewBox="0 0 50 50" aria-hidden="true">'
+  +'<path d="M25 4 L25 32" stroke="#4aa8ff" stroke-width="4" fill="none" stroke-linecap="round"/>'
+  +'<path d="M16 13 L25 4 L34 13" stroke="#4aa8ff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+  +'<path d="M13 22 L9 22 L9 45 L41 45 L41 22 L37 22" stroke="#4aa8ff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function dkA2HSRender(){
+  var steps=document.getElementById('a2hsSteps'), go=document.getElementById('a2hsGo'),
+      lead=document.getElementById('a2hsLead');
+  if(!steps) return;
+  var li=function(n,html){ return '<li><span class="n">'+n+'</span><span>'+html+'</span></li>'; };
+  if(dkInstallEvt){                                   // Android / desktop Chrome — do it for them
+    steps.innerHTML=li(1,'Tap <b>Install</b> below and confirm.')
+                   +li(2,'Dart Keeper lands on your home screen like any other app.');
+    go.style.display=''; go.textContent='⬇ Install';
+  }else if(dkIsIOS()){
+    steps.innerHTML=li(1,'Tap the <b>Share</b> button '+SHARE_ICON+' at the bottom of Safari.')
+                   +li(2,'Scroll down and tap <b>Add to Home Screen</b>.')
+                   +li(3,'Tap <b>Add</b> — then launch it from the new icon.');
+    go.style.display='none';
+    lead.textContent='Dart Keeper runs best as an app — full screen, no Safari bars, and it works with no signal at the board.';
+  }else{
+    steps.innerHTML=li(1,'Open your browser menu (⋮ or ⋯).')
+                   +li(2,'Choose <b>Install app</b>, <b>Add to Home screen</b>, or <b>Add to Dock</b>.')
+                   +li(3,'Launch it from the icon — full screen and offline.');
+    go.style.display='none';
+  }
+}
+function dkA2HSShow(){
+  if(dkStandalone()||dkSnoozed()) return;
+  dkA2HSRender();
+  document.getElementById('a2hs').classList.remove('hidden');
+}
+function dkA2HSHide(){ document.getElementById('a2hs').classList.add('hidden'); }
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); dkInstallEvt=e;
+  if(!document.getElementById('a2hs').classList.contains('hidden')) dkA2HSRender();  // upgrade to a real button
+});
+window.addEventListener('appinstalled', function(){ dkSnooze(3650); dkA2HSHide(); });
+document.getElementById('a2hsLater').onclick=function(){ dkSnooze(7); dkA2HSHide(); };
+document.getElementById('a2hsGo').onclick=function(){
+  if(!dkInstallEvt){ dkA2HSHide(); return; }
+  var e=dkInstallEvt; dkInstallEvt=null;
+  try{ e.prompt(); }catch(_){ }
+  if(e.userChoice && e.userChoice.then) e.userChoice.then(function(c){
+    if(c && c.outcome==='accepted') dkSnooze(3650); else dkSnooze(7);
+    dkA2HSHide();
+  }); else dkA2HSHide();
+};
+// give the install event a beat to arrive so Android gets the real button
+setTimeout(dkA2HSShow, 700);
 
 // ---- update hand-off (used by the service-worker registration below) --------
 // iOS never re-navigates a PWA that was only backgrounded, so waiting for the
