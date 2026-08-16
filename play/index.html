@@ -3973,6 +3973,27 @@ if ('serviceWorker' in navigator) {
         applyUpdate();
         reg.update();
       });
+
+      // POLL WHILE OPEN. Until this, the only checks were on launch and on
+      // returning from the background — so an iPad propped at the board, with
+      // the screen kept awake and the app never switched away from, would not
+      // look for a new build for hours. That is exactly the case that kept
+      // needing a manual swipe-away after a deploy.
+      // Cost is a conditional GET of sw.js (a 304 when nothing changed).
+      function poll() {
+        if (document.visibilityState === 'hidden') return;   // don't poll in the background
+        try { reg.update(); } catch (e) {}
+      }
+      setInterval(poll, 60000);
+      window.addEventListener('online', poll);
+      window.addEventListener('pageshow', poll);
+      window.addEventListener('focus', poll);
+
+      // An update found mid-throw is deferred by dkSafeToReload. Retry it on a
+      // short timer so it lands the moment play is back on safe ground, instead
+      // of waiting for the next launch. applyUpdate is a no-op unless something
+      // is actually pending, and its own 15s guard stops any reload loop.
+      setInterval(function () { if (pending) applyUpdate(); }, 4000);
     }).catch(function (e) { console.warn('SW registration failed', e); });
   });
 }
