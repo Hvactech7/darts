@@ -136,8 +136,8 @@
   .pickslot.filled.slot1 .small{color:var(--blue-lt);}
   .pickslot.filled.slot2{border-color:var(--yellow);box-shadow:inset 0 0 18px rgba(255,212,0,.14);}
   .pickslot.filled.slot2 .small{color:var(--yellow);}
-  .librow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;
-       border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--panel2);}
+  .librow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px;
+       border:1px solid var(--line);border-radius:12px;margin-bottom:5px;background:var(--panel2);}
   .librow .lname{font-size:22px;font-weight:700;}
   .librow button{padding:9px 14px;font-size:18px;}
   .teamcols{display:flex;gap:12px;}
@@ -472,6 +472,16 @@
      Only ever shares the display with a lone "0", and kpFit shrinks the
      SUGGESTION (never the zero) if a long one can't fit. */
   #kpHint.out{color:var(--gold);font-size:96px;font-weight:700;}
+  /* in-app install QR */
+  #qrBig{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;
+    flex-direction:column;gap:18px;background:rgba(3,5,10,.985);}
+  #qrBig.show{display:flex;}
+  #qrBig .tile{background:#fff;border-radius:18px;padding:16px;line-height:0;
+    box-shadow:0 18px 50px rgba(0,0,0,.8),0 0 0 2px var(--gold-dk);}
+  #qrBig .tile > div{width:min(72vw,72vh,420px);height:min(72vw,72vh,420px);}
+  #qrBig .cap{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--gold-lt);
+    text-transform:uppercase;text-align:center;}
+  #qrBig .sub{font-family:var(--body);font-size:16px;color:var(--muted);margin-top:-8px;}
   #kpGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px;}
   #kpGrid button{font-family:var(--num);font-size:58px;font-weight:700;padding:8px 0;line-height:1.2;}
   #kpGrid button.kpop{font-size:91px;line-height:1;padding:0;}
@@ -599,7 +609,7 @@
   }
 
   /* A–Z jump bar */
-  #azBar{display:flex;flex-wrap:nowrap;gap:2px;margin:0 0 10px;}
+  #azBar{display:flex;flex-wrap:nowrap;gap:2px;margin:0 0 5px;}
   #azBar button{flex:1 1 0;min-width:0;padding:7px 0;font-size:17px;font-family:var(--num);font-weight:700;
     border-radius:5px;background:#1d150c;border:1px solid #4a3d28;color:#e9ddc0;box-shadow:none;background-image:none;letter-spacing:0;}
   #azBar button.dim{opacity:.26;pointer-events:none;}
@@ -877,20 +887,20 @@
     #setup #appBanner img{ max-width:540px; }
     #appBanner::before,#appBanner::after{ width:calc((100% - 540px)/2 + 26px); }
     #appBanner{ margin-bottom:6px; }
-    #setup h2{ font-size:15px; margin:0 0 5px; }
+    #setup h2{ font-size:13px; margin:0 0 3px; }
     #setup .card{ padding:2px 12px 8px; margin-bottom:7px; }
     #gameSel button{ font-size:20px; padding:7px 6px; }   /* +35% (Nathan) */
     #startBtn{ font-size:20px !important; padding:9px !important; margin:7px 0 0 !important; }   /* matches Manage Players */
-    #azBar button{ padding:3px 0; font-size:13px; }
+    #azBar button{ padding:2px 0; font-size:12px; }
     /* Match-up lives here now: fixed-height heads holding each side's picks */
     .teamcol-head{ font-size:20px; padding:5px 6px; }
-    #pickHeads .teamcol-head{ height:62px; }
+    #pickHeads .teamcol-head{ height:52px; }
     .th-team{ padding:2px 6px !important; font-size:12.5px !important; }
     #pickHeads{ margin-bottom:4px; }
     #manageBtn{ margin:0 0 7px !important; padding:7px 14px; font-size:20px; }   /* matches the game pills */
     /* list rows a touch tighter so 4 fit — names still by far the biggest text */
-    #listScroll .nameopt{ font-size:40px; padding:6px 14px; }
-    #listScroll .nopt-team{ font-size:17px; }
+    #listScroll .nameopt{ font-size:30px; padding:3px 12px; }
+    #listScroll .nopt-team{ font-size:14px; }
     /* Player Library: bigger name + team fill the row (same row height — the ✕
        still sets it), and small trims so the whole screen locks without scrolling */
     /* paused-game bar: slim, so the menu still locks with it present */
@@ -907,20 +917,23 @@
         font-size:15px; padding:9px 10px; z-index:5;
       }
     }
-    #library .librow .lname{ font-size:30px; }
-    #library .librow .teamsel{ font-size:20px; padding:7px 10px; max-width:250px; margin-right:40px; }
-    #library h2{ font-size:16px; margin:0 0 6px; }
-    #library .card{ padding:2px 12px 9px; margin-bottom:8px; }
+    #library .librow .lname{ font-size:24px; }
+    #library .librow .teamsel{ font-size:16px; padding:4px 8px; max-width:190px; margin-right:14px; }
+    #library .librow button{ padding:5px 11px; font-size:15px; }
+    #library h2{ font-size:14px; margin:0 0 3px; }
+    #library .card{ padding:1px 10px 6px; margin-bottom:5px; }
     #library .card p.small{ margin:4px 0 8px; font-size:13px; }
     /* Backup card: compact (Nathan) — the blurb is gone and the email field no
        longer needs roster-sized type. Tap targets stay ≥40px. */
     #bkCard h2{ margin:0 0 4px; }
-    #bkCard input[type=text]{ padding:8px 12px; font-size:17px; }
+    #bkCard input[type=text]{ padding:6px 11px; font-size:16px; }
+    /* the studs on these buttons need clearance, or the label sits on them */
+    #bkCard #bkSaveBtn,#bkCard #bkRestoreBtn{ font-size:15px; padding:9px 20px; }
     #bkSaveBtn,#bkRestoreBtn{ padding:9px !important; font-size:15px; }
     /* add-player row trimmed to match — height here is a roster row we lose */
     #newPlayer{ padding:9px 12px; font-size:18px; }
-    #addPlayer{ padding:9px 16px !important; font-size:15px; }
-    #manageTeamsBtn,#libDoneBtn{ padding:10px !important; font-size:16px; margin-top:6px !important; }
+    #addPlayer{ padding:7px 14px !important; font-size:15px; }
+    #manageTeamsBtn,#libDoneBtn{ padding:8px !important; font-size:16px; margin-top:4px !important; }
   }
   @media (max-width:600px){
     /* Maximize every px (Nathan): wrap margins 14→6 sides / 14→8 top+bottom.
@@ -981,17 +994,27 @@
   .librow{display:grid;grid-template-columns:1fr auto auto;align-items:center;column-gap:10px;}
   .librow .lname,.librow .lnameEdit{grid-column:1;min-width:0;overflow-wrap:break-word;}
   .librow .teamsel{grid-column:2;max-width:200px;font-size:16px;font-weight:600;padding:7px 8px;}
-  .librow button.warn{grid-column:3;width:42px;height:42px;padding:0;border-radius:9px;
+  /* the ✕ sets the row height, so it sets how many names fit — 36px keeps a
+     usable target while buying a row roughly every six names */
+  .librow button.warn{grid-column:3;width:36px;height:36px;padding:0;border-radius:9px;
        font-size:20px;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center;
        background:linear-gradient(180deg,#5c1f24,#3c1216);border:1.5px solid #a3273c;color:#ff8ba0;}
 
   /* ==================== PHONE (iPhone-width) PASS ==================== */
   @media (max-width:600px){
     /* menu */
-    .nameopt{font-size:25px;padding:10px 12px;gap:2px;}
-    .nameopt .nopt-team{font-size:13px;letter-spacing:.8px;}
+    .nameopt{font-size:20px;padding:5px 10px;gap:1px;}
+    .nameopt .nopt-team{font-size:11px;letter-spacing:.6px;}
     .librow .teamsel{font-size:14px;padding:5px 8px;max-width:130px;}
     .librow button.warn{width:36px;height:36px;font-size:17px;}
+    /* a 136px email box is unusable, and the field is worth more than the ~0.8
+       row it costs — so on a phone the address keeps its own line */
+    #bkCard #bkEmail{ flex:1 0 100%; }
+    #bkCard #bkSaveBtn,#bkCard #bkRestoreBtn{ flex:1 1 0; font-size:13px; padding:9px 6px; margin-top:6px; }
+    #library h2{ font-size:14px; margin:0 0 3px; }
+    #library .card{ padding:1px 8px 5px; margin-bottom:5px; }
+    #library .librow .lname{ font-size:19px; }
+    #manageTeamsBtn,#libDoneBtn{ padding:8px !important; margin-top:4px !important; }
     #azBar{flex-wrap:wrap;gap:3px;}
     #azBar button{flex:0 0 calc(100%/13 - 3px);padding:9px 0;font-size:18px;}
     .teamcol-head{font-size:16px;letter-spacing:1px;padding:8px 4px;}
@@ -1087,6 +1110,11 @@
     .f6-p .nm{font-size:18px;}
     .f6-p .lv{font-size:16px;letter-spacing:1px;}
     .f6-target .val{font-size:72px;}
+    /* three share buttons must stay on ONE line at 375px, or the row wraps and
+       the third button ends up a different size from the other two */
+    #shareCard .row{flex-wrap:nowrap;gap:6px;}
+    #shareCard .row > button{font-size:12.5px;padding:11px 3px;min-width:0;white-space:nowrap;letter-spacing:0;}
+    #shareCard .lw{display:none;}   /* "Share" alone on a phone; the card title gives the rest */
     .f6-who{font-size:18px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
@@ -1232,15 +1260,15 @@
     </div>
     <div class="card" id="bkCard">
       <h2>☁ Backup &amp; Restore</h2>
-      <div class="row" style="margin-bottom:8px;">
-        <input type="text" id="bkEmail" class="grow" placeholder="you@email.com" autocomplete="email" inputmode="email">
-      </div>
-      <div class="row" id="bkCodeRow" style="display:none;margin-bottom:8px;">
-        <input type="text" id="bkCode" class="grow" placeholder="6-digit code from the email" inputmode="numeric" maxlength="6">
-      </div>
+      <!-- email and both actions share ONE row: every row of chrome here is a
+           row of names lost from the list above, which is what matters most -->
       <div class="row">
-        <button class="primary grow" id="bkSaveBtn">☁ Back up now</button>
-        <button class="accent grow" id="bkRestoreBtn">⤓ Restore</button>
+        <input type="text" id="bkEmail" class="grow" placeholder="you@email.com" autocomplete="email" inputmode="email">
+        <button class="primary" id="bkSaveBtn">☁ Back up</button>
+        <button class="accent" id="bkRestoreBtn">⤓ Restore</button>
+      </div>
+      <div class="row" id="bkCodeRow" style="display:none;margin-top:6px;">
+        <input type="text" id="bkCode" class="grow" placeholder="6-digit code from the email" inputmode="numeric" maxlength="6">
       </div>
       <!-- status line only takes space when it has something to say -->
       <p class="small" id="bkMsg" style="margin:6px 0 0;"></p>
@@ -1248,8 +1276,9 @@
     <div class="card" id="shareCard">
       <h2>🤝 Share With a Friend</h2>
       <div class="row">
-        <button class="primary grow" id="shareOfferBtn">📤 Share Library</button>
+        <button class="primary grow" id="shareOfferBtn">📤 Share<span class="lw"> Library</span></button>
         <button class="accent grow" id="shareTakeBtn">📥 Receive</button>
+        <button class="ghost grow" id="qrShowBtn">▦ QR Code</button>
       </div>
       <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
         <span id="shareCodeVal" style="font-family:var(--num);font-size:46px;font-weight:700;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);"></span>
@@ -1260,6 +1289,9 @@
       </div>
       <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
     </div>
+    <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 41 41" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h7m-33 1h1m5 0h1m3 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h1m3 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m4 0h2m1 0h1m3 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m2 0h1m2 0h2m1 0h2m1 0h1m3 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m4 0h6m1 0h1m2 0h1m1 0h1m2 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m2 0h2m2 0h1m2 0h1m1 0h1m-22 1h2m1 0h2m4 0h1m1 0h2m2 0h1m1 0h1m8 0h2m-30 1h1m5 0h1m3 0h2m1 0h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h2m1 0h1m-31 1h4m1 0h4m2 0h1m2 0h2m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1m1 0h2m-33 1h4m3 0h2m2 0h1m1 0h2m1 0h1m1 0h2m2 0h1m4 0h4m-31 1h1m2 0h1m1 0h3m3 0h1m1 0h2m4 0h1m4 0h1m1 0h1m2 0h1m2 0h1m-32 1h2m2 0h1m1 0h1m1 0h6m3 0h2m1 0h3m1 0h1m1 0h1m2 0h2m-32 1h1m3 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m7 0h2m-29 1h2m1 0h2m1 0h1m1 0h1m2 0h3m3 0h2m5 0h2m1 0h1m1 0h1m-27 1h3m2 0h2m1 0h5m1 0h3m2 0h1m1 0h4m3 0h1m-32 1h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h5m2 0h1m1 0h6m2 0h1m-33 1h9m4 0h1m3 0h2m2 0h3m1 0h3m1 0h2m1 0h1m-30 1h2m3 0h3m1 0h1m1 0h1m2 0h4m2 0h3m1 0h5m-32 1h3m1 0h1m1 0h3m3 0h2m4 0h1m5 0h1m4 0h1m1 0h1m-32 1h1m4 0h1m2 0h2m1 0h2m1 0h1m1 0h3m3 0h2m1 0h4m1 0h2m-32 1h1m1 0h2m1 0h4m1 0h1m2 0h2m1 0h2m2 0h1m2 0h1m2 0h3m1 0h3m-33 1h1m3 0h1m4 0h1m9 0h2m7 0h1m1 0h2m-32 1h3m1 0h4m2 0h1m2 0h1m1 0h3m6 0h5m3 0h1m-25 1h1m5 0h1m1 0h2m4 0h1m1 0h1m3 0h2m1 0h1m-32 1h7m1 0h1m2 0h2m2 0h1m1 0h1m3 0h4m1 0h1m1 0h1m-29 1h1m5 0h1m3 0h2m3 0h1m3 0h1m2 0h1m1 0h1m3 0h4m-32 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m5 0h1m1 0h7m1 0h1m-32 1h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h4m1 0h1m2 0h4m1 0h1m4 0h1m-33 1h1m1 0h3m1 0h1m5 0h3m1 0h1m2 0h2m3 0h1m3 0h1m1 0h3m-33 1h1m5 0h1m2 0h1m1 0h1m3 0h1m2 0h3m4 0h1m3 0h4m-33 1h7m3 0h2m2 0h1m1 0h1m1 0h2m3 0h2m1 0h1m1 0h2"/></svg></div></div>
+      <div class="cap">Scan to get Dart Keeper</div>
+      <div class="sub">dartkeeper.net</div></div>
     <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
   </div>
@@ -1751,6 +1783,10 @@ async function shareGo(){
     } else shareMsg((r&&r.error)||'Could not fetch that share.');
   }catch(e){ shareMsg('Could not connect — check your signal and try again.'); }
 }
+// The install QR lives behind a button now — full screen is what a friend
+// actually scans off your phone or tablet anyway.
+document.getElementById('qrShowBtn').onclick=function(){ document.getElementById('qrBig').classList.add('show'); };
+document.getElementById('qrBig').onclick=function(){ this.classList.remove('show'); };
 document.getElementById('shareOfferBtn').onclick=shareOffer;
 document.getElementById('shareTakeBtn').onclick=shareTakeToggle;
 document.getElementById('shareGoBtn').onclick=shareGo;
@@ -1781,6 +1817,47 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
     s.t180=(s.t180||0)+(e.t180||0);
   });
   saveStats();
+}
+
+//============================ INSTALL SOURCE (sticker / magnet QR) ============================
+// A QR on a sticker or magnet lands on dartkeeper.net/?src=<token>; the landing
+// page forwards the token into /play/. FIRST TOUCH WINS and it lives in
+// localStorage, not sessionStorage: the question is "did the stickers bring
+// anyone who STAYED", so a scan has to stay attributed to the visits that come
+// days later. (Same reasoning as Battle Tees' btSrc.)
+var LS_SRC='darts_src_v1', LS_SRCSENT='darts_src_sent_v1';
+var dkSrc='';
+try{
+  var _m=/[?&]src=([A-Za-z0-9_.-]{1,24})/.exec(location.search||'');
+  if(_m && !localStorage.getItem(LS_SRC)) localStorage.setItem(LS_SRC,_m[1]);
+  dkSrc=localStorage.getItem(LS_SRC)||'';
+}catch(e){}
+// Exactly TWO pings per device, ever: one when a QR scan first opens the app,
+// one the first time that device actually starts a game. Together they answer
+// "did the stickers bring anyone, and did they play?" — and then the app goes
+// quiet again for good. Deliberately NOT per-launch telemetry: this app has
+// never phoned home during normal use and this must not change that.
+function dkPing(ev){
+  try{
+    if(!dkSrc) return;                                   // no QR, nothing to attribute
+    if(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+    var sent={};
+    try{ sent=JSON.parse(localStorage.getItem(LS_SRCSENT)||'{}'); }catch(e){}
+    if(sent[ev]) return;                                 // once each, forever
+    sent[ev]=1;
+    try{ localStorage.setItem(LS_SRCSENT,JSON.stringify(sent)); }catch(e){}
+    var dev=localStorage.getItem('darts_dev_v1');
+    if(!dev){ dev='d'+Math.random().toString(36).slice(2,10); try{ localStorage.setItem('darts_dev_v1',dev); }catch(e){} }
+    var ws=new WebSocket(DK_RELAY);
+    var done=setTimeout(function(){ try{ws.close();}catch(e){} },8000);
+    ws.onopen=function(){
+      try{ ws.send(JSON.stringify({t:'stat',app:'darts',ev:ev,src:dkSrc,dev:dev,
+        mode:(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'app':'web',
+        at:Date.now()})); }catch(e){}
+      setTimeout(function(){ clearTimeout(done); try{ws.close();}catch(e){} },600);
+    };
+    ws.onerror=function(){ clearTimeout(done); };
+  }catch(e){}
 }
 
 //============================ BACKUP (Pi relay, Battle Tees pattern) ============================
@@ -2072,6 +2149,7 @@ function mkTeam(name,members){
   return {name,members,memberIdx:0,score:0,marks:{},pts:0,opened:false,history:[],tripleClose:{}};
 }
 function startGame(startTeam, leadoff, ironOrder){
+  try{ dkPing('play'); }catch(e){}
   startTeam = startTeam || 0;
   leadoff = leadoff || {};
   const teams=buildTeams();
@@ -2108,6 +2186,7 @@ function startGame(startTeam, leadoff, ironOrder){
 }
 
 function startFat6(order){
+  try{ dkPing('play'); }catch(e){}
   G={game:'fat6', mode:'ffa', isCricket:false, isFat6:true,
      players:order.map(n=>({name:n,lives:5,out:false})),
      cur:0, darts:[], target:{v:6,m:1,r:'out'}, phase:'hunt',
@@ -3567,6 +3646,7 @@ try{
   if(_lg && _lg!==config.game && document.querySelector('#gameSel button[data-game="'+_lg+'"]')) setGame(_lg);
 }catch(e){}
 restoreGameState();          // bring back an in-progress game after an app restart
+try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
 // Shown the first time the app is opened IN A BROWSER. Android/Chrome can do

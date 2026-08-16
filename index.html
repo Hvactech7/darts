@@ -273,4 +273,15 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
     <a href="mailto:hello@dartkeeper.net">hello@dartkeeper.net</a>
   </footer>
 </div>
+<script>
+// A sticker/magnet QR lands here as dartkeeper.net/?src=<token>. Carry the token
+// into the app on every Play link, or the install loses its attribution at the
+// door — the landing page is the one hop between the camera and /play/.
+(function(){
+  var m=/[?&]src=([A-Za-z0-9_.-]{1,24})/.exec(location.search||'');
+  if(!m) return;
+  var q='?src='+encodeURIComponent(m[1]);
+  [].forEach.call(document.querySelectorAll('a[href="/play/"]'), function(a){ a.href='/play/'+q; });
+})();
+</script>
 </body></html>
