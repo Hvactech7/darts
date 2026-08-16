@@ -151,7 +151,7 @@
        padding:10px;border-radius:11px;margin-bottom:10px;background:rgba(10,7,30,.5);border:1px solid var(--line);}
   .teamcol-head.head1{color:var(--blue);border-color:rgba(79,124,255,.4);box-shadow:0 0 14px rgba(79,124,255,.18);}
   .teamcol-head.head2{color:var(--yellow);border-color:rgba(255,212,0,.4);box-shadow:0 0 14px rgba(255,212,0,.18);}
-  .namelist{display:flex;flex-direction:column;gap:6px;max-height:292px;overflow-y:auto;padding-right:4px;}
+  .namelist{display:flex;flex-direction:column;gap:4px;max-height:292px;overflow-y:auto;padding-right:4px;}
   .nameopt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);
        cursor:pointer;font-weight:700;font-size:44px;word-break:break-word;transition:transform .05s;}
   .nameopt:active{transform:scale(.97);}
@@ -899,7 +899,7 @@
     #pickHeads{ margin-bottom:4px; }
     #manageBtn{ margin:0 0 7px !important; padding:7px 14px; font-size:20px; }   /* matches the game pills */
     /* list rows a touch tighter so 4 fit — names still by far the biggest text */
-    #listScroll .nameopt{ font-size:30px; padding:3px 12px; }
+    #listScroll .nameopt{ font-size:30px; padding:3px 12px; line-height:1.05; }
     #listScroll .nopt-team{ font-size:14px; }
     /* Player Library: bigger name + team fill the row (same row height — the ✕
        still sets it), and small trims so the whole screen locks without scrolling */
@@ -984,12 +984,15 @@
   }
 
   /* ==================== STACKED NAME + TEAM ROWS (2026-08-07) ==================== */
-  /* Long player names were colliding with the team label/select in both the
-     Select Players picker and the Player Library. Name on top, team underneath,
-     noticeably smaller. */
-  .nameopt{flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;}
-  .nameopt .nopt-name{display:block;line-height:1.05;}
-  .nameopt .nopt-team{font-size:19px;letter-spacing:1.2px;white-space:normal;line-height:1.1;}
+  /* Team BESIDE the name, not under it (Nathan). The name keeps priority and is
+     never truncated; if a row runs short the TEAM gives way, being the secondary
+     label. Side by side is also a shorter row, so more names fit in view. */
+  .nameopt{flex-direction:row;align-items:baseline;justify-content:space-between;gap:10px;}
+  /* one line, always: a wrapped name makes the row twice as tall and costs a
+     name elsewhere in the list. The team beside it shrinks away first. */
+  .nameopt .nopt-name{flex:0 0 auto;line-height:1.05;white-space:nowrap;}
+  .nameopt .nopt-team{flex:0 1 auto;min-width:0;font-size:19px;letter-spacing:1.2px;line-height:1.1;
+       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
   /* one line per player: name (takes all spare width) · team select · red ✕ */
   .librow{display:grid;grid-template-columns:1fr auto auto;align-items:center;column-gap:10px;}
   .librow .lname,.librow .lnameEdit{grid-column:1;min-width:0;overflow-wrap:break-word;}
@@ -1003,7 +1006,7 @@
   /* ==================== PHONE (iPhone-width) PASS ==================== */
   @media (max-width:600px){
     /* menu */
-    .nameopt{font-size:20px;padding:5px 10px;gap:1px;}
+    .nameopt{font-size:20px;padding:5px 10px;gap:8px;}   /* 1px was for the old stacked layout */
     .nameopt .nopt-team{font-size:11px;letter-spacing:.6px;}
     .librow .teamsel{font-size:14px;padding:5px 8px;max-width:130px;}
     .librow button.warn{width:36px;height:36px;font-size:17px;}
