@@ -3637,6 +3637,61 @@ document.getElementById('a2hsGo').onclick=function(){
 // give the install event a beat to arrive so Android gets the real button
 setTimeout(dkA2HSShow, 700);
 
+// ---- KEEP THE SCREEN AWAKE ----------------------------------------------
+// A scoreboard on the wall that dims mid-leg is useless. Two mechanisms, because
+// one is not enough: modern browsers get the real Screen Wake Lock API, but it
+// only reached Safari in 16.4 — Nathan's iPad is on 15.8 — so older iOS falls
+// back to the long-standing trick of a MUTED, LOOPING, INLINE video: iOS keeps
+// the screen lit whenever video is playing. The clip is 2 frames of black,
+// 1.2KB, embedded as a data URI so it still works with no signal.
+var DK_KEEPALIVE_MP4='data:video/mp4;base64,AAAAJGZ0eXBpc29tAAACAGlzb21pc282aXNvMmF2YzFtcDQxAAACym1vb3YAAAB4bXZoZAEAAAAAAAAA5qcJsQAAAADmpwmxAAAD6AAAAAAAAAU3AAEAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAIidHJhawAAAGh0a2hkAQAAAwAAAADmpwmxAAAAAOanCbEAAAABAAAAAAAAAAAAAAU3AAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAQAAAAABAAAAAQAAAAAABsm1kaWEAAAAsbWRoZAEAAAAAAAAA5qcJsQAAAADmpwmxAAB1MAAAAAAAAAU3VcQAAAAAAC1oZGxyAAAAAAAAAAB2aWRlAAAAAAAAAAAAAAAAVmlkZW9IYW5kbGVyAAAAAVFtaW5mAAAAFHZtaGQAAAABAAAAAAAAAAAAAAAlZGluZgAAAB1kcmVmAAAAAAAAAAEAAAANdXJsIAAAAAEAAAABEHN0YmwAAAAQc3RzYwAAAAAAAAAAAAAAEHN0dHMAAAAAAAAAAAAAABRzdHN6AAAAAAAAAAAAAAAAAAAAEHN0Y28AAAAAAAAAAAAAAMRzdHNkAAAAAAAAAAEAAAC0YXZjMQAAAAAAAAABAAAAAQAAAAAAAAAAAAAAAABAAEAASAAAAEgAAAAAAAAAAQtBVkMxIENvZGluZwAAAAAAAAAAAAAAAAAAAAAAAAAAABj//wAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAAAAAAAAAAAAACdhdmNDAULACv/hABBnQsAKjGhCSagwMDA8IhGoAQAEaM48gAAAABNjb2xybmNseAAGAAYABgAAAAAobXZleAAAACB0cmV4AAAAAAAAAAEAAAABAAAAAAAAAAAAAAAAAAAA0G1vb2YAAAAQbWZoZAAAAAAAAAABAAAAuHRyYWYAAAAUdGZoZAACACAAAAABAQEAAAAAABR0ZmR0AQAAAAAAAAAAAAAAAAAAiHRydW4BAAMFAAAADgAAANgCAAAAAAAL+QAAAB0AAAu2AAAADAAAC7cAAAAMAAALvAAAAAwAAAu5AAAADAAAC7oAAAALAAALtwAAAAsAAAvTAAAACwAAC5oAAAALAAALtwAAAAsAAAu4AAAACwAAC7cAAAALAAALtwAAAAwAAAPnAAAADAAAALptZGF0AAAAGWW4AAQEP//+HooABvycnJ1111111111114AAAAIYeAAfkBDhGAAAAAIYeAAvkDOEYAAAAAIYeAA/kCuEYAAAAAIYeABPkCOEYAAAAAHYeABfkG4RgAAAAdh4AG+R4RgAAAAB2HgAf5D4RgAAAAHYeACPkLhGAAAAAdh4AJ+R4RgAAAAB2HgAr5D4RgAAAAHYeAC/kH4RgAAAAhh4AM+QJ4RgAAAAAhh4AN+QN4RgAAAAExtZnJhAAAANHRmcmEBAAAAAAAAAQAAAD8AAAABAAAAAAAAAAAAAAAAAAAC7gAAAAEAAAABAAAAAQAAABBtZnJvAAAAAAAAAEw=';
+var dkLock=null, dkKeepVid=null;
+function dkKeepVideoOn(){
+  try{
+    if(!dkKeepVid){
+      var v=document.createElement('video');
+      v.muted=true; v.defaultMuted=true; v.loop=true;
+      v.setAttribute('muted','');  v.setAttribute('loop','');
+      v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+      v.setAttribute('aria-hidden','true'); v.playsInline=true;
+      // must stay rendered — display:none or visibility:hidden stops it counting
+      v.style.cssText='position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none;border:0;';
+      v.src=DK_KEEPALIVE_MP4;
+      document.body.appendChild(v);
+      dkKeepVid=v;
+    }
+    var pr=dkKeepVid.play();
+    if(pr && pr.catch) pr.catch(function(){});   // blocked until a gesture — retried on the next tap
+  }catch(e){}
+}
+function dkKeepAwake(){
+  if(document.visibilityState!=='visible') return;
+  if('wakeLock' in navigator){
+    if(dkLock) return;
+    try{
+      navigator.wakeLock.request('screen').then(function(l){
+        dkLock=l;
+        l.addEventListener('release', function(){ dkLock=null; });
+      }).catch(function(){ dkKeepVideoOn(); });   // refused (or too early) → fall back
+      return;
+    }catch(e){}
+  }
+  dkKeepVideoOn();
+}
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState==='visible') dkKeepAwake();
+  else { try{ if(dkKeepVid) dkKeepVid.pause(); }catch(e){} }   // let the phone sleep once we're away
+});
+// iOS will not start playback without a user gesture: keep trying on taps until
+// something holds, then stop listening.
+function dkWakeOnGesture(){
+  dkKeepAwake();
+  if(dkLock || (dkKeepVid && !dkKeepVid.paused))
+    document.removeEventListener('pointerdown', dkWakeOnGesture, true);
+}
+document.addEventListener('pointerdown', dkWakeOnGesture, true);
+dkKeepAwake();
+
 // ---- update hand-off (used by the service-worker registration below) --------
 // iOS never re-navigates a PWA that was only backgrounded, so waiting for the
 // "next launch" can take days. When a new version is ready the page reloads
