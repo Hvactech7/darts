@@ -2035,24 +2035,15 @@ function loadGroup(id){
   setGroupHint('Loaded “'+g.name+'”.');
 }
 function refreshDuoCard(){
-  const i1=document.getElementById('duoName1'), i2=document.getElementById('duoName2');
-  if(!i1||!i2) return;
-  // A side gets a team-name input whenever IT has 2 picks (works for 2v2 and
-  // for an Ironman duo on either side — duoTeamName keys are side-agnostic).
-  // It replaces that head's "Team N" label, so the box height never changes.
-  let any=false;
-  [0,1].forEach(t=>{
-    const duo = config.game!=='fat6' && teamSel[t].length===2;
-    document.getElementById('head'+(t+1)).classList.toggle('duo', duo);
-    if(duo){
-      any=true;
-      const inp=t===0?i1:i2;
-      if(document.activeElement!==inp) inp.value=duoTeamName(teamSel[t]);
-    }
+  // The pair "team name…" field is gone from the head boxes (Nathan): picking a
+  // second player just shows the two names now. The inputs stay in the DOM —
+  // their listeners are bound at load — but nothing ever reveals them, since
+  // `.th-team` is display:none until a head gets the `duo` class.
+  // Pair names already saved still label that duo in-game; there is simply no
+  // editor for them on this screen any more.
+  ['head1','head2'].forEach(function(id){
+    var h=document.getElementById(id); if(h) h.classList.remove('duo');
   });
-  if(!any) return;
-  const names=[...new Set([...teamLib,...Object.values(duoTeams)])].filter(Boolean);
-  document.getElementById('teamNameList').innerHTML=names.map(n=>`<option value="${esc(n)}">`).join('');
 }
 
 //============================ PIDDLE (who throws first) ============================
