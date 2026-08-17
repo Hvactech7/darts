@@ -139,6 +139,13 @@
   .librow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px;
        border:1px solid var(--line);border-radius:12px;margin-bottom:5px;background:var(--panel2);}
   .librow .lname{font-size:22px;font-weight:700;}
+  /* A rename refused because the name is taken: the ROW itself flashes red.
+     (Animating just the border was useless — it is 1px of dark olive on a blue
+     fill, invisible. Only the 35% frame is declared so the start and end come
+     from the row's own computed colours, whatever the theme sets them to.) */
+  @keyframes rowreject{35%{background-color:#6b1f28;
+    box-shadow:0 0 0 2px #e0475f,0 0 18px rgba(224,71,95,.5);}}
+  .librow.reject{animation:rowreject .5s ease-in-out 2;}
   .librow button{padding:9px 14px;font-size:18px;}
   .teamcols{display:flex;gap:12px;}
   .teamcol{flex:1;min-width:0;}
@@ -1532,7 +1539,14 @@ function renderLibrary(){
       inp.type='text'; inp.value=name; inp.className='lnameEdit'; inp.setAttribute('autocomplete','off');
       span.replaceWith(inp); inp.focus(); inp.select();
       let done=false;
-      const commit=()=>{ if(done) return; done=true; if(!renamePlayer(name, inp.value)) renderLibrary(); };
+      const commit=()=>{ if(done) return; done=true;
+        if(!renamePlayer(name, inp.value)){
+          renderLibrary();
+          // no toast any more, so show the refusal on the row itself
+          const back=[...document.querySelectorAll('#libList .librow')]
+            .find(r=>{const s=r.querySelector('.lname'); return s && s.textContent===name;});
+          if(back){ back.classList.add('reject'); setTimeout(()=>back.classList.remove('reject'),900); }
+        } };
       inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } else if(e.key==='Escape'){ done=true; renderLibrary(); } };
       inp.onblur=commit;
     };
@@ -3046,13 +3060,14 @@ function f(n){return n.toFixed(1);}
 
 //============================ TOAST ============================
 let toastT=null;
-function flashToast(msg){
-  let el=document.querySelector('.toast');
-  if(!el){el=document.createElement('div');el.className='toast';document.body.appendChild(el);}
-  el.textContent=msg;el.style.display='block';
-  clearTimeout(toastT);
-  toastT=setTimeout(()=>{el.style.display='none';},900);
-}
+// The pop-up toast is GONE (Nathan): "a yellow card pops up from the bottom for
+// a quick second… remove it in all instances". Kept as a no-op rather than
+// deleting ten call sites, so nothing can throw and a future message has an
+// obvious place to NOT go. Everything it used to announce is already visible on
+// screen: BUST shows in the calculator and on the confirm button, the double-in
+// warning is printed on the score card, a lost life removes a heart, and a
+// checkout turns the button into 🏆 Confirm Winner.
+function flashToast(msg){ /* intentionally silent */ }
 
 //============================ GAME BUTTONS ============================
 // Undo doubles as a char-backspace while the calculator is visible, so it must
