@@ -489,6 +489,103 @@
   #qrBig .cap{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--gold-lt);
     text-transform:uppercase;text-align:center;}
   #qrBig .sub{font-family:var(--body);font-size:16px;color:var(--muted);margin-top:-8px;}
+
+  /* ===== FAT 6 ELIMINATION: the strike destroys the name =====
+     Sequence matters more than any single frame. The name is readable FIRST,
+     then the bolts converge on it and land, then it is blown apart — so the
+     lightning is visibly the cause and "IS OUT" is the aftermath.
+     Bolts are the banner's own artwork (dk-side-blue / dk-side-red), angled in
+     from the top with origin at the top edge so their tails swing toward the
+     centre, and masked to stop AT the name rather than run past it. */
+  #outSplash{position:fixed;inset:0;z-index:200;display:none;pointer-events:none;overflow:hidden;}
+  #outSplash.show{display:block;}
+  /* ONE continuous sheet — no strips, no rotation. Three rotated panels read as
+     shattered lightning, which is exactly what it must not look like. The art is
+     469x700, so it tiles horizontally at its native height (repeat-x) instead of
+     being blown up: the bolts stay sharp and unbroken across the screen, and the
+     dark night-sky edges vanish under screen blending, so no seam shows. */
+  #outSplash .bolt{position:absolute;left:0;right:0;top:0;height:78%;
+    mix-blend-mode:screen;opacity:0;
+    background-repeat:repeat-x;background-size:auto 100%;background-position:center top;
+    animation:boltStrike 2s ease-out forwards;
+    -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 52%,rgba(0,0,0,.75) 78%,transparent 100%);
+    mask-image:linear-gradient(180deg,#000 0%,#000 52%,rgba(0,0,0,.75) 78%,transparent 100%);}
+  #outSplash.blue .bolt{background-image:url("dk-side-blue.jpg");}
+  #outSplash.fire .bolt{background-image:url("dk-side-red.jpg");}
+  /* the hit itself: a burst centred on the name, not a full-screen wash */
+  #outSplash .burst{position:absolute;left:50%;top:50%;width:150vmax;height:150vmax;
+    transform:translate(-50%,-50%) scale(.1);opacity:0;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,255,255,.55) 12%,transparent 45%);
+    animation:burstOut 2s ease-out forwards;}
+  #outSplash .ring{position:absolute;left:50%;top:50%;width:26vmin;height:26vmin;border-radius:50%;
+    transform:translate(-50%,-50%) scale(.2);opacity:0;border:4px solid #fff;
+    animation:ringOut 2s ease-out forwards;}
+  #outSplash.blue .ring{border-color:#9fd0ff;box-shadow:0 0 26px rgba(74,168,255,.9);}
+  #outSplash.fire .ring{border-color:#ffbe86;box-shadow:0 0 26px rgba(255,122,46,.9);}
+  #outSplash .outwrap{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);
+    text-align:center;animation:outShake 2s ease-out forwards;}
+  /* inline-block so it hugs the word: a transformed child creates its own
+     compositing layer, and wherever that layer sits the screen-blended bolts
+     beneath it stop blending and read as a dark rectangle. Keeping the box the
+     width of the text confines that to behind the letters. */
+  #outSplash .namebox{position:relative;display:inline-block;}
+  #outSplash .outname{font-family:var(--display);font-weight:900;letter-spacing:2px;
+    font-size:clamp(46px,13vw,150px);line-height:1;text-transform:uppercase;white-space:nowrap;}
+  #outSplash .whole{animation:nameHold 2s ease-out forwards;}
+  #outSplash.blue .outname{color:#dcefff;text-shadow:0 0 18px rgba(74,168,255,.95),0 0 60px rgba(74,168,255,.7),0 4px 0 #06203c;}
+  #outSplash.fire .outname{color:#ffe9d4;text-shadow:0 0 18px rgba(255,122,46,.95),0 0 60px rgba(255,122,46,.7),0 4px 0 #3c1606;}
+  /* three slices of the same word, thrown apart by the hit */
+  #outSplash .outsub{font-family:var(--display);font-weight:700;letter-spacing:9px;
+    font-size:clamp(18px,3.4vw,34px);margin-top:10px;color:#fff;opacity:0;
+    animation:subIn 2s ease-out forwards;}
+
+  /* straight down, land at 26%, then flicker as one sheet */
+  @keyframes boltStrike{
+    0%{transform:translateY(-100%) scaleY(.6);opacity:0;}
+    18%{opacity:.9;}
+    26%{transform:translateY(0) scaleY(1);opacity:1;}
+    31%{opacity:.4;} 36%{opacity:1;} 48%{opacity:.55;} 62%{opacity:.85;}
+    86%{opacity:0;} 100%{opacity:0;}
+  }
+  /* The word is readable BEFORE the strike, recoils as the bolts land, then is
+     torn apart by it: scaling out while the letters are driven apart and blown
+     to white. Done on the single text layer — sliced copies fought the bolts'
+     blend mode and left dark rectangles wherever their layers sat. */
+  @keyframes nameHold{
+    0%{transform:scale(.86);opacity:0;letter-spacing:2px;}
+    7%{transform:scale(1);opacity:1;letter-spacing:2px;}
+    24%{transform:scale(1.02);opacity:1;letter-spacing:2px;}
+    27%{transform:scale(1.16);opacity:1;letter-spacing:6px;}     /* the hit */
+    34%{transform:scale(1.26);opacity:.95;letter-spacing:18px;color:#fff;}
+    50%{transform:scale(1.5);opacity:0;letter-spacing:38px;color:#fff;}
+    100%{transform:scale(1.5);opacity:0;}
+  }
+  @keyframes burstOut{
+    0%,24%{transform:translate(-50%,-50%) scale(.1);opacity:0;}
+    27%{transform:translate(-50%,-50%) scale(.55);opacity:1;}
+    40%{transform:translate(-50%,-50%) scale(1);opacity:0;}
+    100%{opacity:0;}
+  }
+  @keyframes ringOut{
+    0%,25%{transform:translate(-50%,-50%) scale(.2);opacity:0;}
+    28%{opacity:.95;}
+    52%{transform:translate(-50%,-50%) scale(3.4);opacity:0;}
+    100%{opacity:0;}
+  }
+  /* "IS OUT" is the aftermath — it arrives once the pieces are gone */
+  @keyframes subIn{
+    0%,40%{opacity:0;transform:translateY(6px);}
+    52%{opacity:.95;transform:translateY(0);}
+    86%{opacity:.95;} 100%{opacity:0;}
+  }
+  @keyframes outShake{
+    0%,25%{transform:translateY(-50%) translateX(0);}
+    27%{transform:translateY(-50%) translateX(-18px);}
+    29%{transform:translateY(-50%) translateX(15px);}
+    31%{transform:translateY(-50%) translateX(-9px);}
+    34%{transform:translateY(-50%) translateX(5px);}
+    38%,100%{transform:translateY(-50%) translateX(0);}
+  }
   #kpGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:10px;}
   #kpGrid button{font-family:var(--num);font-size:58px;font-weight:700;padding:8px 0;line-height:1.2;}
   #kpGrid button.kpop{font-size:91px;line-height:1;padding:0;}
@@ -1226,6 +1323,21 @@
         <button class="primary" id="a2hsGo">Install</button>
       </div>
     </div>
+  </div>
+
+  <!-- TOP LEVEL on purpose: this lived inside #library at first and never showed,
+       because a position:fixed element inside a display:none ancestor is not
+       rendered — and #library is hidden while a game is on screen. -->
+  <div id="outSplash" aria-hidden="true">
+    <!-- The bolts are painted LAST, on top of the name: it reads as the strike
+         going through the word, and screen blending only adds light so the name
+         stays readable underneath. -->
+    <div class="burst"></div><div class="ring"></div>
+    <div class="outwrap">
+      <div class="namebox"><div class="outname whole" id="outName"></div></div>
+      <div class="outsub">Is Out</div>
+    </div>
+    <div class="bolt"></div>
   </div>
 
   <div id="confirmQuit" class="hidden">
@@ -2420,6 +2532,32 @@ function applyFat6(value,mult,region){
   // no "New target" toast (Nathan) — the big TARGET readout at the top already
   // shows it, and the popup sat right over the Lose-a-life button
 }
+// Lightning takes the eliminated player's name out, in the banner's own colours.
+function fat6OutSplash(name){
+  var el=document.getElementById('outSplash'); if(!el) return;
+  var word=shortName(name);
+  var nn=el.querySelector('.outname');
+  nn.textContent=word;
+  nn.style.fontSize='';                      // back to the CSS clamp before measuring
+  el.classList.remove('show','blue','fire');
+  void el.offsetWidth;                       // reflow, or a second elimination never replays
+  el.classList.add('show', Math.random()<0.5 ? 'blue' : 'fire');
+  // Keep the word on ONE line and inside the screen. The clamp alone is not
+  // enough: at 13vw a long name ("Bartholomew W") measured 469px on a 390px
+  // phone, so it wrapped to two lines AND still ran off both edges.
+  // Measure with scrollWidth, NOT getBoundingClientRect: .namebox shrink-wraps
+  // but is capped by .outwrap's width, so the rect reports the clamped box while
+  // the text happily overflows it. scrollWidth is the text. Letter-spacing does
+  // not scale with font-size, so correct a couple of times instead of once.
+  var avail=(window.innerWidth||360)*0.92;
+  for(var i=0;i<4;i++){
+    var w=Math.max(nn.scrollWidth,nn.getBoundingClientRect().width);
+    if(w<=avail) break;
+    nn.style.fontSize=Math.max(18,parseFloat(getComputedStyle(nn).fontSize)*(avail/w)*0.99)+'px';
+  }
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){ el.classList.remove('show'); }, 2200);
+}
 function f6LifeBtn(){
   if(!G || !G.isFat6 || G.over) return;
   pushHistory();
@@ -2427,6 +2565,7 @@ function f6LifeBtn(){
   p.lives--;
   if(p.lives<=0){
     p.lives=0; p.out=true;
+    fat6OutSplash(p.name);
     const alive=G.players.filter(q=>!q.out);
     if(alive.length===1){
       G.over=true;
