@@ -630,6 +630,23 @@
 
   /* small accent buttons: no rivets — they crowd the short labels */
   #addPlayer,#saveGroupBtn,#addTeam{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
+  /* All four Backup & Share buttons lost their rivets (Nathan) — the dots crowded
+     the labels, and on the share pair they sat right against the enlarged icon.
+     Same trick as above: drop the two dot images, keep only the face gradient —
+     .primary is blue, .accent is orange, so they need different ones. */
+  #bkSaveBtn,#shareOfferBtn{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
+  #bkRestoreBtn,#shareTakeBtn{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
+  /* "Library" sits on its own line on BOTH share buttons, so they read the same.
+     Left to natural wrapping they disagreed: at 768px "Receive Library" broke and
+     "Share Library" did not. The phone override below puts it back inline, where
+     one line is worth a whole row of names. */
+  #shareCard .lw{display:block;}
+  /* the icon stands as tall as the two stacked words beside it (Nathan) —
+     2.05em is tuned to the measured height of that two-line block, not guessed */
+  #shareCard #shareOfferBtn,#shareCard #shareTakeBtn{
+    display:flex;align-items:center;justify-content:center;gap:9px;}
+  #shareCard .sic{font-size:2.05em;line-height:1;flex:0 0 auto;}
+  #shareCard .stx{display:inline-block;}
 
   /* library rename */
   .librow .lname{cursor:pointer;}
@@ -1237,6 +1254,9 @@
     #shareCard .row{flex-wrap:nowrap;gap:6px;}
     #shareCard .row > button{font-size:12.5px;padding:11px 3px;min-width:0;
       white-space:nowrap;letter-spacing:0;flex:1 1 auto;}
+    #shareCard .lw{display:inline;}   /* one line on a phone — see the note above */
+    #shareCard .sic{font-size:1.05em;}  /* one line of text, so a one-line icon */
+    #shareCard #shareOfferBtn,#shareCard #shareTakeBtn{gap:4px;}
     .f6-who{font-size:18px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
@@ -1419,8 +1439,8 @@
       <p class="small" id="bkMsg" style="margin:6px 0 0;"></p>
       <div id="shareCard">
         <div class="row">
-          <button class="primary grow" id="shareOfferBtn">📤 Share Library</button>
-          <button class="accent grow" id="shareTakeBtn">📥 Receive Library</button>
+          <button class="primary grow" id="shareOfferBtn"><span class="sic">📤</span><span class="stx">Share<span class="lw"> Library</span></span></button>
+          <button class="accent grow" id="shareTakeBtn"><span class="sic">📥</span><span class="stx">Receive<span class="lw"> Library</span></span></button>
           <button class="ghost grow" id="qrShowBtn">▦ QR</button>
         </div>
         <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
