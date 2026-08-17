@@ -479,6 +479,11 @@
      Only ever shares the display with a lone "0", and kpFit shrinks the
      SUGGESTION (never the zero) if a long one can't fit. */
   #kpHint.out{color:var(--gold);font-size:96px;font-weight:700;}
+  /* Share half of the merged card. No divider rule on purpose: a hairline lands
+     on half a pixel under #library's zoom and disappears, and anything strong
+     enough to survive it just rebuilds the card border this merge removed. The
+     gap plus the different button widths already read as two groups. */
+  #bkCard #shareCard{margin-top:10px;}
   /* in-app install QR */
   #qrBig{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;
     flex-direction:column;gap:18px;background:rgba(3,5,10,.985);}
@@ -1224,11 +1229,14 @@
     .f6-p .nm{font-size:18px;}
     .f6-p .lv{font-size:16px;letter-spacing:1px;}
     .f6-target .val{font-size:72px;}
-    /* three share buttons must stay on ONE line at 375px, or the row wraps and
-       the third button ends up a different size from the other two */
+    /* All three stay on ONE line at 375px — that line is worth a whole row of
+       names in the list above, which is why QR is "QR" and not "QR Code".
+       .grow is flex:1 (basis 0), which splits the row into three EQUAL boxes and
+       clipped "Receive Library" at 125px of text in a 107px box. flex-basis auto
+       sizes each button to its own label first, then shares out what's left. */
     #shareCard .row{flex-wrap:nowrap;gap:6px;}
-    #shareCard .row > button{font-size:12.5px;padding:11px 3px;min-width:0;white-space:nowrap;letter-spacing:0;}
-    #shareCard .lw{display:none;}   /* "Share" alone on a phone; the card title gives the rest */
+    #shareCard .row > button{font-size:12.5px;padding:11px 3px;min-width:0;
+      white-space:nowrap;letter-spacing:0;flex:1 1 auto;}
     .f6-who{font-size:18px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
@@ -1386,9 +1394,17 @@
         <button class="accent" id="addPlayer">Add</button>
       </div>
       <div id="libList"></div>
+      <!-- Teams sits with the players it is built from (Nathan), directly under
+           the list rather than stranded at the bottom of the screen. -->
+      <button class="accent" id="manageTeamsBtn" style="width:100%;margin-top:10px;">👥 Add/Manage Teams</button>
     </div>
+    <!-- ONE card for both jobs (Nathan): backing the library up and handing it
+         to someone standing next to you are the same errand, and a second card's
+         border + padding + title cost a row of names in the list above.
+         #shareCard survives as a plain wrapper, NOT a .card — the phone rules
+         (#shareCard .row) hang off it. -->
     <div class="card" id="bkCard">
-      <h2>☁ Backup &amp; Restore</h2>
+      <h2>☁ Backup &amp; Share</h2>
       <!-- email and both actions share ONE row: every row of chrome here is a
            row of names lost from the list above, which is what matters most -->
       <div class="row">
@@ -1401,27 +1417,25 @@
       </div>
       <!-- status line only takes space when it has something to say -->
       <p class="small" id="bkMsg" style="margin:6px 0 0;"></p>
-    </div>
-    <div class="card" id="shareCard">
-      <h2>🤝 Share With a Friend</h2>
-      <div class="row">
-        <button class="primary grow" id="shareOfferBtn">📤 Share<span class="lw"> Library</span></button>
-        <button class="accent grow" id="shareTakeBtn">📥 Receive</button>
-        <button class="ghost grow" id="qrShowBtn">▦ QR Code</button>
+      <div id="shareCard">
+        <div class="row">
+          <button class="primary grow" id="shareOfferBtn">📤 Share Library</button>
+          <button class="accent grow" id="shareTakeBtn">📥 Receive Library</button>
+          <button class="ghost grow" id="qrShowBtn">▦ QR</button>
+        </div>
+        <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
+          <span id="shareCodeVal" style="font-family:var(--num);font-size:46px;font-weight:700;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);"></span>
+        </div>
+        <div class="row" id="shareTakeRow" style="display:none;margin-top:8px;">
+          <input type="text" id="shareCodeIn" class="grow" placeholder="6-digit code from your friend" inputmode="numeric" maxlength="6">
+          <button class="primary" id="shareGoBtn">Add</button>
+        </div>
+        <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
       </div>
-      <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
-        <span id="shareCodeVal" style="font-family:var(--num);font-size:46px;font-weight:700;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);"></span>
-      </div>
-      <div class="row" id="shareTakeRow" style="display:none;margin-top:8px;">
-        <input type="text" id="shareCodeIn" class="grow" placeholder="6-digit code from your friend" inputmode="numeric" maxlength="6">
-        <button class="primary" id="shareGoBtn">Add</button>
-      </div>
-      <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
     </div>
     <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 41 41" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h7m-33 1h1m5 0h1m3 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h1m3 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m4 0h2m1 0h1m3 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m2 0h1m2 0h2m1 0h2m1 0h1m3 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m4 0h6m1 0h1m2 0h1m1 0h1m2 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m2 0h2m2 0h1m2 0h1m1 0h1m-22 1h2m1 0h2m4 0h1m1 0h2m2 0h1m1 0h1m8 0h2m-30 1h1m5 0h1m3 0h2m1 0h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h2m1 0h1m-31 1h4m1 0h4m2 0h1m2 0h2m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1m1 0h2m-33 1h4m3 0h2m2 0h1m1 0h2m1 0h1m1 0h2m2 0h1m4 0h4m-31 1h1m2 0h1m1 0h3m3 0h1m1 0h2m4 0h1m4 0h1m1 0h1m2 0h1m2 0h1m-32 1h2m2 0h1m1 0h1m1 0h6m3 0h2m1 0h3m1 0h1m1 0h1m2 0h2m-32 1h1m3 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m7 0h2m-29 1h2m1 0h2m1 0h1m1 0h1m2 0h3m3 0h2m5 0h2m1 0h1m1 0h1m-27 1h3m2 0h2m1 0h5m1 0h3m2 0h1m1 0h4m3 0h1m-32 1h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h5m2 0h1m1 0h6m2 0h1m-33 1h9m4 0h1m3 0h2m2 0h3m1 0h3m1 0h2m1 0h1m-30 1h2m3 0h3m1 0h1m1 0h1m2 0h4m2 0h3m1 0h5m-32 1h3m1 0h1m1 0h3m3 0h2m4 0h1m5 0h1m4 0h1m1 0h1m-32 1h1m4 0h1m2 0h2m1 0h2m1 0h1m1 0h3m3 0h2m1 0h4m1 0h2m-32 1h1m1 0h2m1 0h4m1 0h1m2 0h2m1 0h2m2 0h1m2 0h1m2 0h3m1 0h3m-33 1h1m3 0h1m4 0h1m9 0h2m7 0h1m1 0h2m-32 1h3m1 0h4m2 0h1m2 0h1m1 0h3m6 0h5m3 0h1m-25 1h1m5 0h1m1 0h2m4 0h1m1 0h1m3 0h2m1 0h1m-32 1h7m1 0h1m2 0h2m2 0h1m1 0h1m3 0h4m1 0h1m1 0h1m-29 1h1m5 0h1m3 0h2m3 0h1m3 0h1m2 0h1m1 0h1m3 0h4m-32 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m5 0h1m1 0h7m1 0h1m-32 1h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h4m1 0h1m2 0h4m1 0h1m4 0h1m-33 1h1m1 0h3m1 0h1m5 0h3m1 0h1m2 0h2m3 0h1m3 0h1m1 0h3m-33 1h1m5 0h1m2 0h1m1 0h1m3 0h1m2 0h3m4 0h1m3 0h4m-33 1h7m3 0h2m2 0h1m1 0h1m1 0h2m3 0h2m1 0h1m1 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
       <div class="sub">dartkeeper.net</div></div>
-    <button class="accent" id="manageTeamsBtn" style="width:100%;margin-bottom:10px;">👥 Manage Teams</button>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
   </div>
 
@@ -3671,7 +3685,7 @@ function visibleBottom(){
 // gracefully returns to scrolling once the roster outgrows the screen.
 // One locked screen, exactly like the menu: the roster list (#libList) is the
 // only thing that scrolls, and it absorbs whatever height the fixed chrome
-// (add row, Backup card, Manage Teams, Done) leaves behind — about 7 rows on an
+// (add row, Add/Manage Teams, Backup & Share card, Done) leaves behind — about 7 rows on an
 // iPad. Same analytic, measure-before-zoom rule as fitMenu: never read geometry
 // after applying zoom, and never overflow:hidden (that strands content).
 function fitLibrary(){
