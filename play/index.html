@@ -4741,13 +4741,24 @@ document.addEventListener('touchmove',function(e){
     }
     return false;
   }
+  // GHOST CLICKS (Nathan, 2026-08-18): a modal button that hides its own modal
+  // — League Mode's Done, the legs splash's Play, Quit Game, Got It — runs on
+  // pointerdown, so by the time the finger lifts the modal is gone and iOS
+  // delivers the trailing click to whatever is now UNDER the finger: a game
+  // pill, a name, Start Game. The per-button flag below can't catch that (it's
+  // a different button), so a handled tap also opens a short window in which
+  // any trusted click is swallowed. Any new touch we don't handle closes the
+  // window first, so a quick tap on a list row or a piddle name still counts.
+  var swallowUntil=0;
   document.addEventListener('pointerdown',function(e){
+    swallowUntil=0;
     if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
     var b=e.target && e.target.closest ? e.target.closest('button') : null;
     if(!b || b.disabled) return;
     if(b.id==='addPlayer' || b.id==='addTeam') return;   // already have their own instant handlers
     if(inScroller(b)) return;
     b.__dkTapped=true;             // mark so the trailing native click gets swallowed
+    swallowUntil=performance.now()+700;
     b.click();                     // run the button's normal handler NOW
   },true);
   // The native click still arrives on finger-lift (when iOS deigns to send it);
@@ -4756,7 +4767,8 @@ document.addEventListener('touchmove',function(e){
   document.addEventListener('click',function(e){
     if(!e.isTrusted) return;
     var b=e.target && e.target.closest ? e.target.closest('button') : null;
-    if(b && b.__dkTapped){ b.__dkTapped=false; e.stopImmediatePropagation(); e.preventDefault(); }
+    if(b && b.__dkTapped){ b.__dkTapped=false; swallowUntil=0; e.stopImmediatePropagation(); e.preventDefault(); return; }
+    if(performance.now()<swallowUntil){ swallowUntil=0; e.stopImmediatePropagation(); e.preventDefault(); }   // the ghost
   },true);
 })();
 </script>
