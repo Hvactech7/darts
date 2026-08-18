@@ -774,6 +774,78 @@
   #cqBtns{display:flex;gap:10px;margin-top:16px;}
   #cqBtns button{flex:1;}
 
+  /* ===== LEAGUE MODE (2026-08-18) ===== */
+  /* menu row: League | Add/Manage Players | Stats. Add/Manage keeps its 20px
+     text (Nathan's v2.16 rule) and simply gets narrower to share the row. */
+  #menuRow{display:flex;gap:8px;flex-wrap:nowrap;margin:0 0 10px;}
+  #menuRow > button{flex:1 1 0;min-width:0;white-space:nowrap;padding:9px 6px;font-size:20px;letter-spacing:.5px;}
+  #menuRow #manageBtn{flex:1.45 1 0;margin:0 !important;}
+  #menuRow #leagueBtn.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
+    box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
+  /* the two league modals borrow #confirmQuit's dress exactly */
+  #leagueCard,#legsSplash{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
+  #leagueCard.hidden,#legsSplash.hidden{display:none;}
+  #leagueCard .card{max-width:470px;margin:20px;width:100%;}
+  #legsSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
+  #legsSplash h2{justify-content:center;}
+  #legsPick button{font-family:var(--num);font-size:34px;font-weight:700;padding:12px 0;}
+  #lgToggle.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
+    box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
+  #lgEmails{width:100%;margin-top:10px;padding:10px 12px;border-radius:7px;resize:vertical;min-height:74px;
+    background:linear-gradient(180deg,#151009,#1d150c);border:1.5px solid #57451c;color:#e9ddc0;
+    box-shadow:inset 0 3px 8px rgba(0,0,0,.7);font-family:var(--body);font-size:18px;font-weight:600;line-height:1.35;}
+  #lgEmails:focus{outline:none;border-color:#7fb8ef;box-shadow:0 0 0 3px rgba(79,124,255,.18);}
+  .lgOpt{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:17px;color:#e9ddc0;cursor:pointer;}
+  .lgOpt input{width:22px;height:22px;accent-color:#2b5f96;}
+  .lgSeason{margin-top:12px;padding:10px 12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);}
+  .lgSeasonLine{font-size:15px;color:#e9ddc0;line-height:1.35;margin-bottom:8px;}
+  .lgSeasonBtns{flex-wrap:nowrap;gap:8px;}
+  .lgSeasonBtns button{font-size:16px;padding:11px 8px;white-space:nowrap;min-width:0;}
+  .lgSeasonBtns #lgEndSeason{flex:0 0 auto;}
+  .lgSeasonBtns #lgEndTourn{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}  /* short button: no rivets */
+  .lgSeasonBtns button:disabled{opacity:.45;}
+  .stSeason{font-family:var(--display);font-weight:700;font-size:20px;color:#e8c876;margin:2px 0 4px;}
+  .stSeason span{font-family:var(--body);font-weight:600;font-size:14px;color:#a3906a;margin-left:6px;}
+  .stPick{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+  .stPick button{font-size:14px;padding:6px 10px;}
+  .stPick button.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;}
+  .stT{cursor:pointer;padding:9px 4px;border-top:1px solid rgba(87,69,28,.5);font-size:16px;color:#e9ddc0;}
+  .stT .tri{display:inline-block;width:14px;color:#a3906a;}
+  .stTbody{padding:0 0 6px 14px;border-left:2px solid rgba(87,69,28,.5);margin:0 0 6px 6px;}
+  .stNote{color:#a3906a;font-size:13px;margin-top:6px;text-align:right;}
+  #lgBtns{display:flex;gap:10px;margin-top:14px;}
+  #lgBtns button{flex:1;font-size:20px;padding:12px;}
+  /* between legs: "Austin 2 – 1 Ben" under the leg winner */
+  #winMatch{font-family:var(--display);font-weight:700;font-size:26px;letter-spacing:1px;color:#e8c876;margin-top:8px;
+    text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.35);}
+  #winMatch.hidden{display:none;}
+  #resumeBtn .rl{display:block;font-size:.72em;letter-spacing:.5px;opacity:.85;margin-top:2px;}
+  #winMatch .lgs{display:block;font-family:var(--body);font-weight:600;font-size:15px;letter-spacing:.3px;color:#a3906a;margin-top:4px;text-shadow:none;}
+  /* Stats page: one locked screen — the tables scroll inside it, like the roster */
+  #statsPage.hidden{display:none;}
+  #statsCard{display:flex;flex-direction:column;max-height:calc(100vh - 28px);}
+  /* only the body may shrink — .seg-toggle has overflow:hidden, which lets a
+     flex item collapse to nothing when the tables are tall */
+  #statsCard > h2,#statsTabs,#statsBtns,#statsMsg{flex:0 0 auto;}
+  #statsBody{flex:1 1 auto;min-height:0;overflow-y:auto;margin-top:8px;padding-right:2px;}
+  #statsBtns{margin-top:10px;flex-wrap:nowrap;}
+  #statsBtns #statsMailBtn{flex:0 0 auto;font-size:16px;padding:12px 14px;white-space:nowrap;}
+  #statsBtns #statsDoneBtn{font-size:20px;padding:12px;}
+  .stH{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;margin:12px 0 6px;}
+  .stH:first-child{margin-top:2px;}
+  table.st{width:100%;border-collapse:collapse;font-size:17px;}
+  table.st th{font-family:var(--body);font-weight:600;font-size:12.5px;letter-spacing:.6px;text-transform:uppercase;color:#a3906a;
+    text-align:right;padding:2px 6px 5px;border-bottom:1px solid #57451c;white-space:nowrap;}
+  table.st th:first-child,table.st td:first-child{text-align:left;padding-left:2px;}
+  table.st td{padding:6px 6px;text-align:right;font-family:var(--num);font-weight:600;color:#e9ddc0;border-bottom:1px solid rgba(87,69,28,.35);white-space:nowrap;}
+  table.st td:first-child{font-family:var(--body);font-weight:700;font-size:18px;overflow:hidden;text-overflow:ellipsis;max-width:0;width:44%;}
+  table.st tr.me td{color:#fff;}
+  table.st td.w{color:#9fd0ff;} table.st td.l{color:#ff90a6;}
+  .stMatch{display:flex;justify-content:space-between;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(87,69,28,.35);font-size:16px;color:#e9ddc0;}
+  .stMatch .when{color:#a3906a;font-size:13.5px;white-space:nowrap;}
+  .stMatch .res{font-family:var(--num);font-weight:700;white-space:nowrap;}
+  .stEmpty{color:#a3906a;font-size:17px;padding:14px 4px;text-align:center;line-height:1.4;}
+
   /* Piddle screen */
   #pidTitle{font-size:44px;letter-spacing:2.5px;line-height:1.15;justify-content:center;text-align:center;
     text-shadow:0 2px 0 #000, 0 0 24px rgba(232,200,118,.5);margin-bottom:14px;}
@@ -1030,7 +1102,8 @@
     #pickHeads .teamcol-head{ height:52px; }
     .th-team{ padding:2px 6px !important; font-size:12.5px !important; }
     #pickHeads{ margin-bottom:4px; }
-    #manageBtn{ margin:0 0 7px !important; padding:7px 14px; font-size:20px; }   /* matches the game pills */
+    #menuRow{ margin:0 0 7px; }
+    #menuRow > button{ padding:7px 6px; font-size:20px; }   /* matches the game pills */
     /* list rows a touch tighter so 4 fit — names still by far the biggest text */
     #listScroll .nameopt{ font-size:30px; padding:3px 12px; line-height:1.05; }
     #listScroll .nopt-team{ font-size:14px; }
@@ -1105,7 +1178,28 @@
     #pickHeads .teamcol-head{ height:48px; }
     .th-team{ padding:1px 4px !important; font-size:10.5px !important; }
     #pickHeads{ margin-bottom:4px; }
-    #manageBtn{ margin:0 0 6px !important; padding:7px 10px; font-size:17px; }   /* matches the game pills */
+    /* three across a phone: the emoji go (405px of icon+text cannot fit 378px at
+       any readable size), every WORD stays, and each button sizes to its label */
+    #menuRow{ margin:0 0 6px; gap:5px; }
+    #menuRow > button{ padding:7px 5px; font-size:16px; letter-spacing:0; flex:1 1 auto; }
+    #menuRow #manageBtn{ flex:1 1 auto; }
+    #menuRow .mi{ display:none; }
+    /* "Next Leg ▶" / "Main Menu" side by side on one line each */
+    #winScreen .gamebtns button{ white-space:nowrap; min-width:0; padding-left:6px; padding-right:6px; font-size:18px; }
+    #rematchBtn{ background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844); background-position:0 0; background-size:auto; }  /* rivets sat under the letters */
+    /* League card: the two season buttons stack — side by side they clip */
+    .lgSeasonBtns{ flex-wrap:wrap; }
+    .lgSeasonBtns button,.lgSeasonBtns #lgEndSeason{ flex:1 0 100%; }
+    /* Stats: mail button compact so Done has room; Done loses its rivets for the same reason */
+    #statsBtns #statsMailBtn{ font-size:14px; padding:12px 8px; flex:1 1 auto; }
+    #statsBtns #statsDoneBtn{ flex:0 0 auto; min-width:112px; padding:12px 16px; }
+    #statsBtns .mi{ display:none; }
+    #statsTabs button{ font-size:15px; padding:8px 3px; white-space:nowrap; letter-spacing:.3px; }
+    #statsBtns #statsDoneBtn{ background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844); background-position:0 0; background-size:auto; }
+    .stH{ font-size:13px; letter-spacing:1.4px; }
+    table.st{ font-size:15px; } table.st td:first-child{ font-size:16px; }
+    /* the rivets sat under the first and last letters at this width */
+    #menuRow #manageBtn{ background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10); background-position:0 0; background-size:auto; }
     /* Backup card: compact here too. nowrap keeps "Back up now" on ONE line —
        wrapping doubled the button height and undid the shrink. */
     #bkCard h2{ margin:0 0 4px; }
@@ -1299,7 +1393,13 @@
          Select Players column heads, and the height goes to the banner.
          Swapped 2026-08-07: Manage Players sits above the picker, Start Game
          went to the bottom of it (it's the last thing you do). -->
-    <button class="accent" id="manageBtn" style="width:100%;margin:0 0 10px;">⚙ Add/Manage Players</button>
+    <!-- League Mode | Add/Manage Players | Stats (Nathan, 2026-08-18): one row,
+         Add/Manage narrower to make room. League lights up (.on) while active. -->
+    <div class="row" id="menuRow">
+      <button class="ghost" id="leagueBtn"><span class="mi">🏆 </span>League Mode</button>
+      <button class="accent" id="manageBtn"><span class="mi">⚙ </span>Add/Manage Players</button>
+      <button class="ghost" id="statsBtn"><span class="mi">📊 </span>Stats</button>
+    </div>
 
     <div class="card" id="pickCard">
       <h2>Select Players</h2>
@@ -1368,6 +1468,49 @@
       <div class="outsub">Is Out</div>
     </div>
     <div class="bolt"></div>
+  </div>
+
+  <!-- ================= LEAGUE MODE (Nathan, 2026-08-18) =================
+       A league night: every match is best-of-N legs of the same game with the
+       same players, results are kept per match, and a report goes to the
+       league by e-mail. All of it is OFF unless this switch is on. -->
+  <div id="leagueCard" class="hidden">
+    <div class="card">
+      <h2>🏆 League Mode</h2>
+      <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Mode: OFF</button>
+      <div class="row" style="margin-top:10px;">
+        <input type="text" id="lgName" class="grow" placeholder="League name (optional)" autocomplete="off" maxlength="40">
+      </div>
+      <textarea id="lgEmails" rows="3" placeholder="League e-mails — one per line" autocomplete="off" spellcheck="false"></textarea>
+      <!-- Season → tournaments (one per league night) → matches. Ending the
+           night is what sends the league its report. -->
+      <div class="lgSeason">
+        <div class="lgSeasonLine" id="lgSeasonLine"></div>
+        <div class="row lgSeasonBtns">
+          <button class="primary grow" id="lgEndTourn">🏁 End Tournament</button>
+          <button class="warn" id="lgEndSeason">End Season</button>
+        </div>
+      </div>
+      <p class="small" id="lgHint" style="margin:6px 0 0;"></p>
+      <div id="lgBtns"><button class="primary" id="lgDone">Done</button></div>
+    </div>
+  </div>
+
+  <!-- How many legs? Shown after the bull-off, league only. -->
+  <div id="legsSplash" class="hidden">
+    <div class="card">
+      <h2>How many legs?</h2>
+      <p class="small" style="margin:2px 0 8px;">Same game, same players — a different starter each leg. Most legs wins the match.</p>
+      <div class="seg-toggle" id="legsPick">
+        <button data-legs="1">1</button>
+        <button data-legs="3" class="on">3</button>
+        <button data-legs="5">5</button>
+        <button data-legs="7">7</button>
+        <button data-legs="9">9</button>
+      </div>
+      <button class="primary" id="legsGo" style="width:100%;font-size:23px;padding:15px;margin-top:12px;">Play ▶</button>
+      <button class="ghost" id="legsBack" style="width:100%;margin-top:8px;">← Back</button>
+    </div>
   </div>
 
   <div id="confirmQuit" class="hidden">
@@ -1524,14 +1667,36 @@
   <!-- ================= WIN ================= -->
   <div id="winScreen" class="hidden">
     <div class="card winbanner">
-      <div class="small">WINNER</div>
+      <div class="small" id="winKicker">WINNER</div>
       <div class="big" id="winName">—</div>
       <div class="small" id="winDetail"></div>
+      <!-- league only: "Austin 2 – 1 Ben" between legs / after the match -->
+      <div id="winMatch" class="hidden"></div>
       <div class="gamebtns" style="margin-top:18px;">
         <button class="primary grow" id="rematchBtn">Rematch</button>
         <button class="ghost grow" id="winMenuBtn">Main Menu</button>
       </div>
       <button class="warn" id="winUndoBtn" style="width:100%;margin-top:10px;">↶ Undo — back to game</button>
+    </div>
+  </div>
+
+  <!-- ================= STATS (Nathan, 2026-08-18) =================
+       League standings first (that is what the league cares about), the
+       all-time ledger that has quietly existed since 2026-08-03 as a second tab. -->
+  <div id="statsPage" class="hidden">
+    <div class="card" id="statsCard">
+      <h2>📊 Stats</h2>
+      <div class="seg-toggle" id="statsTabs">
+        <button data-tab="league" class="on">League</button>
+        <button data-tab="fat6">Fat 6</button>
+        <button data-tab="all">All-time</button>
+      </div>
+      <div id="statsBody"></div>
+      <div class="row" id="statsBtns">
+        <button class="ghost" id="statsMailBtn">📧 E-mail Report</button>
+        <button class="primary grow" id="statsDoneBtn">Done</button>
+      </div>
+      <p class="small" id="statsMsg" style="margin:6px 0 0;"></p>
     </div>
   </div>
 </div>
@@ -2042,7 +2207,8 @@ var LS_BKEMAIL='darts_backup_email_v1';
 var LS_BKFP='darts_backup_fp_v1';
 var bkTimer=null;
 function bkPayload(){
-  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, groups:groupLib, stats:statsLib, v:1};
+  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, groups:groupLib, stats:statsLib,
+          league:{on:!!league.on, name:league.name||'', emails:league.emails||[], seasons:league.seasons||[]}, fat6:f6log, v:1};
 }
 function bkFingerprint(){ return JSON.stringify(bkPayload()); }
 function relayBackup(payload){
@@ -2141,6 +2307,32 @@ async function bkRestore(){
         a.g=Math.max(a.g,b.g||0); a.w=Math.max(a.w,b.w||0);
       });
     });
+    if(d.league&&typeof d.league==='object'){       // league: union by id at every level; settings from the backup if we had none
+      (d.league.seasons||[]).forEach(function(si){
+        if(!si||!si.id) return;
+        var so=league.seasons.find(function(x){return x.id===si.id;});
+        if(!so){ league.seasons.push(si); return; }
+        (si.tournaments||[]).forEach(function(ti){
+          var to=(so.tournaments||[]).find(function(x){return x.id===ti.id;});
+          if(!to){ so.tournaments.push(ti); return; }
+          var have={}; (to.matches||[]).forEach(function(m){ if(m&&m.id) have[m.id]=1; });
+          (ti.matches||[]).forEach(function(m){ if(m&&m.id&&!have[m.id]) to.matches.push(m); });
+          to.matches.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+          if(ti.endTs&&!to.endTs) to.endTs=ti.endTs; if(ti.mailed) to.mailed=true;
+        });
+        so.tournaments.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+        if(si.endTs&&!so.endTs) so.endTs=si.endTs;
+      });
+      league.seasons.sort(function(a,b){ return (a.startTs||0)-(b.startTs||0); });
+      if(!league.name && d.league.name) league.name=d.league.name;
+      if(!league.emails.length && (d.league.emails||[]).length) league.emails=lgParseEmails((d.league.emails||[]).join('\n'));
+      saveLeague(); renderLeagueUI();
+    }
+    if(Array.isArray(d.fat6)){                       // Fat 6 log: union by id
+      var f6have={}; f6log.forEach(function(e){ if(e&&e.id) f6have[e.id]=1; });
+      d.fat6.forEach(function(e){ if(e&&e.id&&!f6have[e.id]) f6log.push(e); });
+      f6log.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); saveF6log();
+    }
     saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams(); saveGroups(); saveStats();
     bkMode=null; document.getElementById('bkCodeRow').style.display='none';
     try{renderLibrary();}catch(e){} renderColumns(); renderLineup(); updateStart(); renderGroups();
@@ -2395,6 +2587,7 @@ function applyState(s){
   G.teams=s.teams;G.cur=s.cur;G.darts=s.darts;
   G.turnStartScore=s.turnStartScore;G.turnStartOpened=s.turnStartOpened;
   G.turnLocked=s.turnLocked;G.pendingWin=s.pendingWin;G.round=s.round;G.over=s.over;
+  G._coNoted=!!s.pendingWin;             // a snapshot at a pending win already holds its checkout turn
   if(G.isFat6){G.players=s.players;G.target=s.target;G.phase=s.phase;
     if(G.players && G.players[G.cur] && G.players[G.cur].out){ f6NextPlayer(); }  // never leave an eliminated player as current
   }
@@ -2534,7 +2727,7 @@ function commitTurn(){
   }
   G.darts=[];
   G.turnLocked=false;
-  G.pendingWin=null;
+  G.pendingWin=null; G._coNoted=false;
   G.turnStartScore=curTeam().score;
   G.turnStartOpened=curTeam().opened;
   renderGame();
@@ -2601,6 +2794,7 @@ function f6LifeBtn(){
   p.lives--;
   if(p.lives<=0){
     p.lives=0; p.out=true;
+    p.outSeq=(G.outSeq=(G.outSeq||0)+1);   // elimination order → league placings
     fat6OutSplash(p.name);
     const alive=G.players.filter(q=>!q.out);
     if(alive.length===1){
@@ -2610,6 +2804,7 @@ function f6LifeBtn(){
       document.getElementById('winScreen').classList.remove('hidden');
       document.getElementById('winName').textContent=shortName(alive[0].name);
       document.getElementById('winDetail').textContent='Last one standing — Fat 6';
+      try{ f6LogRecord(); lgOnWin(-1); }catch(e){}   // Fat 6 stats card; never a league leg
       clearGameState();                // game finished — nothing to resume
       return;
     }
@@ -2638,7 +2833,19 @@ function fat6TargetLabel(){
 function pendWin(teamIdx,detail){          // winning dart thrown — wait for Confirm
   G.pendingWin={teamIdx,detail};
   G.turnLocked=true;
+  noteCheckout(teamIdx);
   flashToast('Game shot! Confirm to finish');
+}
+// The checkout turn never reaches commitTurn() (the game stops at Confirm), so
+// it never landed in the team's turn history — every 3-dart average since the
+// ledger began (2026-08-03) was missing its best turn. Record it here, once,
+// for both the board and calculator paths. Win-screen Undo restores the
+// pre-turn snapshot, so this is undone with everything else.
+function noteCheckout(teamIdx){
+  if(!G || G.isCricket || G.isFat6) return;
+  var t=G.teams[teamIdx]; if(!t) return;
+  var pts=(G.turnStartScore||0)-(t.score||0);
+  if(pts>0 && !G._coNoted){ t.history.push(pts); G._coNoted=true; }
 }
 function declareWin(teamIdx,detail){
   G.over=true;
@@ -2661,6 +2868,7 @@ function declareWin(teamIdx,detail){
   document.getElementById('winScreen').classList.remove('hidden');
   document.getElementById('winName').textContent=displayName(t);
   document.getElementById('winDetail').textContent=detail||'';
+  try{ lgOnWin(teamIdx); }catch(e){}   // league: record the leg / plain game: reset the kicker
   clearGameState();                    // game finished — nothing to resume
 }
 function displayName(t){
@@ -3433,7 +3641,7 @@ function kpCommit(total){
   }else{
     t.score=rem;
     if(total>0 && !t.opened) t.opened=true;   // calculator = manual scoring: entered points counted
-    if(rem===0){ G.pendingWin={teamIdx:G.cur,detail:'Checked out '+total}; renderGame(); }
+    if(rem===0){ G.pendingWin={teamIdx:G.cur,detail:'Checked out '+total}; noteCheckout(G.cur); renderGame(); }
     else commitTurn();
   }
   kpExpr=''; kpRender();
@@ -3454,12 +3662,27 @@ document.getElementById('kpOK').onclick=()=>{ const v=kpEval(kpExpr); if(v<=180)
   });
 });
 document.getElementById('endTurnBtn').onclick=endTurnManual;
-document.getElementById('quitBtn').onclick=()=>{ if(G && !G.over) document.getElementById('confirmQuit').classList.remove('hidden'); else toMenu(); };
+document.getElementById('quitBtn').onclick=()=>{
+  if(G && !G.over){
+    var cqp=document.querySelector('#confirmQuit p');
+    if(cqp) cqp.innerHTML = lgMatchOpen()
+      ? 'This is leg '+(league.cur.results.length+1)+' of a best-of-'+league.cur.legs+' match. Quitting <b>abandons the whole match</b> — the legs already played won\'t count.'
+      : 'The current game will be <b>erased</b> — scores and turns are lost for good.';
+    document.getElementById('confirmQuit').classList.remove('hidden');
+  } else toMenu();
+};
 let pausedSig=null;
 function gameSig(){ return JSON.stringify({g:config.game,m:config.mode,t:teamSel,f:config.game==='fat6'?f6Sel:null}); }
 function refreshResume(){
   const b=document.getElementById('resumeBtn'); if(!b) return;
-  const show=!!(G && !G.over);
+  const mid=!!(G && !G.over);                       // a leg (or plain game) is paused
+  const between=!mid && lgMatchOpen();              // between legs of a league match
+  const show=mid||between;
+  // two short lines: the wing this button lives in on the iPad is narrow
+  var legTxt=lgMatchOpen()?('Leg '+(league.cur.results.length+1)+(league.cur.results.length<league.cur.legs?' of '+league.cur.legs:' · tiebreak')):'';
+  if(between) b.innerHTML='▶ Continue Match<br><span class="rl">'+legTxt+'</span>';
+  else if(mid && lgMatchOpen()) b.innerHTML='⏸ Return to Game ▶<br><span class="rl">'+legTxt+'</span>';
+  else b.textContent='⏸ Return to Game ▶';
   const was=!b.classList.contains('hidden');
   b.classList.toggle('hidden', !show);
   // hasResume drives the CSS that makes room for the bar (wing placement /
@@ -3471,7 +3694,7 @@ function refreshResume(){
 // (☰ Menu button removed 2026-08-07 — its binding went with it, or the missing
 // element would null-crash the whole script at load.)
 document.getElementById('resumeBtn').onclick=()=>{
-  if(!G || G.over) return;
+  if(!G || G.over){ if(lgMatchOpen()) lgStartLeg(league.cur.results.length); return; }
   if(gameSig()===pausedSig){                                  // nothing changed — resume exactly
     ['setup','winScreen','piddle'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     document.getElementById('game').classList.remove('hidden');
@@ -3484,26 +3707,34 @@ document.getElementById('resumeBtn').onclick=()=>{
 document.getElementById('cqCancel').onclick=()=>document.getElementById('confirmQuit').classList.add('hidden');
 document.getElementById('cqQuit').onclick=()=>{
   document.getElementById('confirmQuit').classList.add('hidden');
+  lgAbandon();                          // a quit mid-match abandons the match — the legs played don't count
   G=null; pausedSig=null; history=[]; redoStack.length=0;
   clearGameState();                    // deliberate quit — don't resurrect it
   toMenu();
 };
-document.getElementById('rematchBtn').onclick=showPiddle;
+document.getElementById('rematchBtn').onclick=function(){
+  if(lgMatchOpen()){ lgStartLeg(league.cur.results.length); return; }   // "Next Leg ▶"
+  lgCommitMatch();                                                     // finished match → record + report
+  showPiddle();
+};
 document.getElementById('piddle').addEventListener('click',function(e){ const el=e.target.closest('.pid-name'); if(el) pidTap(parseInt(el.dataset.team,10), parseInt(el.dataset.idx,10)); });
 document.getElementById('pidResetBtn').onclick=function(){ pidPicks=[]; renderPiddle(); };
 document.getElementById('pidBackBtn').onclick=function(){ document.getElementById('piddle').classList.add('hidden'); document.getElementById('setup').classList.remove('hidden'); };
 document.getElementById('pidStartBtn').onclick=function(){
-  if(config.game==='fat6'){ document.getElementById('piddle').classList.add('hidden'); startFat6(pidPicks.map(p=>f6Sel[p.idx])); return; }
-  if(config.mode==='iron'){
-    const order=pidPicks.map(p=>p.idx<2?{t:0,m:p.idx}:{t:1,m:0});
-    document.getElementById('piddle').classList.add('hidden');
-    startGame(order[0].t, {}, order);
-    return;
-  }
-  const first=pidPicks[0].team; const leadoff={}; pidPicks.forEach(p=>leadoff[p.team]=p.idx); document.getElementById('piddle').classList.add('hidden'); startGame(first, leadoff); };
-document.getElementById('winMenuBtn').onclick=toMenu;
+  // The bull-off is captured as a SPEC so League Mode can replay it with the
+  // starter rotated for each leg (pidStartSpec/lgRunStart). Same three starts
+  // as before, just through one door.
+  var spec=pidStartSpec();
+  document.getElementById('piddle').classList.add('hidden');
+  if(leagueOn() && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (Fat 6 is not a league game)
+  lgAbandon();                                       // a plain game supersedes any half-played match
+  lgRunStart(spec,0);
+};
+document.getElementById('winMenuBtn').onclick=function(){ lgCommitMatch(); toMenu(); };
 document.getElementById('winUndoBtn').onclick=()=>{
   rollbackStats();                       // the win was already written to the ledger — take it back out
+  lgUndoLeg();                           // ...and the leg out of the match, if this is a league match
+  f6LogUndo();                           // ...and the game out of the Fat 6 log
   if(G && G.isFat6){ undo(); return; }   // Fat 6: the final life-loss is already applied — really undo it
   // x01/cricket: reopen the game in its pending-win state so the score can be corrected
   G.over=false;
@@ -3831,6 +4062,432 @@ setTimeout(refitAll,300); setTimeout(refitAll,1200);
     window.visualViewport.addEventListener('resize', function(){ if(kbEl) setTimeout(reveal,60); });
 })();
 
+//============================ LEAGUE MODE (Nathan, 2026-08-18) ============================
+// A league is a SEASON of league nights. Each night is a TOURNAMENT; every
+// match played while League Mode is on files into the open tournament (best-of-N
+// legs of the same game, a different starter each leg). Closing the night —
+// "End Tournament" — is what sends the league its e-mail: that night's results
+// plus the season standings. Fat 6 is NOT a league game (no legs, no match
+// record) but every Fat 6 game is logged for its own Stats card. Everything
+// here is inert while the switch is off — the ordinary game flow does not know
+// the league exists.
+var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
+var league=(function(){
+  var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
+  if(!v||typeof v!=='object') v={};
+  v.on=!!v.on; v.name=v.name||''; v.emails=v.emails||[]; v.seasons=v.seasons||[]; v.cur=v.cur||null;
+  // (an earlier scratch build kept a flat matches[]; fold it into a first season/tournament)
+  if(v.matches&&v.matches.length&&!v.seasons.length){
+    v.seasons.push({id:'s1',name:'Season 1',startTs:v.matches[0].ts||Date.now(),endTs:null,
+      tournaments:[{id:'t1',ts:v.matches[0].ts||Date.now(),endTs:null,mailed:false,matches:v.matches}]});
+  }
+  delete v.matches; delete v.auto;
+  return v;
+})();
+var f6log=(function(){ try{ var v=JSON.parse(localStorage.getItem(LS_F6LOG)); if(Array.isArray(v)) return v; }catch(e){} return []; })();
+// League settings + finished matches ride the backup. `cur`, the match in
+// progress, stays on this device — half a match is not a record.
+function saveLeague(){ try{ localStorage.setItem(LS_LEAGUE,JSON.stringify(league)); }catch(e){} try{ bkQueue(); }catch(e){} }
+function saveF6log(){ try{ localStorage.setItem(LS_F6LOG,JSON.stringify(f6log)); }catch(e){} try{ bkQueue(); }catch(e){} }
+function leagueOn(){ return !!league.on; }
+function lgMatchOpen(){ return !!(league.cur && !league.cur.done); }
+function lgId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function lgSeason(){ var s=league.seasons[league.seasons.length-1]; return (s&&!s.endTs)?s:null; }
+function lgTourn(){ var s=lgSeason(); if(!s) return null; var t=s.tournaments[s.tournaments.length-1]; return (t&&!t.endTs)?t:null; }
+function lgSeasonMatches(s){ var out=[]; (s.tournaments||[]).forEach(function(t){ out=out.concat(t.matches||[]); }); return out; }
+function lgDay(ts){ var d=new Date(ts); return (d.getMonth()+1)+'/'+d.getDate(); }
+function lgLongDay(ts){ return new Date(ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
+function lgStartSeason(name){
+  var n=league.seasons.length+1;
+  var s={id:lgId('s'),name:(name||'').trim()||('Season '+n),startTs:Date.now(),endTs:null,tournaments:[]};
+  league.seasons.push(s); saveLeague(); return s;
+}
+// A season and a tournament come into being the moment a match needs one.
+function lgEnsureTourn(){
+  var s=lgSeason()||lgStartSeason('');
+  var t=lgTourn();
+  if(!t){ t={id:lgId('t'),ts:Date.now(),endTs:null,mailed:false,matches:[]}; s.tournaments.push(t); saveLeague(); }
+  return t;
+}
+function renderLeagueUI(){
+  var b=document.getElementById('leagueBtn');
+  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League: ON':'League Mode'); }
+  var t=document.getElementById('lgToggle');
+  if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League Mode: '+(leagueOn()?'ON':'OFF'); }
+  var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
+  if(line){
+    if(!s) line.textContent='No season running — one starts with the first league match, or start one now.';
+    else line.textContent=s.name+' · since '+lgDay(s.startTs)+' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')
+      +(tn?(' · tonight: '+tn.matches.length+' match'+(tn.matches.length===1?'':'es')+' so far'):'');
+  }
+  var et=document.getElementById('lgEndTourn'); if(et){ et.disabled=!tn; et.textContent='🏁 End Tournament'; }
+  var es=document.getElementById('lgEndSeason'); if(es){ es.textContent=s?'End '+s.name:'Start Season'; es.classList.toggle('warn',!!s); es.classList.toggle('accent',!s); }
+}
+function lgParseEmails(text){
+  var out=[], seen={};
+  String(text||'').split(/[\s,;]+/).forEach(function(e){
+    e=e.trim().toLowerCase(); if(!e) return;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) return;
+    if(seen[e]) return; seen[e]=1; out.push(e);
+  });
+  return out.slice(0,12);                       // the relay caps recipients at 12 too
+}
+function openLeagueCard(){
+  document.getElementById('lgName').value=league.name||'';
+  document.getElementById('lgEmails').value=(league.emails||[]).join('\n');
+  document.getElementById('lgHint').textContent='';
+  renderLeagueUI();
+  document.getElementById('leagueCard').classList.remove('hidden');
+}
+function readLeagueCard(){
+  league.name=(document.getElementById('lgName').value||'').trim().slice(0,40);
+  var raw=document.getElementById('lgEmails').value||'';
+  league.emails=lgParseEmails(raw);
+  saveLeague();
+  return raw.split(/[\s,;]+/).filter(function(x){return x.trim();}).length-league.emails.length;   // lines that were not e-mails
+}
+document.getElementById('leagueBtn').onclick=openLeagueCard;
+document.getElementById('lgToggle').onclick=function(){ league.on=!league.on; saveLeague(); renderLeagueUI(); };
+document.getElementById('lgDone').onclick=function(){
+  var bad=readLeagueCard(), h=document.getElementById('lgHint');
+  if(bad>0){ h.textContent=bad+' line'+(bad===1?' was':'s were')+' not an e-mail address and got dropped — check the list.'; document.getElementById('lgEmails').value=league.emails.join('\n'); return; }
+  document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI();
+};
+document.getElementById('leagueCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('lgDone').click(); });
+document.getElementById('lgEndTourn').onclick=function(){
+  readLeagueCard();
+  var h=document.getElementById('lgHint');
+  lgEndTournament(function(msg){ h.textContent=msg; renderLeagueUI(); });
+};
+document.getElementById('lgEndSeason').onclick=function(){
+  readLeagueCard();
+  var h=document.getElementById('lgHint');
+  if(lgSeason()){
+    var s=lgSeason();
+    if(!confirm('End '+s.name+'? Any open tournament is closed and reported first. Stats stay on the Stats page under this season.')) return;
+    lgEndSeason(function(msg){ h.textContent=msg; renderLeagueUI(); });
+  }else{
+    var nm=prompt('Season name', 'Season '+(league.seasons.length+1));
+    if(nm===null) return;
+    lgStartSeason(nm); h.textContent=lgSeason().name+' started.'; renderLeagueUI();
+  }
+};
+
+//---------------------------- legs ----------------------------
+// What the bull-off decided, in a form that can be replayed with a rotation.
+function pidStartSpec(){
+  if(config.game==='fat6') return {kind:'fat6', order:pidPicks.map(function(p){return f6Sel[p.idx];})};
+  if(config.mode==='iron') return {kind:'iron', ironOrder:pidPicks.map(function(p){return p.idx<2?{t:0,m:p.idx}:{t:1,m:0};})};
+  var first=pidPicks[0].team, leadoff={}; pidPicks.forEach(function(p){ leadoff[p.team]=p.idx; });
+  return {kind:'std', first:first, leadoff:leadoff};
+}
+function lgRot(a,k){ k=((k%a.length)+a.length)%a.length; return a.slice(k).concat(a.slice(0,k)); }
+// Leg k of a spec: the same players, the starter rotated k places on.
+function lgRunStart(spec,k){
+  k=k||0;
+  if(spec.kind==='fat6'){ startFat6(lgRot(spec.order,k)); return; }
+  if(spec.kind==='iron'){ var o=lgRot(spec.ironOrder,k); startGame(o[0].t,{},o); return; }
+  startGame((spec.first+k)%2, spec.leadoff||{});
+}
+function lgStarterFor(m,k){
+  if(m.spec.kind==='iron'){ var o=lgRot(m.spec.ironOrder,k); return o[0].t; }
+  return (m.spec.first+k)%2;
+}
+function lgSidesFor(spec){
+  return buildTeams().map(function(t){ return {name:(config.mode==='2p'||t.members.length===1)?t.members[0]:t.name, members:t.members.slice()}; });
+}
+var _lgPendingSpec=null;
+function lgAskLegs(spec){ _lgPendingSpec=spec; document.getElementById('legsSplash').classList.remove('hidden'); }
+document.getElementById('legsPick').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-legs]'); if(!b) return;
+  this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on',x===b); });
+});
+document.getElementById('legsBack').onclick=function(){
+  document.getElementById('legsSplash').classList.add('hidden'); _lgPendingSpec=null;
+  document.getElementById('piddle').classList.remove('hidden');
+};
+document.getElementById('legsGo').onclick=function(){
+  var spec=_lgPendingSpec; if(!spec) return;
+  var on=document.getElementById('legsPick').querySelector('button.on');
+  var legs=parseInt(on&&on.dataset.legs||'3',10)||3;
+  document.getElementById('legsSplash').classList.add('hidden'); _lgPendingSpec=null;
+  var sides=lgSidesFor(spec);
+  league.cur={ id:lgId('m'), ts:Date.now(), game:config.game, mode:config.mode, legs:legs, spec:spec, sides:sides,
+    score:sides.map(function(){return 0;}), results:[], winner:null, done:false };
+  saveLeague();
+  lgRunStart(spec,0);
+};
+function lgStartLeg(k){
+  var m=league.cur; if(!m||m.done) return;
+  // buildTeams() reads config/teamSel — put them back exactly as the match had them
+  config.game=m.game; config.mode=m.mode;
+  teamSel=[m.sides[0].members.slice(), m.sides[1].members.slice()];
+  try{ syncGamePill(); }catch(e){}
+  ['setup','winScreen','piddle'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  lgRunStart(m.spec,k);
+}
+// Best of N: first to a majority.
+function lgDecided(m){
+  var need=Math.floor(m.legs/2)+1, sc=m.score, top=Math.max.apply(null,sc);
+  if(top>=need) return sc.indexOf(top);
+  if(m.results.length>=m.legs && sc.filter(function(x){return x===top;}).length===1) return sc.indexOf(top);
+  return -1;
+}
+function lgSideLabel(m,i){ var s=m.sides[i]; if(!s) return '?'; return s.members.length>1 ? s.name : shortName(s.name); }
+function lgScoreHTML(m){ return esc(lgSideLabel(m,0))+' <b>'+m.score[0]+' – '+m.score[1]+'</b> '+esc(lgSideLabel(m,1)); }
+function lgScoreText(m){ return lgSideLabel(m,0)+' '+m.score[0]+'–'+m.score[1]+' '+lgSideLabel(m,1); }
+// Per-side detail for the leg that just ended — what the Stats page adds up.
+function lgLegStats(){
+  var st={}; if(!G||G.isFat6) return st;
+  G.teams.forEach(function(t,i){
+    var h=t.history||[];
+    if(G.isCricket) st[i]={cpts:t.pts||0, rounds:G.round||0};
+    else st[i]={pts:h.reduce(function(a,b){return a+b;},0), turns:h.length, best:h.length?Math.max.apply(null,h):null, t180:h.filter(function(x){return x===180;}).length};
+  });
+  return st;
+}
+// Called from every win path AFTER it has painted the win screen. Records the
+// leg when a match is open; otherwise makes sure the screen reads as a plain win.
+function lgOnWin(winnerIdx){
+  var kick=document.getElementById('winKicker'), match=document.getElementById('winMatch'), rb=document.getElementById('rematchBtn');
+  var m=league.cur;
+  if(!m || m.done || winnerIdx<0){ kick.textContent='WINNER'; match.classList.add('hidden'); rb.textContent='Rematch'; return; }
+  var k=m.results.length;
+  m.results.push({leg:k+1, starter:lgStarterFor(m,k), winner:winnerIdx, ts:Date.now(), st:lgLegStats()});
+  m.score[winnerIdx]++;
+  var w=lgDecided(m);
+  if(w>=0){ m.winner=w; m.done=true; }
+  saveLeague();
+  var sub;
+  if(m.done){
+    kick.textContent='MATCH WINNER';
+    document.getElementById('winName').textContent=lgSideLabel(m,w);
+    rb.textContent='Rematch';
+    sub='Match over — best of '+m.legs;
+  }else{
+    kick.textContent='LEG '+(k+1)+' OF '+m.legs+' · WINNER';
+    rb.textContent='Next Leg ▶';
+    sub='Next: leg '+(k+2)+' of '+m.legs+' · '+lgSideLabel(m,lgStarterFor(m,k+1))+' throws first';
+  }
+  match.innerHTML=lgScoreHTML(m)+'<span class="lgs">'+esc(sub)+'</span>';
+  match.classList.remove('hidden');
+}
+function lgUndoLeg(){
+  var m=league.cur; if(!m||!m.results.length) return;
+  var r=m.results.pop();
+  m.score[r.winner]=Math.max(0,m.score[r.winner]-1);
+  m.done=false; m.winner=null; saveLeague();
+}
+// A finished match becomes a record only when the player LEAVES the winner
+// screen — so Undo there is clean. It files into tonight's tournament; nothing
+// is e-mailed until the tournament is ended.
+function lgCommitMatch(){
+  var m=league.cur; if(!m||!m.done) return;
+  league.cur=null;
+  var t=lgEnsureTourn(); t.matches.push(m);
+  saveLeague();
+}
+function lgAbandon(){ if(league.cur){ league.cur=null; saveLeague(); } }
+
+//---------------------------- Fat 6 log (every game, league or not) ----------------------------
+function f6LogRecord(){
+  if(!G||!G.isFat6) return;
+  var n=G.players.length, places={};
+  G.players.forEach(function(p){ places[p.name]= p.out ? (n-(p.outSeq||n)+1) : 1; });
+  var e={id:lgId('f'), ts:Date.now(), n:n, places:places};
+  f6log.push(e); if(f6log.length>600) f6log.splice(0,f6log.length-600);
+  G._f6logId=e.id; saveF6log();
+}
+function f6LogUndo(){
+  if(!G||!G._f6logId) return;
+  var i=f6log.findIndex(function(e){return e.id===G._f6logId;});
+  if(i>=0){ f6log.splice(i,1); saveF6log(); }
+  G._f6logId=null;
+}
+function f6Stats(){
+  var by={};
+  f6log.forEach(function(e){ Object.keys(e.places||{}).forEach(function(nm){
+    var s=by[nm]||(by[nm]={name:nm,g:0,w:0,sum:0,best:99});
+    var pl=e.places[nm]; s.g++; if(pl===1) s.w++; s.sum+=pl; s.best=Math.min(s.best,pl); }); });
+  return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){ return (b.w-a.w)||((a.sum/a.g)-(b.sum/b.g))||a.name.localeCompare(b.name); });
+}
+
+//---------------------------- standings ----------------------------
+// Derived from a list of matches at display time — no second ledger to drift.
+function lgStandings(matches){
+  var teams={}, players={};
+  function ent(map,name){ if(!map[name]) map[name]={name:name,m:0,mw:0,lw:0,ll:0,pts:0,turns:0,best:0,t180:0}; return map[name]; }
+  (matches||[]).forEach(function(m){
+    if(!m||!m.done||m.winner==null) return;
+    var legsPlayed=m.results.length;
+    m.sides.forEach(function(s,i){
+      var won=(m.winner===i), lw=m.score[i]||0, ll=legsPlayed-lw;
+      var agg={pts:0,turns:0,best:0,t180:0};
+      m.results.forEach(function(r){ var st=r.st&&r.st[i]; if(!st||st.pts==null) return;
+        agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; });
+      var targets=s.members.map(function(n){ return ent(players,n); });
+      if(s.members.length>1) targets.push(ent(teams,s.name));
+      targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
+        e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; });
+    });
+  });
+  function rows(map){ return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){
+    return (b.mw-a.mw) || ((b.lw-b.ll)-(a.lw-a.ll)) || (a.m-b.m) || a.name.localeCompare(b.name); }); }
+  return {teams:rows(teams), players:rows(players)};
+}
+function lgAvg(e){ return e.turns ? (e.pts/e.turns).toFixed(1) : '—'; }
+function lgGameLabel(g){ return g==='cricket'?'Cricket':g==='fat6'?'Fat 6':g; }
+function lgTablesHTML(st, title){
+  var html='';
+  if(st.teams.length){
+    html+='<div class="stH">'+esc(title)+' · Teams</div><table class="st"><tr><th>Team</th><th>Matches</th><th>Legs</th></tr>';
+    st.teams.forEach(function(e){ html+='<tr><td>'+esc(e.name)+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td></tr>'; });
+    html+='</table>';
+  }
+  var any01=st.players.some(function(e){return e.turns>0;});
+  html+='<div class="stH">'+esc(title)+' · Players</div><table class="st"><tr><th>Player</th><th>Matches</th><th>Legs</th>'+(any01?'<th title="3-dart average">Avg</th><th>High</th><th>180s</th>':'')+'</tr>';
+  if(!st.players.length) html+='<tr><td colspan="6" class="stEmpty">No matches yet</td></tr>';
+  st.players.forEach(function(e){ html+='<tr><td>'+esc(shortName(e.name))+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td>'+(any01?'<td>'+lgAvg(e)+'</td><td>'+(e.best||'—')+'</td><td>'+(e.t180||0)+'</td>':'')+'</tr>'; });
+  html+='</table>';
+  return html;
+}
+function lgMatchLineHTML(m){
+  return '<div class="stMatch"><span class="when">'+lgDay(m.ts)+' · '+lgGameLabel(m.game)+' · bo'+m.legs+'</span><span class="res">'+esc(lgScoreText(m))+'</span></div>';
+}
+var _statsTab='league', _statsSeason=null, _statsOpenT={};
+function renderStats(tab){
+  var body=document.getElementById('statsBody'), html='';
+  document.querySelectorAll('#statsTabs button').forEach(function(b){ b.classList.toggle('on',b.dataset.tab===tab); });
+  var mail=document.getElementById('statsMailBtn'); mail.style.display='none';
+  if(tab==='league'){
+    var seasons=league.seasons;
+    if(!seasons.length){
+      html='<div class="stEmpty">'+(leagueOn()?'No league matches yet — the first finished match starts the season and tonight’s tournament.':'League Mode is off. Turn it on from the menu and every match is recorded here.')+'</div>';
+    }else{
+      var s=seasons.find(function(x){return x.id===_statsSeason;})||seasons[seasons.length-1];
+      _statsSeason=s.id;
+      var live=(s===lgSeason());
+      // season picker (only when there is something to pick)
+      if(seasons.length>1){
+        html+='<div class="stPick">'+seasons.slice().reverse().map(function(x){ return '<button class="'+(x===s?'on':'')+'" data-season="'+x.id+'">'+esc(x.name)+(x.endTs?'':' ·live')+'</button>'; }).join('')+'</div>';
+      }
+      html+='<div class="stSeason">'+esc(s.name)+' <span>'+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'now')+' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')+'</span></div>';
+      var open=lgTourn();
+      if(live&&open){ mail.style.display=''; mail.innerHTML='🏁 End Tournament<span class="mi"> &amp; E-mail</span>'; mail.dataset.act='end'; }
+      else if(live){ var lastT=s.tournaments[s.tournaments.length-1]; if(lastT&&league.emails.length){ mail.style.display=''; mail.innerHTML=lastT.mailed?'📧 Re-send<span class="mi"> Last</span> Report':'📧 Send<span class="mi"> Last</span> Report'; mail.dataset.act='resend'; } }
+      html+=lgTablesHTML(lgStandings(lgSeasonMatches(s)), 'Season');
+      html+='<div class="stH">Tournaments</div>';
+      s.tournaments.slice().reverse().forEach(function(t){
+        var isOpen=!t.endTs, exp=_statsOpenT[t.id]!=null?_statsOpenT[t.id]:isOpen;
+        html+='<div class="stT" data-t="'+t.id+'"><span class="tri">'+(exp?'▾':'▸')+'</span> <b>'+lgLongDay(t.ts)+'</b> · '+t.matches.length+' match'+(t.matches.length===1?'':'es')
+          +(isOpen?' · <span class="w">in progress</span>':(t.mailed?' · e-mailed ✓':' · not sent'))+'</div>';
+        if(exp){
+          html+='<div class="stTbody">'+lgTablesHTML(lgStandings(t.matches),'Tournament');
+          if(t.matches.length){ html+='<div class="stH">Matches</div>'; t.matches.slice().reverse().forEach(function(m){ html+=lgMatchLineHTML(m); }); }
+          html+='</div>';
+        }
+      });
+    }
+  }else if(tab==='fat6'){
+    var rows=f6Stats();
+    if(!rows.length) html='<div class="stEmpty">No Fat 6 games recorded yet.</div>';
+    else{
+      html+='<div class="stH">Fat 6 · every game</div><table class="st"><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th title="average finishing place">Avg finish</th><th>Best</th></tr>';
+      rows.forEach(function(e){ html+='<tr><td>'+esc(shortName(e.name))+'</td><td>'+e.g+'</td><td>'+e.w+'</td><td>'+Math.round(100*e.w/e.g)+'%</td><td>'+(e.sum/e.g).toFixed(1)+'</td><td>'+(e.best===1?'🥇':e.best)+'</td></tr>'; });
+      html+='</table><div class="stNote">'+f6log.length+' game'+(f6log.length===1?'':'s')+' logged</div>';
+    }
+  }else{
+    var names=Object.keys(statsLib).sort(function(a,b){ return (statsLib[b].w||0)-(statsLib[a].w||0) || (statsLib[b].g||0)-(statsLib[a].g||0) || a.localeCompare(b); });
+    if(!names.length) html='<div class="stEmpty">No games recorded yet.</div>';
+    else{
+      html+='<div class="stH">All-time · every game</div><table class="st"><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>Avg</th><th>High</th><th>180s</th></tr>';
+      names.forEach(function(n){ var s=statsLib[n];
+        html+='<tr><td>'+esc(shortName(n))+'</td><td>'+(s.g||0)+'</td><td>'+(s.w||0)+'</td><td>'+(s.g?Math.round(100*(s.w||0)/s.g)+'%':'—')+'</td><td>'+lgAvg(s)+'</td><td>'+(s.best||'—')+'</td><td>'+(s.t180||0)+'</td></tr>'; });
+      html+='</table>';
+    }
+  }
+  body.innerHTML=html; body.scrollTop=0;
+}
+function openStats(){
+  ['setup','library','teamLibrary'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  document.getElementById('statsMsg').textContent='';
+  document.getElementById('statsPage').classList.remove('hidden');
+  renderStats(_statsTab);
+}
+document.getElementById('statsBtn').onclick=openStats;
+document.getElementById('statsTabs').addEventListener('click',function(e){ var b=e.target.closest('button[data-tab]'); if(!b) return; _statsTab=b.dataset.tab; renderStats(_statsTab); });
+document.getElementById('statsBody').addEventListener('click',function(e){
+  var sp=e.target.closest('button[data-season]'); if(sp){ _statsSeason=sp.dataset.season; renderStats('league'); return; }
+  var th=e.target.closest('.stT'); if(th){ var id=th.dataset.t; _statsOpenT[id]=!(_statsOpenT[id]!=null?_statsOpenT[id]:th.querySelector('.tri').textContent==='▾'); renderStats('league'); }
+});
+document.getElementById('statsDoneBtn').onclick=function(){
+  document.getElementById('statsPage').classList.add('hidden');
+  document.getElementById('setup').classList.remove('hidden');
+  renderColumns();renderLineup();updateStart();
+};
+document.getElementById('statsMailBtn').onclick=function(){
+  var msg=document.getElementById('statsMsg'), act=this.dataset.act;
+  if(act==='end'){ lgEndTournament(function(m){ msg.textContent=m; renderStats('league'); }); return; }
+  var s=lgSeason(), t=s&&s.tournaments[s.tournaments.length-1]; if(!t) return;
+  msg.textContent='Sending…';
+  lgSendReport(t,s).then(function(r){ msg.textContent=lgSendMsg(r); if(r&&r.ok&&!r.test){ t.mailed=true; saveLeague(); } renderStats('league'); })
+    .catch(function(){ msg.textContent='Could not connect — check your signal and try again.'; });
+};
+function lgSendMsg(r){
+  if(r&&r.ok&&r.test) return 'Preview build — the relay mutes mail from here. Nothing was sent.';
+  if(r&&r.ok) return '✓ Report sent to '+r.sent+' address'+(r.sent===1?'':'es')+'.';
+  return (r&&r.error)||'Could not send.';
+}
+// End the night: close the tournament, e-mail the league. `done(msg)` gets a
+// human line for whichever screen asked.
+// done(msg, final): interim lines (final=false) may be followed by one more.
+function lgEndTournament(done){
+  var s=lgSeason(), t=lgTourn();
+  if(!t){ done('No tournament is open.',true); return; }
+  if(lgMatchOpen()){ done('Finish or quit the match in progress first (leg '+(league.cur.results.length+1)+' of '+league.cur.legs+').',true); return; }
+  t.endTs=Date.now(); saveLeague(); renderLeagueUI();
+  if(!league.emails.length){ done('Tournament closed — no league e-mails set, so no report was sent.',true); return; }
+  done('Tournament closed — sending the report…',false);
+  lgSendReport(t,s).then(function(r){ if(r&&r.ok&&!r.test){ t.mailed=true; saveLeague(); } done('Tournament closed. '+lgSendMsg(r),true); renderLeagueUI(); })
+    .catch(function(){ done('Tournament closed, but the report could not be sent — use "Send Last Report" on the Stats page when you have signal.',true); });
+}
+function lgEndSeason(done){
+  var s=lgSeason(); if(!s){ done('No season is running.',true); return; }
+  var finish=function(prefix){ s.endTs=Date.now(); saveLeague(); renderLeagueUI(); done((prefix||'')+s.name+' ended. Start a new season when you’re ready — the first league match will start one too.',true); };
+  if(lgTourn()) lgEndTournament(function(msg,final){ if(!final){ done(msg,false); return; } if(/quit the match/.test(msg)) done(msg,true); else finish(msg+' '); });
+  else finish('');
+}
+
+//---------------------------- report ----------------------------
+// The app sends STRUCTURED data; the Pi writes the e-mail. That way the relay
+// never forwards free text to arbitrary addresses — it can only ever send a
+// Dart Keeper league report. One send per address.
+function lgStandingsData(st){
+  return { teams:st.teams.map(function(e){return {name:e.name,mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll};}),
+           players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.turns?+(e.pts/e.turns).toFixed(1):null,best:e.best||null,t180:e.t180||0};}) };
+}
+function lgReportData(t,s){
+  return { name:league.name||'', to:league.emails.slice(0,12), when:Date.now(),
+    tournament:{ when:t.ts, standings:lgStandingsData(lgStandings(t.matches)),
+      matches:t.matches.map(function(m){ return {game:lgGameLabel(m.game),legs:m.legs,sides:[lgSideLabel(m,0),lgSideLabel(m,1)],score:m.score.slice(),winner:m.winner}; }) },
+    season:{ name:s.name, tournaments:s.tournaments.filter(function(x){return x.endTs;}).length, standings:lgStandingsData(lgStandings(lgSeasonMatches(s))) } };
+}
+function lgSendReport(t,s){
+  return new Promise(function(resolve,reject){
+    var data=lgReportData(t,s), ws, done=false;
+    var timer=setTimeout(function(){ if(!done){ done=true; try{ws.close();}catch(e){} reject(new Error('timeout')); } },12000);
+    try{ ws=new WebSocket(DK_RELAY); }catch(e){ clearTimeout(timer); reject(e); return; }
+    ws.onopen=function(){ try{ ws.send(JSON.stringify({t:'backup',op:'league',app:'darts',rid:'lg',data:data})); }catch(e){} };
+    ws.onmessage=function(ev){
+      var r=null; try{ r=JSON.parse(ev.data); }catch(e){}
+      if(!r||r.t!=='backupResult') return;
+      done=true; clearTimeout(timer); try{ws.close();}catch(e){}
+      resolve(r);
+    };
+    ws.onerror=function(){ if(!done){ done=true; clearTimeout(timer); reject(new Error('ws')); } };
+  });
+}
+
 //============================ INIT ============================
 resetSelection();
 renderColumns();renderLineup();updateStart();
@@ -3841,6 +4498,9 @@ try{
   if(_lg && _lg!==config.game && document.querySelector('#gameSel button[data-game="'+_lg+'"]')) setGame(_lg);
 }catch(e){}
 restoreGameState();          // bring back an in-progress game after an app restart
+renderLeagueUI();
+if(league.cur && league.cur.done) lgCommitMatch();   // finished on the winner screen, then the app was killed
+refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
