@@ -3239,6 +3239,46 @@ function markStr(m){ // legacy (unused by cricket render)
 }
 
 //============================ DARTBOARD (SVG) ============================
+// One-time rasterisation of the sisal noise (see the PERF note in buildBoard).
+// The five filter rects are drawn into a 804px canvas through an <img> of a
+// standalone svg, and the PNG data URL replaces them in the live board. Any
+// failure just leaves the live filters in place — the board always draws.
+var BOARD_TEX_URL=null, _texBaking=false;
+function bakeBoardTexture(texDefs, liveTex){
+  if(BOARD_TEX_URL || _texBaking) return;
+  _texBaking=true;
+  var url=null;
+  try{
+    var S=804;   // 1.5× the 536 viewBox: noise needs no more, and the PNG stays ~1 MB
+    var str='<svg xmlns="http://www.w3.org/2000/svg" viewBox="30 30 476 476" width="'+S+'" height="'+S+'">'+texDefs+liveTex+'</svg>';
+    url=URL.createObjectURL(new Blob([str],{type:'image/svg+xml;charset=utf-8'}));
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var c=document.createElement('canvas'); c.width=S; c.height=S;
+        c.getContext('2d').drawImage(img,0,0,S,S);
+        // WebP keeps alpha at a fraction of PNG's size for noise; a browser that
+        // can't encode it answers with a PNG data URL instead — both are fine
+        var u=c.toDataURL('image/webp',0.82);
+        BOARD_TEX_URL=(u.indexOf('data:image/webp')===0)?u:c.toDataURL('image/png');
+        // swap into the board that is on screen right now
+        var g=document.querySelector('#boardwrap svg g.texg');
+        if(g){
+          g.querySelectorAll('rect[filter]').forEach(function(r){ r.remove(); });
+          var im=document.createElementNS('http://www.w3.org/2000/svg','image');
+          im.setAttribute('href',BOARD_TEX_URL); im.setAttributeNS('http://www.w3.org/1999/xlink','href',BOARD_TEX_URL);
+          im.setAttribute('x','30'); im.setAttribute('y','30'); im.setAttribute('width','476'); im.setAttribute('height','476');
+          im.setAttribute('preserveAspectRatio','none');
+          g.insertBefore(im, g.firstChild);
+        }
+      }catch(e){}
+      try{ URL.revokeObjectURL(url); }catch(e){}
+      _texBaking=false;
+    };
+    img.onerror=function(){ try{ URL.revokeObjectURL(url); }catch(e){} _texBaking=false; };
+    img.src=url;
+  }catch(e){ _texBaking=false; }
+}
 function buildBoard(){
   const cx=268,cy=268;
   // wider double (16→22) and triple (12→22) bands = bigger tap targets
@@ -3326,8 +3366,17 @@ function buildBoard(){
     + `<stop offset=".55" stop-color="#6d7783"/><stop offset="1" stop-color="#aab4c0"/></linearGradient>`
     + `<clipPath id="playClip"><circle cx="${cx}" cy="${cy}" r="238"/></clipPath></defs>`;
   const R=(f,o)=>`<rect x="30" y="30" width="476" height="476" filter="url(#${f})" opacity="${o}"/>`;
-  const texLayers=`<g clip-path="url(#playClip)" pointer-events="none">`
-    + R('mottle','.34') + R('fibre','.62') + R('fibreLite','.46') + R('cracks','.5') + R('holes','.6')
+  // ⚠️ PERF (Nathan, 2026-08-21: "all of the touch/presses are super slow"):
+  // WebKit renders feTurbulence in software and re-runs ALL FIVE on every
+  // repaint of this svg — and a tap repaints it twice (:active on press, again
+  // on release). Measured in Safari: 53 ms a tap with the live filters, 36 ms
+  // without (33 of which is the 3-frame measurement floor); an iPad's CPU is
+  // several times slower again. So the noise is rasterised ONCE per session
+  // (bakeBoardTexture, below) and painted as a plain bitmap. The live filters
+  // stay as the fallback until the bake lands (~100 ms) or if it ever fails.
+  const liveTex = R('mottle','.34') + R('fibre','.62') + R('fibreLite','.46') + R('cracks','.5') + R('holes','.6');
+  const texLayers=`<g clip-path="url(#playClip)" pointer-events="none" class="texg">`
+    + (BOARD_TEX_URL ? `<image href="${BOARD_TEX_URL}" x="30" y="30" width="476" height="476" preserveAspectRatio="none"/>` : liveTex)
     + `<circle cx="${cx}" cy="${cy}" r="238" fill="url(#wearG)" style="stroke:none"/></g>`;
   // metal spider: dark seat, bright wire, top glint. Strokes go in STYLE
   // attributes because the stylesheet's `.board circle{stroke:#080510}` would
@@ -3364,6 +3413,7 @@ function buildBoard(){
   BOARD_SVG=ns(svg,'bc-');                    // cricket-header copy
   const wrap=document.getElementById('boardwrap');
   wrap.innerHTML=ns(mkSVG(true),'bm-');       // main play board — the textured one
+  if(!BOARD_TEX_URL) bakeBoardTexture(texDefs, liveTex);
   // pointerdown, NOT click: a click only fires after the finger LIFTS, plus
   // iOS synthesis lag — the score should land the instant the board is touched.
   // pointerdown covers mouse too, so no click listener remains (no double-fire).
