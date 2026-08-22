@@ -2635,7 +2635,7 @@ function throwDart(value,mult,region){
 
 function dartLabel(value,mult){
   if(value===0)return 'Miss';
-  if(value===25)return mult===2?'Double Bullseye':'Single Bullseye';
+  if(value===25)return mult===2?'DB':'Bull';   // "DB" / "Bull" (Nathan, 2026-08-21)
   return (mult===2?'D':mult===3?'T':'')+value;
 }
 
@@ -3587,7 +3587,7 @@ function renderBdCalls(){                      // live dart calls across the top
   const el=document.getElementById('bdCalls'); if(!el)return;
   if(!G||G.isCricket||G.isFat6){ el.innerHTML=''; return; }
   el.innerHTML=G.darts.map(d=>{
-    const cls=d.bust?' bust':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>6?' lng':'');
+    const cls=d.bust?' bust':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>8?' lng':'');   // >8: "D. Bull" stays full size
     return `<span class="bc${cls}">${esc(d.bust?'BUST':d.label)}</span>`;
   }).join('');
 }
