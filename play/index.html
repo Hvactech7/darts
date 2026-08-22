@@ -221,8 +221,13 @@
      unreadable. Dimmed instead, which reads the same without obscuring it. */
   .dart.nocount{color:var(--muted);opacity:.6;font-weight:600;}
   .boardwrap{display:flex;justify-content:center;position:relative;padding:2px 0;}
+  /* PERF (2026-08-21): the glow used to be a CSS filter — saturate(1.2) +
+     drop-shadow — over the WHOLE svg, re-run by the GPU on every repaint of
+     the board (Safari: a tap went 28 ms → 20 ms without it; an iPad is far
+     slower at it). A box-shadow is painted once into the layer and cached,
+     and the 20% saturation is baked into the gradient colours in buildBoard. */
   svg.board{width:100%;max-width:610px;height:auto;touch-action:manipulation;display:block;
-       filter:saturate(1.2) drop-shadow(0 0 24px rgba(79,124,255,.4));}
+       border-radius:50%;box-shadow:0 0 24px rgba(79,124,255,.4);}
   .board path,.board circle{cursor:pointer;stroke:#080510;stroke-width:1;}
   /* the sisal board draws real metal wires over the seams, so the scoring
      shapes themselves must not paint their own outline (id beats the rule above) */
@@ -3280,6 +3285,7 @@ function bakeBoardTexture(texDefs, liveTex){
   }catch(e){ _texBaking=false; }
 }
 function buildBoard(){
+  // NOTE: gradient stop colours below carry a baked saturate(1.2) — see svg.board in the CSS
   const cx=268,cy=268;
   // wider double (16→22) and triple (12→22) bands = bigger tap targets
   const rDoubleOut=238,rDoubleIn=216,rTripleOut=158,rTripleIn=136,rBullOut=40,rBull=18,rLabel=248;
@@ -3315,22 +3321,22 @@ function buildBoard(){
   }
   const defs=`<defs>
     <radialGradient id="sisalCream" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
-      <stop offset="0" stop-color="#f6e9c8"/><stop offset=".55" stop-color="#ead9ae"/><stop offset="1" stop-color="#d0bc8e"/></radialGradient>
+      <stop offset="0" stop-color="#f9e9c1"/><stop offset=".55" stop-color="#edd9a5"/><stop offset="1" stop-color="#d4bc85"/></radialGradient>
     <radialGradient id="sisalDark" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
-      <stop offset="0" stop-color="#45454b"/><stop offset=".55" stop-color="#2d2d32"/><stop offset="1" stop-color="#1e1e23"/></radialGradient>
+      <stop offset="0" stop-color="#45454c"/><stop offset=".55" stop-color="#2d2d33"/><stop offset="1" stop-color="#1e1e24"/></radialGradient>
     <radialGradient id="ringRed" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
-      <stop offset="0" stop-color="#e25a50"/><stop offset=".6" stop-color="#c02b24"/><stop offset="1" stop-color="#8f1f1b"/></radialGradient>
+      <stop offset="0" stop-color="#f85448"/><stop offset=".6" stop-color="#d8251c"/><stop offset="1" stop-color="#a11a15"/></radialGradient>
     <radialGradient id="ringGreen" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="238">
-      <stop offset="0" stop-color="#47ad6a"/><stop offset=".6" stop-color="#2c8049"/><stop offset="1" stop-color="#1c5a35"/></radialGradient>
+      <stop offset="0" stop-color="#38b262"/><stop offset=".6" stop-color="#208442"/><stop offset="1" stop-color="#135d31"/></radialGradient>
     <radialGradient id="bullG" cx=".38" cy=".34" r=".95">
-      <stop offset="0" stop-color="#55c07c"/><stop offset=".55" stop-color="#2c8049"/><stop offset="1" stop-color="#174c2c"/></radialGradient>
+      <stop offset="0" stop-color="#45c674"/><stop offset=".55" stop-color="#208442"/><stop offset="1" stop-color="#0f4f28"/></radialGradient>
     <radialGradient id="bullR" cx=".38" cy=".34" r=".95">
-      <stop offset="0" stop-color="#ef6a5e"/><stop offset=".55" stop-color="#c02b24"/><stop offset="1" stop-color="#801713"/></radialGradient>
+      <stop offset="0" stop-color="#ff6556"/><stop offset=".55" stop-color="#d8251c"/><stop offset="1" stop-color="#91130e"/></radialGradient>
     <radialGradient id="surroundG" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy-40}" r="300">
-      <stop offset=".78" stop-color="#33363e"/><stop offset=".9" stop-color="#22252b"/><stop offset="1" stop-color="#121419"/></radialGradient>
+      <stop offset=".78" stop-color="#323640"/><stop offset=".9" stop-color="#21252c"/><stop offset="1" stop-color="#12141a"/></radialGradient>
     <linearGradient id="rimG" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#c3ccd6"/><stop offset=".22" stop-color="#7d8894"/><stop offset=".5" stop-color="#454d57"/>
-      <stop offset=".78" stop-color="#69727d"/><stop offset="1" stop-color="#9aa4af"/></linearGradient>
+      <stop offset="0" stop-color="#c1ccd8"/><stop offset=".22" stop-color="#7b8897"/><stop offset=".5" stop-color="#444d59"/>
+      <stop offset=".78" stop-color="#67727f"/><stop offset="1" stop-color="#98a4b1"/></linearGradient>
     <radialGradient id="boardLight" gradientUnits="userSpaceOnUse" cx="${cx-70}" cy="${cy-90}" r="430">
       <stop offset="0" stop-color="#ffffff" stop-opacity=".16"/><stop offset=".38" stop-color="#ffffff" stop-opacity=".05"/>
       <stop offset=".72" stop-color="#000000" stop-opacity=".08"/><stop offset="1" stop-color="#000000" stop-opacity=".32"/></radialGradient>
