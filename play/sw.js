@@ -8,7 +8,7 @@
 // refresh, which is what keeps startup instant.
 //
 // Bump CACHE when the file list below changes.
-const CACHE = 'darts-v2.42';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
+const CACHE = 'darts-v2.43';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
 const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
   './dk-bg.jpg'
 ,  './dk-side-blue.jpg',
@@ -49,24 +49,34 @@ self.addEventListener('fetch', (e) => {
 
   if (isAppShell(req)) {
     // NETWORK-FIRST — the whole point: a launch with signal gets today's build.
+    //
+    // (2026-08-21) ...and it has to reach the ORIGIN. GitHub Pages serves
+    // everything with max-age=600, and Safari's own HTTP cache honours that
+    // too, so a plain fetch could hand back a 10-minute-old copy from either —
+    // Nathan restarted the app repeatedly two minutes after a deploy and still
+    // saw the old build. A per-launch query string makes both caches miss.
+    // The response is stored under the PLAIN url, so offline launches and
+    // ?src= arrivals keep working exactly as before.
+    const plain = req.url.split('?')[0];
+    const fresh = new Request(plain + '?v=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
     e.respondWith(new Promise((resolve) => {
       let settled = false;
       const done = (r) => { if (!settled && r) { settled = true; resolve(r); } };
 
       // If the network hasn't answered in time, serve the cached app instead.
-      const timer = setTimeout(() => { caches.match(req).then(done); }, APP_TIMEOUT);
+      const timer = setTimeout(() => { caches.match(plain).then(done); }, APP_TIMEOUT);
 
-      fetch(req).then((resp) => {
+      fetch(fresh).then((resp) => {
         clearTimeout(timer);
         if (resp && resp.status === 200) {
-          putInCache(req, resp);           // cache it even if we already served
+          putInCache(plain, resp);         // cache it even if we already served
           done(resp);                       // the cached copy on timeout
         } else {
-          caches.match(req).then((c) => done(c || resp));
+          caches.match(plain).then((c) => done(c || resp));
         }
       }).catch(() => {                      // offline / DNS failure
         clearTimeout(timer);
-        caches.match(req).then((c) => done(c || Response.error()));
+        caches.match(plain).then((c) => done(c || Response.error()));
       });
     }));
     return;
