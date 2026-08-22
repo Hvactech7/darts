@@ -910,7 +910,7 @@
     #appBanner::after{ right:-6px; background:url("dk-side-red.jpg") center/cover no-repeat; }
   }
   #appBanner img{ display:block; width:100%; max-width:560px; margin:0 auto; border-radius:8px;
-    filter:drop-shadow(0 10px 24px rgba(0,0,0,.8)); }
+    box-shadow:0 10px 24px rgba(0,0,0,.8); }   /* was a drop-shadow FILTER — re-blurred on every menu repaint */
   h2{ display:flex; align-items:center; gap:12px; color:#e8c876; font-family:'Cinzel',serif; font-weight:700; font-size:20px; letter-spacing:3px;
     text-shadow:0 1px 0 #000, 0 2px 3px rgba(0,0,0,.8); }
   h2::before,h2::after{ content:""; flex:1; height:2px;
@@ -969,6 +969,9 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 3px 6px rgba(0,0,0,.4); }
   #col1 .nameopt.picked{ border:2px solid #4aa8ff; color:#bcdcff; background:linear-gradient(180deg,#14293f,#0d1b2c);
     box-shadow:0 0 16px rgba(74,168,255,.45), inset 0 0 14px rgba(74,168,255,.2); text-shadow:0 0 10px rgba(74,168,255,.7); }
+  /* the instant on-touch state: the picked colours, before the pick commits on lift */
+  #col1 .nameopt.pressing{ border-color:#4aa8ff; color:#bcdcff; }
+  #col2 .nameopt.pressing{ border-color:#ff7a2e; color:#ffcf9e; }
   #col2 .nameopt.picked{ border:2px solid #ff7a2e; color:#ffcf9e; background:linear-gradient(180deg,#33170a,#200e06);
     box-shadow:0 0 16px rgba(255,122,46,.5), inset 0 0 14px rgba(255,122,46,.22); text-shadow:0 0 10px rgba(255,122,46,.8); }
   .pickslot{ border:2px solid #4a3d28 !important; border-radius:6px; background:linear-gradient(180deg,#221a10,#181107); }
@@ -3910,11 +3913,24 @@ window.addEventListener('visibilitychange', function(){ if(document.hidden) save
 // and only the players list (#listScroll) scrolls internally. The list absorbs
 // whatever height is left over — the slack method also accounts for the cards
 // BELOW it (Manage Players, Pairings).
-function fitMenu(){
+var _fitSig='';
+function fitMenu(force){
   var setupEl=document.getElementById('setup');
   if(!setupEl || setupEl.classList.contains('hidden')) return;
   var ls=document.getElementById('listScroll');
   if(!ls) return;
+  // PERF (Nathan, 2026-08-21: "picking of the players in the list is very
+  // slow"): every pick re-ran this — reset zoom to 1, measure, re-apply zoom —
+  // which re-lays-out and REPAINTS the entire menu, banner included, twice.
+  // A pick cannot change the answer: the heads are fixed-height boxes and the
+  // rows keep their size. So the fit only runs when one of its real inputs
+  // moved: viewport, game, roster, row geometry, resume bar, setup classes.
+  var r0=ls.querySelector('.nameopt'), rb=document.getElementById('resumeBtn');
+  var sig=[innerWidth,innerHeight,Math.round(visibleBottom()),config.game,roster.length,setupEl.className,
+           r0?r0.offsetHeight:0, ls.querySelectorAll('.nameopt').length,
+           rb?(rb.classList.contains('hidden')?0:rb.offsetHeight):0].join('|');
+  if(!force && sig===_fitSig) return;
+  _fitSig=sig;
   // NOTE: scrollHeight is floored at clientHeight, so it can never reveal
   // POSITIVE slack — measure the real content bottom from the children instead.
   // FLOOR = at least 4 full name rows in view (Nathan's minimum), measured from
@@ -4061,7 +4077,7 @@ function fitLibrary(){
   lib.style.maxHeight=Math.max(160, Math.floor(avail-top))+'px';
   lib.style.overflowY='auto';                     // self-heals; nothing to scroll when it fits
 }
-window.addEventListener('resize', function(){ fitMenu(); fitLibrary(); });
+window.addEventListener('resize', function(){ fitMenu(true); fitLibrary(); });
 window.addEventListener('orientationchange', function(){ setTimeout(function(){ fitMenu(); fitLibrary(); },120); });
 // The banner image loads AFTER the first fitMenu — until it has height, the
 // measurement is short and everything below gets pushed past the bottom edge.
@@ -4773,11 +4789,16 @@ window.dkAfterUpdate=function(){                          // called on the fresh
     if(e.isPrimary===false || (e.button!==undefined && e.button>0)){ sel=null; return; }
     sel=e.target.closest && e.target.closest('.nameopt');
     sx=e.clientX; sy=e.clientY; st=performance.now();
+    if(sel && typeof sel.onclick==='function') sel.classList.add('pressing');   // light up on TOUCH; the pick lands on lift
   },true);
-  ls.addEventListener('pointercancel',function(){ sel=null; },true);   // scroll took over
+  ls.addEventListener('pointermove',function(e){
+    if(sel && (Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10)) sel.classList.remove('pressing');   // it's a scroll
+  },true);
+  ls.addEventListener('pointercancel',function(){ if(sel) sel.classList.remove('pressing'); sel=null; },true);   // scroll took over
   ls.addEventListener('pointerup',function(e){
     var el=sel; sel=null;
     if(!el) return;
+    el.classList.remove('pressing');
     if(!e.target.closest || e.target.closest('.nameopt')!==el) return;  // finger moved off the row
     if(Math.abs(e.clientX-sx)>10 || Math.abs(e.clientY-sy)>10) return;  // that was a scroll
     if(performance.now()-st>800) return;                                // a long press, not a tap
