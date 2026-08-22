@@ -4801,6 +4801,12 @@ renderLeagueUI();
 if(LG.cur && LG.cur.done) lgCommitMatch();   // finished on the winner screen, then the app was killed
 setTimeout(function(){ lgSyncAll(); }, 1500);
 window.addEventListener('online', function(){ lgSyncAll(); });
+// Auto-backup used to retry only on the NEXT change — a save that failed on a
+// flaky hotspot at the end of the night sat unsent until something else
+// changed. Now it also retries when the connection comes back and at launch
+// (bkQueue compares fingerprints, so this costs nothing when already backed up).
+setTimeout(function(){ try{ bkQueue(); }catch(e){} }, 3000);
+window.addEventListener('online', function(){ try{ bkQueue(); }catch(e){} });
 refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 
