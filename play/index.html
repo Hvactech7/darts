@@ -2496,6 +2496,11 @@ function pidTap(team,idx){
     else if(pidPicks.length<2){ pidPicks.push({team,idx}); }
   }
   renderPiddle();
+  // 1v1 / 2v2 (Nathan, 2026-08-21): the order is settled the moment the last
+  // name is tapped, so go straight to the game — no Start Game press to wait
+  // for. (League Mode still asks how many legs; Fat 6 and Ironman keep the
+  // button because their order takes several taps.)
+  if(pidPicks.length>=2) document.getElementById('pidStartBtn').click();
 }
 
 //============================ GAME SETUP ============================
