@@ -655,7 +655,7 @@
 
   /* library rename */
   .librow .lname{cursor:pointer;}
-  .librow .lname::after{content:'  ✎';opacity:.4;font-size:.62em;}
+  /* (name suffix now drawn by the Player Card rule: › ) */
   .librow .lnameEdit{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1.5px solid #7fb8ef;
     background:linear-gradient(180deg,#151009,#1d150c);color:var(--txt);font-family:var(--body);font-size:21px;font-weight:600;
     box-shadow:0 0 12px rgba(74,168,255,.35);}
@@ -788,8 +788,31 @@
   #menuRow #leagueBtn.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
   /* the two league modals borrow #confirmQuit's dress exactly */
-  #leagueCard,#legsSplash{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
-  #leagueCard.hidden,#legsSplash.hidden{display:none;}
+  #leagueCard,#legsSplash,#playerCard{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
+  #leagueCard.hidden,#legsSplash.hidden,#playerCard.hidden{display:none;}
+  /* header and buttons stay put; only the stats scroll (the card is taller than an iPad in landscape) */
+  #playerCard .card{max-width:520px;width:100%;margin:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;}
+  .pcHead,#pcBtns{flex:0 0 auto;}
+  #pcBody{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:2px;}
+  .pcHead{text-align:center;margin-bottom:6px;}
+  .pcName{font-family:var(--display);font-weight:900;font-size:30px;color:#e8c876;letter-spacing:1px;line-height:1.1;text-shadow:0 2px 0 #000,0 0 18px rgba(232,200,118,.4);}
+  .pcSub{font-size:14px;color:#a3906a;margin-top:4px;}
+  .pcSec{margin-top:12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);padding:8px 10px 4px;}
+  .pcSecH{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c9a75a;margin-bottom:4px;}
+  .pcSecH .wl{font-family:var(--num);font-size:15px;letter-spacing:0;color:#e9ddc0;}
+  .pcGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 8px;}
+  .pcStat{padding:6px 4px;text-align:center;}
+  .pcStat .v{font-family:var(--num);font-weight:700;font-size:24px;line-height:1;color:#e9ddc0;}
+  .pcStat .v.gold{color:#e8c876;}
+  .pcStat .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#a3906a;margin-top:4px;line-height:1.2;}
+  .pcStat .n{font-size:10px;color:#7a6a4a;margin-top:2px;}
+  .pcNote{font-size:12px;color:#a3906a;margin:8px 2px 2px;line-height:1.35;}
+  #pcBtns{margin-top:12px;flex-wrap:nowrap;}
+  #pcBtns button{font-size:18px;padding:11px;}
+  #pcRename{flex:0 0 auto;background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%);}
+  #pcDone{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
+  .librow .lname::after{content:'  ›';opacity:.45;font-size:.9em;}
+  @media (max-width:600px){ .pcGrid{grid-template-columns:repeat(3,1fr);gap:4px 4px;} .pcStat .v{font-size:20px;} .pcName{font-size:26px;} }
   #leagueCard .card{max-width:470px;margin:20px;width:100%;}
   #legsSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
   #legsSplash h2{justify-content:center;}
@@ -1494,6 +1517,17 @@
        A league night: every match is best-of-N legs of the same game with the
        same players, results are kept per match, and a report goes to the
        league by e-mail. All of it is OFF unless this switch is on. -->
+  <!-- ================= PLAYER CARD (Nathan, 2026-08-22) =================
+       Tap a name in the Player Library. Everything here is derived from the
+       ledger (statsLib), the Fat 6 log and the league records at open time. -->
+  <div id="playerCard" class="hidden">
+    <div class="card">
+      <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
+      <div id="pcBody"></div>
+      <div class="row" id="pcBtns"><button class="ghost" id="pcRename">✎ Rename</button><button class="primary grow" id="pcDone">Done</button></div>
+    </div>
+  </div>
+
   <div id="leagueCard" class="hidden">
     <div class="card">
       <h2>🏆 League Mode</h2>
@@ -1880,8 +1914,11 @@ function renderLibrary(){
       .concat(teamLib.map(tm=>`<option value="${esc(tm)}"${teamOfPlayer(name)===tm?' selected':''}>${esc(tm)}</option>`)).join('');
     row.innerHTML=`<span class="lname"></span><select class="teamsel">${opts}</select><button class="warn" title="Delete player" aria-label="Delete player">✕</button>`;
     row.querySelector('.lname').textContent=name;
-    row.querySelector('.lname').title='Tap to rename';
-    row.querySelector('.lname').onclick=()=>{
+    row.querySelector('.lname').title='Tap for the player card';
+    // tapping the NAME opens the Player Card (Nathan, 2026-08-22); renaming
+    // moved to a button on the card, which calls row._rename
+    row.querySelector('.lname').onclick=()=>openPlayerCard(name);
+    row._rename=()=>{
       const span=row.querySelector('.lname'); if(!span) return;
       const inp=document.createElement('input');
       inp.type='text'; inp.value=name; inp.className='lnameEdit'; inp.setAttribute('autocomplete','off');
@@ -2191,9 +2228,78 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
     s.pts=(s.pts||0)+(e.pts||0); s.turns=(s.turns||0)+(e.turns||0);
     if(e.best!=null) s.best=Math.max(s.best||0,e.best);
     s.t180=(s.t180||0)+(e.t180||0);
+    // Player Card counters: tons, cricket darts/hits/marks, double-in darts/opens,
+    // double-out darts/outs (the double ones come from BOARD-entered darts only —
+    // the calculator never sees individual darts), highest checkout
+    ['t100','cd','ch','cm','di','dio','do','doo'].forEach(k=>{ s[k]=(s[k]||0)+(e[k]||0); });
+    if(e.hiOut) s.hiOut=Math.max(s.hiOut||0,e.hiOut);
   });
+  all.forEach(n=>{ statFor(n).last=Date.now(); });
   saveStats();
 }
+
+//============================ PLAYER CARD (2026-08-22) ============================
+function pcPct(a,b){ return b?Math.round(100*a/b)+'%':'—'; }
+function pcAvg(a,b,d){ return b?(a/b).toFixed(d==null?1:d):'—'; }
+function playerCardData(name){
+  const s=statsLib[name]||{}; const bg=s.byGame||{};
+  const gt=k=>bg[k]||{g:0,w:0};
+  const x01={g:gt('301').g+gt('501').g, w:gt('301').w+gt('501').w};
+  const f6=(typeof f6Stats==='function'?f6Stats():[]).find(e=>e.name===name)||null;
+  // league record across every league on this device (+ pre-league history)
+  const lg={m:0,mw:0,lw:0,ll:0};
+  try{
+    const recs=(typeof LG!=='undefined')?LG.list.concat([LG.local]):[];
+    recs.forEach(rec=>(rec.seasons||[]).forEach(se=>(se.tournaments||[]).forEach(tn=>(tn.matches||[]).forEach(m=>{
+      if(!m||!m.done||m.winner==null) return;
+      m.sides.forEach((side,i)=>{ if(!side.members.includes(name)) return;
+        const lw=m.score[i]||0, played=(m.results||[]).length;
+        lg.m++; if(m.winner===i) lg.mw++; lg.lw+=lw; lg.ll+=Math.max(0,played-lw); });
+    }))));
+  }catch(e){}
+  return {s, x01, cricket:gt('cricket'), fat6:gt('fat6'), f6, lg, team:teamOfPlayer(name)||''};
+}
+function pcStat(v,l,n,gold){ return '<div class="pcStat"><div class="v'+(gold?' gold':'')+'">'+v+'</div><div class="l">'+l+'</div>'+(n?'<div class="n">'+esc(n)+'</div>':'')+'</div>'; }
+function pcSec(title,wl,body){ return '<div class="pcSec"><div class="pcSecH"><span>'+title+'</span><span class="wl">'+wl+'</span></div>'+body+'</div>'; }
+function pcWL(e){ return e.g?('<span style="color:#9fd0ff">'+e.w+'</span>–<span style="color:#ff90a6">'+(e.g-e.w)+'</span> · '+pcPct(e.w,e.g)):'no games'; }
+var _pcName=null;
+function openPlayerCard(name){
+  _pcName=name;
+  const d=playerCardData(name), s=d.s;
+  document.getElementById('pcName').textContent=name;
+  document.getElementById('pcSub').textContent=(d.team?d.team+' · ':'')+(s.g||0)+' game'+(s.g===1?'':'s')+(s.last?' · last played '+lgDay(s.last):'');
+  let h='';
+  h+=pcSec('Overall', s.g?pcWL({g:s.g,w:s.w||0}):'no games yet',
+    '<div class="pcGrid">'+pcStat(s.g||0,'Games')+pcStat(s.w||0,'Wins')+pcStat(pcPct(s.w||0,s.g||0),'Win rate',null,true)+'</div>');
+  h+=pcSec('301 / 501', pcWL(d.x01),
+    '<div class="pcGrid">'
+    +pcStat(pcAvg(s.pts||0,s.turns||0),'3-dart avg',null,true)+pcStat(s.best||'—','High turn')+pcStat(s.hiOut||'—','High checkout')
+    +pcStat(s.t180||0,'180s')+pcStat(s.t100||0,'Tons (100+)')+pcStat(s.turns||0,'Turns thrown')
+    +pcStat(pcAvg(s.di||0,s.dio||0),'Darts to double in',(s.dio?(s.di+' darts / '+s.dio+' opens'):'no board data'),true)
+    +pcStat(pcAvg(s.do||0,s.doo||0),'Darts to double out',(s.doo?(s.do+' darts / '+s.doo+' outs'):'no board data'),true)
+    +pcStat(s.do?pcPct(s.doo||0,s.do):'—','Double-out hit rate',(s.do?'per dart on a double':''))
+    +'</div><div class="pcNote">Double-in / double-out count darts thrown on the board once a double could open or finish the game. The calculator can’t see single darts, so those turns don’t count here.</div>');
+  h+=pcSec('Cricket', pcWL(d.cricket),
+    '<div class="pcGrid">'+pcStat(s.cd?pcPct(s.ch||0,s.cd):'—','Darts that counted',(s.cd?(s.ch+' of '+s.cd+' darts'):'no board data'),true)
+    +pcStat(s.cd?pcAvg(s.cm||0,(s.cd)/3,2):'—','Marks per round',(s.cd?'3 darts = a round':''))+pcStat(s.cd||0,'Darts thrown')+'</div>');
+  h+=pcSec('Fat 6', pcWL(d.fat6),
+    '<div class="pcGrid">'+pcStat(d.f6?d.f6.g:0,'Games')+pcStat(d.f6?pcAvg(d.f6.sum,d.f6.g):'—','Avg finish',null,true)+pcStat(d.f6&&d.f6.g?(d.f6.best===1?'🥇':d.f6.best):'—','Best finish')+'</div>');
+  h+=pcSec('League', d.lg.m?('<span style="color:#9fd0ff">'+d.lg.mw+'</span>–<span style="color:#ff90a6">'+(d.lg.m-d.lg.mw)+'</span> matches'):'no league matches',
+    '<div class="pcGrid">'+pcStat(d.lg.m,'Matches')+pcStat(d.lg.m?pcPct(d.lg.mw,d.lg.m):'—','Match win rate',null,true)+pcStat(d.lg.lw+'–'+d.lg.ll,'Legs W–L')+'</div>');
+  document.getElementById('pcBody').innerHTML=h;
+  document.getElementById('playerCard').classList.remove('hidden');
+  document.getElementById('playerCard').querySelector('.card').scrollTop=0;
+}
+document.getElementById('pcDone').onclick=function(){ document.getElementById('playerCard').classList.add('hidden'); };
+document.getElementById('playerCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('pcDone').click(); });
+document.getElementById('pcRename').onclick=function(){
+  const name=_pcName; document.getElementById('playerCard').classList.add('hidden');
+  const row=[...document.querySelectorAll('#libList .librow')].find(r=>{ const sp=r.querySelector('.lname'); return sp&&sp.textContent===name; });
+  // The button fires on TOUCH; the finger-lift click that follows would land on
+  // the list and blur a freshly opened editor (blur = commit = editor gone).
+  // Open it once that click has come and gone.
+  if(row&&row._rename) setTimeout(function(){ row._rename(); }, 450);
+};
 
 //============================ INSTALL SOURCE (sticker / magnet QR) ============================
 // A QR on a sticker or magnet lands on dartkeeper.net/?src=<token>; the landing
@@ -2335,8 +2441,9 @@ async function bkRestore(){
       const inc=inStats[n];
       if(!statsLib[n]){ statsLib[n]=inc; return; }
       const s=statFor(n);
-      ['g','w','pts','turns','t180'].forEach(k=>{ s[k]=Math.max(s[k]||0, inc[k]||0); });
+      ['g','w','pts','turns','t180','t100','cd','ch','cm','di','dio','do','doo','last'].forEach(k=>{ s[k]=Math.max(s[k]||0, inc[k]||0); });
       if(inc.best!=null) s.best=Math.max(s.best||0, inc.best);
+      if(inc.hiOut!=null) s.hiOut=Math.max(s.hiOut||0, inc.hiOut);
       Object.keys(inc.byGame||{}).forEach(gt=>{
         const a=s.byGame[gt]=s.byGame[gt]||{g:0,w:0}, b=inc.byGame[gt];
         a.g=Math.max(a.g,b.g||0); a.w=Math.max(a.w,b.w||0);
@@ -2605,6 +2712,7 @@ function snapshot(){
     turnStartScore:G.turnStartScore,turnStartOpened:G.turnStartOpened,
     turnLocked:G.turnLocked,pendingWin:G.pendingWin,round:G.round,over:G.over,
     players:G.players,target:G.target,phase:G.phase,ironOrder:G.ironOrder,ironPos:G.ironPos,
+    pstats:G.pstats||{},
     kx:(typeof kpExpr==='string'?kpExpr:'')});   // calculator expression at capture — undo brings it back
 }
 function pushHistory(){history.push(snapshot());redoStack.length=0;if(history.length>200)history.shift();}
@@ -2617,6 +2725,7 @@ function applyState(s){
     if(G.players && G.players[G.cur] && G.players[G.cur].out){ f6NextPlayer(); }  // never leave an eliminated player as current
   }
   G.ironOrder=s.ironOrder||null;G.ironPos=s.ironPos||0;
+  G.pstats=s.pstats||{};
   if(typeof kpExpr==='string') kpExpr=s.kx||'';   // Score It → Undo shows the equation again
   if(G.over){G.over=false;}
   document.getElementById('winScreen').classList.add('hidden');
@@ -2644,15 +2753,38 @@ function throwDart(value,mult,region){
   const score=value*mult;
   const label=dartLabel(value,mult);
   G.darts.push({value,mult,score,label,bust:false,noCount:false});
+  // PLAYER CARD (Nathan, 2026-08-22): remember what the board looked like
+  // before this dart so it can be classified afterwards (double-in attempt,
+  // double-out attempt, cricket hit). Lives in G.pstats → snapshotted → Undo
+  // takes it back like everything else; folded into the ledger at the win.
+  const pre=(!G.isFat6&&G.teams)?(function(){ const t=curTeam(); return {t:t,name:t.members[t.memberIdx],opened:t.opened,score:t.score,
+      marks:G.isCricket?Object.assign({},t.marks):null,pts:t.pts}; })():null;
 
   if(G.isCricket){ applyCricket(value,mult); }
   else if(G.isFat6){ applyFat6(value,mult,region); }
   else{ applyX01(value,mult); }
+  if(pre) dkDartStat(pre,value,mult);
 
   if(!G.isFat6 && G.darts.length>=3) G.turnLocked=true; // all 3 thrown — require Confirm (Fat 6 auto-resolves)
   renderGame();
 }
 
+// A score that ONE dart can finish: any double up to 40, or the bull (50).
+function finishable(s){ return s===50 || (s>=2 && s<=40 && s%2===0); }
+function dkDartStat(pre,value,mult){
+  const ps=(G.pstats=G.pstats||{});
+  const p=ps[pre.name]||(ps[pre.name]={cd:0,ch:0,cm:0,di:0,dio:0,do:0,doo:0});
+  const t=pre.t;
+  if(G.isCricket){
+    p.cd++;                                                      // a cricket dart
+    const gained=CRICKET_TARGETS.reduce((a,n)=>a+(t.marks[n]-(pre.marks[n]||0)),0);
+    const ptsGained=(t.pts||0)-(pre.pts||0);
+    if(gained>0||ptsGained>0){ p.ch++; p.cm+=gained+(ptsGained>0&&value?Math.round(ptsGained/value):0); }   // it counted: marks and/or points
+    return;
+  }
+  if(G.requireDoubleIn && !pre.opened){ p.di++; if(t.opened) p.dio++; return; }   // 301: a dart thrown trying to open
+  if(finishable(pre.score)){ p.do++; if(t.score===0) p.doo++; }                  // one dart could have ended it
+}
 function dartLabel(value,mult){
   if(value===0)return 'Miss';
   if(value===25)return mult===2?'DB':'Bull';   // "DB" / "Bull" (Nathan, 2026-08-21)
@@ -2877,16 +3009,18 @@ function declareWin(teamIdx,detail){
   const t=G.teams[teamIdx];
   try{
     const lose=G.teams[1-teamIdx];
-    let extra=null;
-    if(!G.isCricket){                       // 01 detail: turns/points/best/180s per team member share
-      extra={};
-      G.teams.forEach(tm=>{
-        const hist=tm.history||[];
-        const per={pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
-                   best:hist.length?Math.max(...hist):null, t180:hist.filter(x=>x===180).length};
-        tm.members.forEach(n=>{ extra[n]=per; });
+    // per-player detail for the ledger / Player Card: 01 turn numbers (team
+    // history is shared by its members, as before) + the per-dart counters
+    const extra={};
+    G.teams.forEach(tm=>{
+      const hist=tm.history||[];
+      tm.members.forEach(n=>{
+        const per=G.isCricket?{}:{pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
+                   best:hist.length?Math.max(...hist):null, t180:hist.filter(x=>x===180).length,
+                   t100:hist.filter(x=>x>=100).length, hiOut:(tm===t&&hist.length)?hist[hist.length-1]:0};
+        extra[n]=Object.assign(per, (G.pstats&&G.pstats[n])||{});
       });
-    }
+    });
     recordGameResult(t.members.slice(), lose.members.slice(), G.game, extra);
   }catch(e){}
   document.getElementById('game').classList.add('hidden');
@@ -4797,6 +4931,23 @@ restoreGameState();          // bring back an in-progress game after an app rest
 // Bake the board's sisal texture now, while nothing is happening, so the first
 // Dart Board press of the session paints a bitmap and not five noise filters.
 setTimeout(function(){ try{ bakeBoardTexture(); }catch(e){} }, 350);
+// ONE-TIME WIPE of made-up test games (Nathan, 2026-08-22): "wipe all the
+// current stats of games I have stored." Only on HIS devices (keyed to his
+// backup e-mail), only once per device. Players, teams, pairings and groups
+// are untouched; the emptied ledger backs itself up, so the Pi copy follows.
+(function(){
+  try{
+    var KEY='darts_statsreset_20260822';
+    if(localStorage.getItem(KEY)) return;
+    var em=(localStorage.getItem(LS_BKEMAIL)||'').trim().toLowerCase();
+    if(em!=='nathan@dartkeeper.net' && em!=='hvacbreeding@gmail.com') return;
+    Object.keys(statsLib).forEach(function(k){ delete statsLib[k]; });
+    f6log.length=0;
+    LG.local.seasons=[]; LG.list.forEach(function(rec){ rec.seasons=[]; }); LG.cur=null;
+    localStorage.setItem(KEY, String(Date.now()));
+    saveStats(); saveF6log(); saveLeague();
+  }catch(e){}
+})();
 renderLeagueUI();
 if(LG.cur && LG.cur.done) lgCommitMatch();   // finished on the winner screen, then the app was killed
 setTimeout(function(){ lgSyncAll(); }, 1500);
