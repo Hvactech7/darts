@@ -5240,6 +5240,25 @@ function lgSendReport(t,s){
   });
 }
 
+//============================ STAY AWAKE (Nathan, 2026-08-23) ============================
+// Keep the screen on the whole time Dart Keeper is open — Screen Wake Lock API
+// (iOS 16.4+ Safari and home-screen apps). The OS drops the lock whenever the
+// page is hidden (Pandora, iMessage, the lock button), so it's taken again on
+// every return; the first touch re-asks too in case launch was too early.
+// Local-only: no network, nothing stored.
+var _wake=null;
+function wakeRequest(){
+  if(_wake || !('wakeLock' in navigator) || document.visibilityState!=='visible') return;
+  try{
+    navigator.wakeLock.request('screen').then(function(l){ _wake=l; l.addEventListener('release',function(){ _wake=null; }); }).catch(function(){});
+  }catch(e){}
+}
+wakeRequest();
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') wakeRequest(); });
+window.addEventListener('pageshow',wakeRequest);
+window.addEventListener('focus',wakeRequest);
+document.addEventListener('pointerdown',wakeRequest,{capture:true,passive:true});
+
 //============================ INIT ============================
 resetSelection();
 renderColumns();renderLineup();updateStart();
