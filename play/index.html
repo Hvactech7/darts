@@ -505,6 +505,19 @@
   #bdOuts{display:none;}
   #game.bdopen #bdOuts{display:flex;position:absolute;top:10px;right:10px;gap:0;z-index:2;align-items:center;}
   #bdCalls .bc.out{color:var(--gold);text-shadow:0 3px 0 #000,0 0 16px rgba(232,200,118,.8);}
+  /* ---- game-shot call (Nathan, 2026-08-23) ---- */
+  #winCall{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;flex:1 1 auto;min-height:170px;padding:18px 10px;animation:markpop .5s cubic-bezier(.2,1.5,.4,1);}
+  #winCall.hidden{display:none !important;}
+  #winCall .wcName{font-family:var(--display);font-weight:900;font-size:76px;line-height:1.05;letter-spacing:1px;color:var(--gold);text-shadow:0 3px 0 #000,0 0 24px rgba(232,200,118,.65);}
+  #winCall .wcText{font-family:var(--display);font-weight:700;font-size:40px;line-height:1.2;color:#f1e6cc;text-shadow:0 2px 0 #000;margin-top:10px;}
+  #winCall .wcText b{color:var(--gold);}
+  #game.bdopen #winCall{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none;min-height:0;z-index:3;max-width:88%;
+    background:rgba(8,6,4,.88);border:2px solid var(--gold);border-radius:22px;padding:26px 44px;box-shadow:0 0 50px rgba(0,0,0,.85),0 0 34px rgba(232,200,118,.35);animation:none;}
+  #game.bdopen #winCall .wcText{white-space:nowrap;font-size:36px;}
+  @media (max-width:600px){
+    #winCall{min-height:120px;} #winCall .wcName{font-size:40px;} #winCall .wcText{font-size:22px;}
+    #game.bdopen #winCall{padding:16px 22px;} #game.bdopen #winCall .wcText{font-size:20px;}
+  }
   @media (max-width:600px){
     .outd svg{width:13px;height:52px;} #bdOuts .outd svg{width:12px;height:48px;}
     .outd,.outd:active,.outd:hover{padding:4px 9px !important;}
@@ -1787,6 +1800,9 @@
           <button data-q="60">60</button><button data-q="80">80</button><button data-q="100">100</button><button data-q="180">180</button>
         </div>
       </div>
+      <!-- (2026-08-23) game-shot call: "NAME has won the match with their 2nd dart" — fills the
+           keypad's spot on the calculator screen, sits over the middle of the board on the board screen -->
+      <div id="winCall" class="hidden"></div>
       <div class="gamebtns">
         <button class="ghost" id="missBtn">Miss / 0</button>
         <button class="confirm-btn" id="endTurnBtn">✓ Score It</button>
@@ -2947,7 +2963,18 @@ function outsHTML(st){
   }
   return h;
 }
+// "NAME has won the match with their Nth dart" — while the game shot waits for Confirm.
+function renderWinCall(){
+  const el=document.getElementById('winCall'); if(!el) return;
+  if(!G||!G.pendingWin||G.isCricket||G.isFat6){ el.innerHTML=''; el.classList.add('hidden'); return; }
+  const t=G.teams[G.pendingWin.teamIdx]; if(!t){ el.classList.add('hidden'); return; }
+  const who=shortName(t.members[t.memberIdx]||t.name||'');
+  const k=t.coDarts, ord=k===1?'1st':k===2?'2nd':k===3?'3rd':'';
+  el.innerHTML='<div class="wcName">'+esc(who)+'</div><div class="wcText">has won the match'+(ord?'<br>with their <b>'+ord+'</b> dart':'!')+'</div>';
+  el.classList.remove('hidden');
+}
 function renderOuts(){
+  renderWinCall();
   const st=outState();
   const kp=document.getElementById('kpOuts'), bd=document.getElementById('bdOuts'), disp=document.getElementById('kpDisplay');
   const kpOn=!!st && !kpExpr;                          // calculator: only beside a lone 0
