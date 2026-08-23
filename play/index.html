@@ -484,6 +484,37 @@
      Only ever shares the display with a lone "0", and kpFit shrinks the
      SUGGESTION (never the zero) if a long one can't fit. */
   #kpHint.out{color:var(--gold);font-size:96px;font-weight:700;}
+  /* ---- "Out in N darts" pickers (Nathan, 2026-08-23) ----
+     Three darts = the three darts of this turn. A dart is PICKABLE when the
+     score can be finished by then (darts 2+3 on a two-dart finish, all three
+     on a single-dart finish); tapping it = "I went out with that dart".
+     Calculator: right beside the 0.  Board: top corner above the board. */
+  #kpOuts{display:flex;gap:0;align-items:center;flex:0 0 auto;margin:0 auto 0 10px;align-self:center;}
+  #kpOuts.hidden,#bdOuts.hidden{display:none !important;}
+  #kpDisplay.outs #kpVal{flex:0 0 auto;}
+  .outd,.outd:active,.outd:hover{background:none !important;background-image:none !important;border:0 !important;box-shadow:none !important;padding:4px 17px !important;border-radius:0;text-shadow:none;min-width:0;height:auto;line-height:1;
+    display:flex;flex-direction:column;align-items:center;gap:3px;color:#7a6d5c;opacity:.5;cursor:default;transform:none !important;}
+  .outd.off svg{filter:grayscale(1) brightness(.6);}
+  .outd svg{width:22px;height:88px;display:block;overflow:visible;}
+  #bdOuts .outd svg{width:17px;height:68px;}
+  .outd.pick{opacity:1;color:#ffc83a;cursor:pointer;}
+  .outd.pick svg{filter:drop-shadow(0 0 5px rgba(255,215,110,.95)) drop-shadow(0 0 12px rgba(255,170,40,.55)) drop-shadow(0 2px 1px rgba(0,0,0,.8));}
+  .outd.pick:active svg{transform:scale(.9);}
+  .outd.used{opacity:.9;color:#7f93b8;}
+  .outd.used svg{opacity:.45;filter:drop-shadow(0 2px 1px rgba(0,0,0,.8));}
+  #bdOuts{display:none;}
+  #game.bdopen #bdOuts{display:flex;position:absolute;top:10px;right:10px;gap:0;z-index:2;align-items:center;}
+  #bdCalls .bc.out{color:var(--gold);text-shadow:0 3px 0 #000,0 0 16px rgba(232,200,118,.8);}
+  @media (max-width:600px){
+    .outd svg{width:13px;height:52px;} #bdOuts .outd svg{width:12px;height:48px;}
+    .outd,.outd:active,.outd:hover{padding:4px 9px !important;}
+    #kpOuts{margin-left:4px;}
+    #game.bdopen #bdOuts{top:calc(env(safe-area-inset-top, 0px) + 56px);right:8px;}
+    /* phone: no room for 0 + darts + the checkout beside each other — the
+       checkout drops to its own line under them */
+    #kpDisplay.outs{flex-wrap:wrap;row-gap:0;}
+    #kpDisplay.outs #kpHint{flex:1 1 100%;text-align:right;margin-top:-4px;}
+  }
   /* Share half of the merged card. No divider rule on purpose: a hairline lands
      on half a pixel under #library's zoom and disappears, and anything strong
      enough to survive it just rebuilds the card border this merge removed. The
@@ -1721,6 +1752,15 @@
     <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
       <div id="bdCalls"></div>
+      <!-- (2026-08-23) "out in N darts" pickers — see goOut() -->
+      <div id="bdOuts" class="hidden"></div>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+        <linearGradient id="dkRed" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#f04a50"/><stop offset=".35" stop-color="#e3151f"/><stop offset="1" stop-color="#8f0a12"/></linearGradient>
+        <linearGradient id="dkRedS" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#ff6a6e"/><stop offset=".4" stop-color="#d8121b"/><stop offset="1" stop-color="#6e060c"/></linearGradient>
+        <linearGradient id="dkBrass" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#6b5120"/><stop offset=".3" stop-color="#f1d27a"/><stop offset=".55" stop-color="#c9a24a"/><stop offset="1" stop-color="#4e3a14"/></linearGradient>
+        <linearGradient id="dkTip" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#6a6a6e"/><stop offset=".35" stop-color="#1c1c1f"/><stop offset="1" stop-color="#000"/></linearGradient>
+        <pattern id="dkKnurl" width="3.2" height="3.2" patternUnits="userSpaceOnUse"><path d="M0 0L3.2 3.2M3.2 0L0 3.2" stroke="#2a1c04" stroke-width=".75"/></pattern>
+      </defs></svg>
       <div class="turnbar">
         <button class="ghost" id="inputToggle" title="Switch scoring input">🔢</button>
         <div class="darts" id="dartsRow"></div>
@@ -1734,7 +1774,7 @@
           <button data-q="41">41</button><button data-q="26">26</button><button data-q="45">45</button><button data-q="57">57</button>
         </div>
         <div id="kpMain">
-          <div id="kpDisplay"><span id="kpVal">0</span><span id="kpHint"></span></div>
+          <div id="kpDisplay"><span id="kpVal">0</span><span id="kpOuts" class="hidden"></span><span id="kpHint"></span></div>
           <div id="kpGrid">
             <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
             <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
@@ -2279,7 +2319,7 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
     // Player Card counters: tons, cricket darts/hits/marks, double-in darts/opens,
     // double-out darts/outs (the double ones come from BOARD-entered darts only —
     // the calculator never sees individual darts), highest checkout
-    ['t100','cd','ch','cm','di','dio','do','doo'].forEach(k=>{ s[k]=(s[k]||0)+(e[k]||0); });
+    ['t100','cd','ch','cm','di','dio','do','doo','dts'].forEach(k=>{ s[k]=(s[k]||0)+(e[k]||0); });
     if(e.hiOut) s.hiOut=Math.max(s.hiOut||0,e.hiOut);
   });
   all.forEach(n=>{ statFor(n).last=Date.now(); });
@@ -2340,7 +2380,7 @@ function openPlayerCard(name){
     '<div class="pcGrid">'+pcStat(s.g||0,'Games')+pcStat(s.w||0,'Wins')+pcStat(pcPct(s.w||0,s.g||0),'Win rate',null,true)+'</div>');
   h+=pcSec('301 / 501', pcWL(d.x01),
     '<div class="pcGrid">'
-    +pcStat(pcAvg(s.pts||0,s.turns||0),'3-dart avg',null,true)+pcStat(s.best||'—','High turn')+pcStat(s.hiOut||'—','High checkout')
+    +pcStat(s.dts?pcAvg((s.pts||0)*3,s.dts):pcAvg(s.pts||0,s.turns||0),'3-dart avg',null,true)+pcStat(s.best||'—','High turn')+pcStat(s.hiOut||'—','High checkout')
     +pcStat(s.t180||0,'180s')+pcStat(s.t100||0,'Tons (100+)')+pcStat(s.turns||0,'Turns thrown')
     +pcStat(pcAvg(s.di||0,s.dio||0),'Darts to double in',(s.dio?(s.di+' darts / '+s.dio+' opens'):'no board data'),true)
     +pcStat(pcAvg(s.do||0,s.doo||0),'Darts to double out',(s.doo?(s.do+' darts / '+s.doo+' outs'):'no board data'),true)
@@ -2858,6 +2898,86 @@ function throwDart(value,mult,region){
 
 // A score that ONE dart can finish: any double up to 40, or the bull (50).
 function finishable(s){ return s===50 || (s>=2 && s<=40 && s%2===0); }
+
+//============================ OUT IN N DARTS (Nathan, 2026-08-23) ============================
+// Fewest darts that can finish a score with a double (or the bull) last:
+// 1 = a double itself, 2 = any segment + a double, 3 = two segments + a double.
+// Bogey numbers (169, 168, 166, 165, 163, 162, 159) and anything over 170 have none.
+const X01_SEGS=(()=>{ const s=new Set(); for(let v=1;v<=20;v++){ s.add(v); s.add(2*v); s.add(3*v); } s.add(25); s.add(50); return s; })();
+const X01_DBL=[50].concat(Array.from({length:20},(_,i)=>2*(i+1)));
+const MIN_OUT=(()=>{ const m={}, segs=Array.from(X01_SEGS);
+  for(let sc=2;sc<=170;sc++){ let n=0;
+    if(X01_DBL.includes(sc)) n=1;
+    else if(X01_DBL.some(d=>X01_SEGS.has(sc-d))) n=2;
+    else if(X01_DBL.some(d=>{ const r=sc-d; return r>1 && segs.some(a=>X01_SEGS.has(r-a)); })) n=3;
+    if(n) m[sc]=n; }
+  return m; })();
+// Is a finish on for the thrower this turn? → {min, thrown, score} or null.
+function outState(){
+  if(!G||G.over||G.pendingWin||G.turnLocked||G.isCricket||G.isFat6) return null;   // locked = bust or 3 thrown
+  const t=curTeam(); if(G.requireDoubleIn&&!t.opened) return null;
+  const min=MIN_OUT[t.score]; if(!min) return null;
+  const thrown=G.darts.length;                         // board: darts already thrown this turn
+  if(thrown+min>3) return null;
+  return {min:min,thrown:thrown,score:t.score};
+}
+const OUT_DART_SVG='<svg viewBox="0 0 40 160" aria-hidden="true">'
+  // flight: standard shape, two outer lobes + the centre fin seen edge-on
+  +'<path d="M20 3C28 6 36 13 37.5 24 38.5 34 30 46 21.5 52L20 53 18.5 52C10 46 1.5 34 2.5 24 4 13 12 6 20 3Z" fill="url(#dkRed)"/>'
+  +'<path d="M20 3C28 6 36 13 37.5 24 38.5 34 30 46 21.5 52L20 53Z" fill="#000" opacity=".18"/>'
+  +'<path d="M20 4C23.5 12 24.5 24 23.5 36 22.8 44 21.5 50 20 53 18.5 50 17.2 44 16.5 36 15.5 24 16.5 12 20 4Z" fill="url(#dkRedS)"/>'
+  +'<path d="M20 4C23.5 12 24.5 24 23.5 36 22.8 44 21.5 50 20 53Z" fill="#000" opacity=".28"/>'
+  // shaft: long red taper
+  +'<path d="M16.3 52H23.7L22.9 97H17.1Z" fill="url(#dkRed)"/>'
+  +'<path d="M20 52L23.7 52 22.9 97 20 97Z" fill="#000" opacity=".22"/>'
+  // barrel: knurled brass with grooves, then the smooth taper to the tip
+  +'<path d="M14 99C14 97.5 15 97 16 97H24C25 97 26 97.5 26 99V130H14Z" fill="url(#dkBrass)"/>'
+  +'<path d="M14 100H26V130H14Z" fill="url(#dkKnurl)" opacity=".55"/>'
+  +'<path d="M14 104.5H26M14 109H26M14 113.5H26M14 118H26M14 122.5H26M14 127H26" stroke="#2a1c04" stroke-opacity=".55" stroke-width=".9"/>'
+  +'<path d="M14 130H26L23.2 141H16.8Z" fill="url(#dkBrass)"/>'
+  +'<path d="M14 130H26" stroke="#3a2a08" stroke-opacity=".6" stroke-width=".8"/>'
+  // soft tip: black, slight flare at the base
+  +'<path d="M17.2 141H22.8L21.6 147 21.1 160H18.9L18.4 147Z" fill="url(#dkTip)"/>'
+  +'</svg>';
+function outsHTML(st){
+  let h='';
+  for(let k=1;k<=3;k++){
+    const cls=k<=st.thrown?'used':(k>=st.thrown+st.min?'pick':'off');
+    h+='<button class="outd '+cls+'" data-k="'+k+'"'+(cls==='pick'?'':' disabled')+' aria-label="Out with dart '+k+'">'+OUT_DART_SVG+'</button>';
+  }
+  return h;
+}
+function renderOuts(){
+  const st=outState();
+  const kp=document.getElementById('kpOuts'), bd=document.getElementById('bdOuts'), disp=document.getElementById('kpDisplay');
+  const kpOn=!!st && !kpExpr;                          // calculator: only beside a lone 0
+  if(kp){ kp.innerHTML=kpOn?outsHTML(st):''; kp.classList.toggle('hidden',!kpOn); }
+  if(disp) disp.classList.toggle('outs',kpOn);
+  if(bd){ bd.innerHTML=st?outsHTML(st):''; bd.classList.toggle('hidden',!st); }
+}
+// Player Card counters for a finish entered this way: the last dart hit the
+// double; any darts beyond the minimum are taken as misses at the double.
+function dkOutStat(name,darts,min){
+  const ps=(G.pstats=G.pstats||{});
+  const p=ps[name]||(ps[name]={cd:0,ch:0,cm:0,di:0,dio:0,do:0,doo:0});
+  p.do+=Math.max(1,darts-min+1); p.doo++;
+}
+// "I went out with dart k of this turn."
+function goOut(k){
+  const st=outState(); if(!st||k<st.thrown+st.min||k>3) return;
+  pushHistory();
+  const t=curTeam(), total=t.score;
+  if(G.darts.length){                                  // board: fill the turn out to dart k
+    for(let i=st.thrown+1;i<k;i++) G.darts.push({value:0,mult:1,score:0,label:'·',bust:false,noCount:false,unk:true});
+    G.darts.push({value:0,mult:1,score:total,label:'OUT',bust:false,noCount:false,out:true});
+  } else G.darts=[{value:0,mult:1,score:total,label:String(total),bust:false,noCount:false,out:true}];
+  dkOutStat(t.members[t.memberIdx],k-st.thrown,st.min);
+  t.score=0; if(!t.opened) t.opened=true; t.coDarts=k;
+  G.pendingWin={teamIdx:G.cur,detail:'Checked out '+total+' in '+k+(k===1?' dart':' darts')};
+  G.turnLocked=true; noteCheckout(G.cur);
+  flashToast('Game shot! Confirm to finish');
+  kpExpr=''; renderGame(); kpRender();
+}
 function dkDartStat(pre,value,mult){
   const ps=(G.pstats=G.pstats||{});
   const p=ps[pre.name]||(ps[pre.name]={cd:0,ch:0,cm:0,di:0,dio:0,do:0,doo:0});
@@ -2909,7 +3029,7 @@ function applyX01(value,mult){
 
   if(remaining===0){
     if(G.requireDoubleOut && !isDouble){ bustX01(); return; } // must finish on a double
-    t.score=0;
+    t.score=0; t.coDarts=G.darts.length;          // darts it took (Player Card / 3-dart avg)
     pendWin(G.cur, `${displayName(t)} checked out!`);
     return;
   }
@@ -3104,7 +3224,8 @@ function declareWin(teamIdx,detail){
       tm.members.forEach(n=>{
         const per=G.isCricket?{}:{pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
                    best:hist.length?Math.max(...hist):null, t180:hist.filter(x=>x===180).length,
-                   t100:hist.filter(x=>x>=100).length, hiOut:(tm===t&&hist.length)?hist[hist.length-1]:0};
+                   t100:hist.filter(x=>x>=100).length, hiOut:(tm===t&&hist.length)?hist[hist.length-1]:0,
+                   dts:hist.length*3-((tm===t&&hist.length)?(3-(tm.coDarts||3)):0)};
         extra[n]=Object.assign(per, (G.pstats&&G.pstats[n])||{});
       });
     });
@@ -3825,10 +3946,11 @@ function closeBoard01(){
   fitScreen();
 }
 function renderBdCalls(){                      // live dart calls across the top of the board overlay
+  renderOuts();                                // the out pickers above the board track every dart
   const el=document.getElementById('bdCalls'); if(!el)return;
   if(!G||G.isCricket||G.isFat6){ el.innerHTML=''; return; }
   el.innerHTML=G.darts.map(d=>{
-    const cls=d.bust?' bust':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>8?' lng':'');   // >8: "D. Bull" stays full size
+    const cls=d.bust?' bust':d.out?' out':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>8?' lng':'');   // >8: "D. Bull" stays full size
     return `<span class="bc${cls}">${esc(d.bust?'BUST':d.label)}</span>`;
   }).join('');
 }
@@ -3933,6 +4055,7 @@ function kpRender(){
       elH.textContent=CHECKOUTS[curTeam().score]; elH.className='out'; }
     else { elH.textContent=eq; elH.className=''; }
   } else elH.textContent='';
+  renderOuts();                                   // before kpFit: the darts take room beside the 0
   kpFit();
   const ok=document.getElementById('kpOK'); if(ok) ok.disabled = kpEval(kpExpr)>180 || !kpAllowed() || (G&&(G.over||!!G.pendingWin));
   // Empty calculator = pressing confirm records a miss (or covers a bust when
@@ -3975,6 +4098,7 @@ document.getElementById('kpOK').onclick=()=>{ const v=kpEval(kpExpr); if(v<=180)
   });
 });
 document.getElementById('endTurnBtn').onclick=endTurnManual;
+['kpOuts','bdOuts'].forEach(id=>{ document.getElementById(id).addEventListener('click',e=>{ const b=e.target.closest('button.outd'); if(b&&!b.disabled) goOut(parseInt(b.dataset.k,10)); }); });
 document.getElementById('quitBtn').onclick=()=>{
   if(G && !G.over){
     var cqp=document.querySelector('#confirmQuit p');
@@ -4808,7 +4932,8 @@ function lgLegStats(){
   G.teams.forEach(function(t,i){
     var h=t.history||[];
     if(G.isCricket) st[i]={cpts:t.pts||0, rounds:G.round||0};
-    else st[i]={pts:h.reduce(function(a,b){return a+b;},0), turns:h.length, best:h.length?Math.max.apply(null,h):null, t180:h.filter(function(x){return x===180;}).length};
+    else st[i]={pts:h.reduce(function(a,b){return a+b;},0), turns:h.length, best:h.length?Math.max.apply(null,h):null, t180:h.filter(function(x){return x===180;}).length,
+                dts:h.length*3-((t.score===0&&h.length)?(3-(t.coDarts||3)):0)};
   });
   return st;
 }
@@ -4889,20 +5014,20 @@ function lgStandings(matches){
     var legsPlayed=m.results.length;
     m.sides.forEach(function(s,i){
       var won=(m.winner===i), lw=m.score[i]||0, ll=legsPlayed-lw;
-      var agg={pts:0,turns:0,best:0,t180:0};
+      var agg={pts:0,turns:0,best:0,t180:0,dts:0};
       m.results.forEach(function(r){ var st=r.st&&r.st[i]; if(!st||st.pts==null) return;
-        agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; });
+        agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; agg.dts+=(st.dts!=null?st.dts:(st.turns||0)*3); });
       var targets=s.members.map(function(n){ return ent(players,n); });
       if(s.members.length>1) targets.push(ent(teams,s.name));
       targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
-        e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; });
+        e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; e.dts=(e.dts||0)+agg.dts; });
     });
   });
   function rows(map){ return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){
     return (b.mw-a.mw) || ((b.lw-b.ll)-(a.lw-a.ll)) || (a.m-b.m) || a.name.localeCompare(b.name); }); }
   return {teams:rows(teams), players:rows(players)};
 }
-function lgAvg(e){ return e.turns ? (e.pts/e.turns).toFixed(1) : '—'; }
+function lgAvg(e){ return e.dts ? (e.pts*3/e.dts).toFixed(1) : (e.turns ? (e.pts/e.turns).toFixed(1) : '—'); }   // true 3-dart average: points per dart × 3
 function lgGameLabel(g){ return g==='cricket'?'Cricket':g==='fat6'?'Fat 6':g; }
 function lgTablesHTML(st, title){
   var html='';
@@ -5046,7 +5171,7 @@ function lgEndSeason(done){
 // Dart Keeper league report. One send per address.
 function lgStandingsData(st){
   return { teams:st.teams.map(function(e){return {name:e.name,mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll};}),
-           players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.turns?+(e.pts/e.turns).toFixed(1):null,best:e.best||null,t180:e.t180||0};}) };
+           players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.dts?+(e.pts*3/e.dts).toFixed(1):(e.turns?+(e.pts/e.turns).toFixed(1):null),best:e.best||null,t180:e.t180||0};}) };
 }
 function lgReportData(t,s){
   return { name:league.name||'', league:league.id, email:lgEmail(), when:Date.now(),
