@@ -506,17 +506,21 @@
   #game.bdopen #bdOuts{display:flex;position:absolute;top:10px;right:10px;gap:0;z-index:2;align-items:center;}
   #bdCalls .bc.out{color:var(--gold);text-shadow:0 3px 0 #000,0 0 16px rgba(232,200,118,.8);}
   /* ---- game-shot call (Nathan, 2026-08-23) ---- */
-  #winCall{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;flex:1 1 auto;min-height:170px;padding:18px 10px;animation:markpop .5s cubic-bezier(.2,1.5,.4,1);}
+  #winCall{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:absolute;left:50%;transform:translate(-50%,-50%);z-index:3;max-width:92%;
+    background:rgba(8,6,4,.88);border:2px solid var(--gold);border-radius:22px;padding:26px 44px;box-shadow:0 0 50px rgba(0,0,0,.85),0 0 34px rgba(232,200,118,.35);animation:wcpop .5s cubic-bezier(.2,1.5,.4,1);}
+  @keyframes wcpop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}60%{transform:translate(-50%,-50%) scale(1.08);opacity:1}100%{transform:translate(-50%,-50%) scale(1)}}
+  #winCall .wcText{white-space:nowrap;}
+  #winCall.tight .wcName{font-size:44px;} #winCall.tight .wcText{font-size:24px;} #winCall.tight{padding:14px 24px;}
   #winCall.hidden{display:none !important;}
   #winCall .wcName{font-family:var(--display);font-weight:900;font-size:76px;line-height:1.05;letter-spacing:1px;color:var(--gold);text-shadow:0 3px 0 #000,0 0 24px rgba(232,200,118,.65);}
   #winCall .wcText{font-family:var(--display);font-weight:700;font-size:40px;line-height:1.2;color:#f1e6cc;text-shadow:0 2px 0 #000;margin-top:10px;}
   #winCall .wcText b{color:var(--gold);}
-  #game.bdopen #winCall{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);flex:none;min-height:0;z-index:3;max-width:88%;
-    background:rgba(8,6,4,.88);border:2px solid var(--gold);border-radius:22px;padding:26px 44px;box-shadow:0 0 50px rgba(0,0,0,.85),0 0 34px rgba(232,200,118,.35);animation:none;}
-  #game.bdopen #winCall .wcText{white-space:nowrap;font-size:36px;}
+  #game.bdopen #winCall{top:50%;animation:none;}
+  #game.bdopen #winCall .wcText{font-size:36px;}
   @media (max-width:600px){
-    #winCall{min-height:120px;} #winCall .wcName{font-size:40px;} #winCall .wcText{font-size:22px;}
-    #game.bdopen #winCall{padding:16px 22px;} #game.bdopen #winCall .wcText{font-size:20px;}
+    #winCall{padding:16px 22px;} #winCall .wcName{font-size:40px;} #winCall .wcText{font-size:22px;}
+    #game.bdopen #winCall .wcText{font-size:20px;}
+    #winCall.tight .wcName{font-size:30px;} #winCall.tight .wcText{font-size:17px;} #winCall.tight{padding:10px 16px;}
   }
   @media (max-width:600px){
     .outd svg{width:13px;height:52px;} #bdOuts .outd svg{width:12px;height:48px;}
@@ -2971,7 +2975,21 @@ function renderWinCall(){
   const who=shortName(t.members[t.memberIdx]||t.name||'');
   const k=t.coDarts, ord=k===1?'1st':k===2?'2nd':k===3?'3rd':'';
   el.innerHTML='<div class="wcName">'+esc(who)+'</div><div class="wcText">has won the match'+(ord?'<br>with their <b>'+ord+'</b> dart':'!')+'</div>';
-  el.classList.remove('hidden');
+  el.classList.remove('hidden'); el.classList.remove('tight'); el.style.top='';
+  // Calculator screen: centre the box in the gap between the score cards and the
+  // controls (#playArea sinks to the bottom with margin-top:auto). Board screen: CSS
+  // centres it over the board. Offsets are in #game's own (unscaled) space.
+  const g=document.getElementById('game');
+  if(g && !g.classList.contains('bdopen')){
+    const sb=document.getElementById('scoreboard'), pa=document.getElementById('playArea');
+    if(sb && pa){
+      // #winCall lives inside #playArea (so it also sits above the fixed board overlay),
+      // so its top is relative to the controls card: the gap's midpoint comes out negative.
+      const gapTop=sb.offsetTop+sb.offsetHeight, gapBot=pa.offsetTop, gap=gapBot-gapTop;
+      if(gap < el.offsetHeight+16) el.classList.add('tight');           // short gap (phone): smaller box
+      el.style.top=Math.round((gapTop+gapBot)/2 - pa.offsetTop)+'px';
+    }
+  }
 }
 function renderOuts(){
   renderWinCall();
