@@ -797,6 +797,12 @@
   .pcHead{text-align:center;margin-bottom:6px;}
   .pcName{font-family:var(--display);font-weight:900;font-size:30px;color:#e8c876;letter-spacing:1px;line-height:1.1;text-shadow:0 2px 0 #000,0 0 18px rgba(232,200,118,.4);}
   .pcSub{font-size:14px;color:#a3906a;margin-top:4px;}
+  .pcMail{display:flex;align-items:center;gap:6px;flex:0 0 auto;margin:2px 0 0;}
+  .pcMailIco{font-size:18px;color:#e8c876;flex:0 0 auto;}
+  .pcMail input{flex:1 1 auto;min-width:0;font-size:16px;padding:9px 10px;border-radius:8px;border:1px solid #5a4a2a;background:#120e08;color:#f1e6cc;}
+  .pcMail input.bad{border-color:#ff6e86;}
+  .pcMail button{flex:0 0 auto;font-size:14px;padding:9px 12px;white-space:nowrap;background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%);}
+  .pcMailNote{flex:0 0 auto;font-size:12px;color:#a3906a;margin:4px 0 8px 26px;}
   .pcSec{margin-top:12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);padding:8px 10px 4px;}
   .pcSecH{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c9a75a;margin-bottom:4px;}
   .pcSecH .wl{font-family:var(--num);font-size:15px;letter-spacing:0;color:#e9ddc0;}
@@ -807,6 +813,11 @@
   .pcStat .l{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#a3906a;margin-top:4px;line-height:1.2;}
   .pcStat .n{font-size:10px;color:#7a6a4a;margin-top:2px;}
   .pcNote{font-size:12px;color:#a3906a;margin:8px 2px 2px;line-height:1.35;}
+  .pcSub2{font-family:var(--display);font-weight:700;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;margin:10px 2px 2px;}
+  table.st.pcTab{font-size:15px;margin-bottom:4px;} table.st.pcTab td:first-child{font-size:16px;} table.st.pcTab td{padding:5px 6px;}
+  .pcPct{color:#a3906a;font-size:12px;margin-left:4px;}
+  table.st.pcDvd td:first-child{white-space:normal;line-height:1.2;} table.st.pcDvd td:first-child .vs{display:block;font-weight:500;font-size:13px;color:#a3906a;}
+  tr.stP{cursor:pointer;} tr.stP .stMore{color:#7a6a4a;font-size:.9em;}
   #pcBtns{margin-top:12px;flex-wrap:nowrap;}
   #pcBtns button{font-size:18px;padding:11px;}
   #pcRename{flex:0 0 auto;background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%);}
@@ -850,6 +861,16 @@
   .lgRow .ck{font-size:13px;color:#7fb8ef;white-space:nowrap;min-width:58px;text-align:right;}
   .lgRow.on{border-color:#7fb8ef;background:linear-gradient(180deg,#14293f,#0d1b2c);}
   .stLeaguePick{margin-bottom:6px;}
+  .lgMeRow{align-items:center;gap:8px;flex-wrap:nowrap;margin-top:8px;}
+  .lgMeLbl{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;white-space:nowrap;}
+  #lgMe{flex:1 1 auto;min-width:0;padding:8px 10px;border-radius:7px;border:1.5px solid #57451c;background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);font-size:16px;font-weight:600;}
+  .lgReq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 10px;border:1.5px solid #7fb8ef;border-radius:8px;background:linear-gradient(180deg,#14293f,#0d1b2c);margin-bottom:6px;}
+  .lgReq .who{flex:1 1 100%;min-width:0;font-size:14px;color:#e9ddc0;line-height:1.25;}
+  .lgReq button{flex:1 1 0;min-width:0;overflow:hidden;font-size:14px;padding:9px 8px;white-space:nowrap;background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
+  .lgReq button.warn{background-image:none;}
+  .lgReq button.primary{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}   /* no rivets — they sit under the letters on a phone (outranks the riveted rule below) */
+  .lgWait{font-size:13px;color:#a3906a;margin:6px 2px 4px;line-height:1.4;}
+  .librow .pendtag{font-size:12px;font-weight:400;color:#e8c876;white-space:nowrap;margin-left:8px;vertical-align:middle;}
   #lgInviteCode{margin-top:10px;text-align:center;padding:12px;border:1px solid #c9a75a;border-radius:10px;background:rgba(0,0,0,.3);}
   #lgInviteCode b{display:block;font-family:var(--num);font-size:44px;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);}
   #lgInviteCode small{display:block;color:#a3906a;font-size:13px;margin-top:4px;line-height:1.4;}
@@ -1523,6 +1544,9 @@
   <div id="playerCard" class="hidden">
     <div class="card">
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
+      <!-- (2026-08-22) the player's own e-mail — League tournament reports go here -->
+      <div class="pcMail"><span class="pcMailIco">✉</span><input type="email" id="pcEmail" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e-mail address"><button class="ghost" id="pcEmailSave">Save</button></div>
+      <div class="pcMailNote">League reports are e-mailed to this address.</div>
       <div id="pcBody"></div>
       <div class="row" id="pcBtns"><button class="ghost" id="pcRename">✎ Rename</button><button class="primary grow" id="pcDone">Done</button></div>
     </div>
@@ -1538,6 +1562,8 @@
       <div id="lgHasLeague">
         <div class="lgSeason">
           <div class="lgSeasonLine" id="lgLeagueLine"></div>
+          <div class="row lgMeRow"><span class="lgMeLbl">I am</span><select id="lgMe" class="grow"></select></div>
+          <div id="lgRequests"></div>
           <div class="row lgSeasonBtns"><button class="primary grow" id="lgInvite">👤 Invite a member</button><button class="ghost" id="lgSync">↻ Sync</button></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
@@ -1778,6 +1804,8 @@ const LS_PTEAMS='darts_player_teams_v1';
 let roster=loadRoster();            // array of names
 let teamLib=loadTeams();             // array of team names
 let playerTeams=loadPlayerTeams();   // { playerName: teamName }
+const LS_PEMAIL='darts_player_emails_v1';
+let playerEmails=loadPlayerEmails(); // { playerName: {e:'who@where', at:ms} } — the Player Card e-mail; league reports go here
 let config={game:'501',mode:'2p'};  // selection
 let teamSel=[[],[]];                 // [Team 1 names, Team 2 names]
 let f6Sel=[];                        // Fat 6: selected player names (unordered)
@@ -1803,6 +1831,20 @@ function saveTeams(){localStorage.setItem(LS_TEAMS,JSON.stringify(teamLib));bkQu
 function loadPlayerTeams(){try{return JSON.parse(localStorage.getItem(LS_PTEAMS))||{};}catch(e){return {};}}
 function savePlayerTeams(){localStorage.setItem(LS_PTEAMS,JSON.stringify(playerTeams));bkQueue();}
 function teamOfPlayer(n){return playerTeams[n]||'';}
+function loadPlayerEmails(){try{return JSON.parse(localStorage.getItem(LS_PEMAIL))||{};}catch(e){return {};}}
+function savePlayerEmails(){localStorage.setItem(LS_PEMAIL,JSON.stringify(playerEmails));bkQueue();}
+function emailOfPlayer(n){ const r=playerEmails[n]; return (r&&r.e)||''; }
+const EMAIL_OK=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// Set (or clear) a player's e-mail. Stamped so the league can tell which device
+// edited it last. Returns false when the address doesn't look like one.
+function setPlayerEmail(n,e){
+  e=String(e||'').trim().toLowerCase().slice(0,80);
+  if(e===emailOfPlayer(n)) return true;
+  if(e&&!EMAIL_OK.test(e)) return false;
+  playerEmails[n]={e:e,at:Date.now()}; savePlayerEmails();
+  try{ if(LG.active&&typeof lgSync==='function') lgSync(); }catch(x){}   // the league learns it right away
+  return true;
+}
 
 function teamOf(name){
   if(teamSel[0].includes(name))return 0;
@@ -1883,6 +1925,7 @@ function renamePlayer(oldName,newName){
   const i=roster.indexOf(oldName); if(i<0) return false;
   roster[i]=newName;
   if(playerTeams[oldName]!==undefined){ playerTeams[newName]=playerTeams[oldName]; delete playerTeams[oldName]; }
+  if(playerEmails[oldName]!==undefined){ playerEmails[newName]=playerEmails[oldName]; delete playerEmails[oldName]; savePlayerEmails(); }
   const nd={};                                    // duo keys embed the lowercased names
   Object.keys(duoTeams).forEach(k=>{
     let pair; try{ pair=JSON.parse(k); }catch(e){ nd[k]=duoTeams[k]; return; }
@@ -1936,6 +1979,7 @@ function renderLibrary(){
       inp.onblur=commit;
     };
     row.querySelector('.teamsel').onchange=(e)=>setPlayerTeam(name,e.target.value);
+    if(league&&league.id&&lgPlayerPending(league,name)){ const tag=document.createElement('span'); tag.className='pendtag'; tag.textContent='⏳ pending'; tag.title='Waiting for a team member to approve'; row.querySelector('.lname').appendChild(tag); }
     row.querySelector('button').onclick=()=>{ if(confirm(`Delete "${name}"?`)) removePlayer(name); };
     el.appendChild(row);
   });
@@ -1977,6 +2021,7 @@ function addPlayer(name){
 function removePlayer(name){
   roster=roster.filter(p=>p!==name);
   delete playerTeams[name]; savePlayerTeams();
+  if(playerEmails[name]!==undefined){ delete playerEmails[name]; savePlayerEmails(); }
   teamSel=teamSel.map(arr=>arr.filter(n=>n!==name));
   f6Sel=f6Sel.filter(n=>n!==name);
   saveRoster();renderColumns();renderLibrary();renderLineup();updateStart();
@@ -2146,7 +2191,7 @@ document.getElementById('bkRestoreBtn').onclick=bkRestore;
 // A 6-digit code through the relay (iOS Safari has no Bluetooth for web apps).
 // Deliberately shares IDENTITY only — players, teams, pairings — never stats:
 // the receiving device's history stays its own. Merge is ADD-ONLY.
-function sharePayload(){ return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, v:1}; }
+function sharePayload(){ return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, v:1}; }
 function shareMsg(t){ const el=document.getElementById('shareMsg'); if(el) el.textContent=t; if(typeof fitLibrary==='function') fitLibrary(); }
 function shareMergeIn(d){
   let added=0;
@@ -2160,7 +2205,10 @@ function shareMergeIn(d){
   Object.keys(d.pteams||{}).forEach(k=>{      // never overwrite an existing assignment
     if(!(k in playerTeams) && roster.includes(k)) playerTeams[k]=String(d.pteams[k]||'').slice(0,40); });
   Object.keys(d.duoTeams||{}).forEach(k=>{ if(!(k in duoTeams)) duoTeams[k]=String(d.duoTeams[k]||'').slice(0,40); });
-  saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams();
+  Object.keys(d.pemails||{}).forEach(k=>{      // an e-mail only fills a blank, never replaces one
+    const r=d.pemails[k], e=String((r&&r.e)||'').trim().toLowerCase().slice(0,80);
+    if(e && EMAIL_OK.test(e) && roster.includes(k) && !emailOfPlayer(k)) playerEmails[k]={e:e,at:(r&&r.at)||Date.now()}; });
+  saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams(); savePlayerEmails();
   renderLibrary(); if(typeof renderColumns==='function') renderColumns();
   if(typeof bkQueue==='function') bkQueue();   // the enlarged library backs itself up
   return added;
@@ -2248,16 +2296,34 @@ function playerCardData(name){
   const f6=(typeof f6Stats==='function'?f6Stats():[]).find(e=>e.name===name)||null;
   // league record across every league on this device (+ pre-league history)
   const lg={m:0,mw:0,lw:0,ll:0};
+  // (Nathan, 2026-08-22) partners: your record with each teammate you've been
+  // paired with; h2h: your record in SINGLES against each opponent
+  const partners={}, h2h={}, dvd={};
+  const bump=(map,who,won,lw,ll)=>{ const e=map[who]||(map[who]={name:who,m:0,mw:0,lw:0,ll:0}); e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll; };
+  const byName=(a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'});
   try{
     const recs=(typeof LG!=='undefined')?LG.list.concat([LG.local]):[];
     recs.forEach(rec=>(rec.seasons||[]).forEach(se=>(se.tournaments||[]).forEach(tn=>(tn.matches||[]).forEach(m=>{
       if(!m||!m.done||m.winner==null) return;
       m.sides.forEach((side,i)=>{ if(!side.members.includes(name)) return;
-        const lw=m.score[i]||0, played=(m.results||[]).length;
-        lg.m++; if(m.winner===i) lg.mw++; lg.lw+=lw; lg.ll+=Math.max(0,played-lw); });
+        const lw=m.score[i]||0, played=(m.results||[]).length, ll=Math.max(0,played-lw), won=(m.winner===i);
+        lg.m++; if(won) lg.mw++; lg.lw+=lw; lg.ll+=ll;
+        side.members.forEach(o=>{ if(o!==name) bump(partners,o,won,lw,ll); });
+        const other=m.sides[1-i];
+        if(side.members.length===1 && other && other.members.length===1) bump(h2h,other.members[0],won,lw,ll);
+        // doubles vs doubles: keyed by partner + the opposing pair SORTED, so
+        // A+B vs C+D and B+A vs D+C are the same record whatever order the
+        // line-up was picked in
+        if(side.members.length===2 && other && other.members.length===2){
+          const partner=side.members.find(o=>o!==name), opp=other.members.slice().sort(byName);
+          const key=partner+'|'+opp.join('|');
+          const e=dvd[key]||(dvd[key]={name:key,partner:partner,opp:opp,m:0,mw:0,lw:0,ll:0}); e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
+        }
+      });
     }))));
   }catch(e){}
-  return {s, x01, cricket:gt('cricket'), fat6:gt('fat6'), f6, lg, team:teamOfPlayer(name)||''};
+  const sortRec=map=>Object.keys(map).map(k=>map[k]).sort((a,b)=>(b.m-a.m)||(b.mw-a.mw)||a.name.localeCompare(b.name));
+  return {s, x01, cricket:gt('cricket'), fat6:gt('fat6'), f6, lg, partners:sortRec(partners), h2h:sortRec(h2h), dvd:sortRec(dvd), team:teamOfPlayer(name)||''};
 }
 function pcStat(v,l,n,gold){ return '<div class="pcStat"><div class="v'+(gold?' gold':'')+'">'+v+'</div><div class="l">'+l+'</div>'+(n?'<div class="n">'+esc(n)+'</div>':'')+'</div>'; }
 function pcSec(title,wl,body){ return '<div class="pcSec"><div class="pcSecH"><span>'+title+'</span><span class="wl">'+wl+'</span></div>'+body+'</div>'; }
@@ -2268,6 +2334,7 @@ function openPlayerCard(name){
   const d=playerCardData(name), s=d.s;
   document.getElementById('pcName').textContent=name;
   document.getElementById('pcSub').textContent=(d.team?d.team+' · ':'')+(s.g||0)+' game'+(s.g===1?'':'s')+(s.last?' · last played '+lgDay(s.last):'');
+  const mi=document.getElementById('pcEmail'); mi.value=emailOfPlayer(name); mi.classList.remove('bad'); document.getElementById('pcEmailSave').textContent='Save';
   let h='';
   h+=pcSec('Overall', s.g?pcWL({g:s.g,w:s.w||0}):'no games yet',
     '<div class="pcGrid">'+pcStat(s.g||0,'Games')+pcStat(s.w||0,'Wins')+pcStat(pcPct(s.w||0,s.g||0),'Win rate',null,true)+'</div>');
@@ -2284,13 +2351,32 @@ function openPlayerCard(name){
     +pcStat(s.cd?pcAvg(s.cm||0,(s.cd)/3,2):'—','Marks per round',(s.cd?'3 darts = a round':''))+pcStat(s.cd||0,'Darts thrown')+'</div>');
   h+=pcSec('Fat 6', pcWL(d.fat6),
     '<div class="pcGrid">'+pcStat(d.f6?d.f6.g:0,'Games')+pcStat(d.f6?pcAvg(d.f6.sum,d.f6.g):'—','Avg finish',null,true)+pcStat(d.f6&&d.f6.g?(d.f6.best===1?'🥇':d.f6.best):'—','Best finish')+'</div>');
+  const recTable=(rows,who)=>{ if(!rows.length) return ''; let t='<table class="st pcTab"><tr><th>'+who+'</th><th>Matches</th><th>Legs</th></tr>';
+    rows.forEach(e=>{ t+='<tr><td>'+esc(shortName(e.name))+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span> <span class="pcPct">'+pcPct(e.mw,e.m)+'</span></td><td>'+e.lw+'–'+e.ll+'</td></tr>'; });
+    return t+'</table>'; };
   h+=pcSec('League', d.lg.m?('<span style="color:#9fd0ff">'+d.lg.mw+'</span>–<span style="color:#ff90a6">'+(d.lg.m-d.lg.mw)+'</span> matches'):'no league matches',
-    '<div class="pcGrid">'+pcStat(d.lg.m,'Matches')+pcStat(d.lg.m?pcPct(d.lg.mw,d.lg.m):'—','Match win rate',null,true)+pcStat(d.lg.lw+'–'+d.lg.ll,'Legs W–L')+'</div>');
+    '<div class="pcGrid">'+pcStat(d.lg.m,'Matches')+pcStat(d.lg.m?pcPct(d.lg.mw,d.lg.m):'—','Match win rate',null,true)+pcStat(d.lg.lw+'–'+d.lg.ll,'Legs W–L')+'</div>'
+    +(d.partners.length?'<div class="pcSub2">With partners</div>'+recTable(d.partners,'Partner'):'')
+    +(d.h2h.length?'<div class="pcSub2">Head to head · singles</div>'+recTable(d.h2h,'Opponent'):'')
+    +(d.dvd.length?'<div class="pcSub2">Head to head · doubles</div><table class="st pcTab pcDvd"><tr><th>Pair vs pair</th><th>Matches</th><th>Legs</th></tr>'
+        +d.dvd.map(e=>'<tr><td><b>with '+esc(shortName(e.partner))+'</b><span class="vs">vs '+e.opp.map(shortName).map(esc).join(' + ')+'</span></td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span> <span class="pcPct">'+pcPct(e.mw,e.m)+'</span></td><td>'+e.lw+'–'+e.ll+'</td></tr>').join('')+'</table>':''));
   document.getElementById('pcBody').innerHTML=h;
+  const hasRow=[...document.querySelectorAll('#libList .librow .lname')].some(sp=>sp.textContent===name) && !document.getElementById('library').classList.contains('hidden');
+  document.getElementById('pcRename').style.display=hasRow?'':'none';
   document.getElementById('playerCard').classList.remove('hidden');
   document.getElementById('playerCard').querySelector('.card').scrollTop=0;
 }
 document.getElementById('pcDone').onclick=function(){ document.getElementById('playerCard').classList.add('hidden'); };
+// Save on the button, on Enter, or simply on leaving the field (so Done saves too).
+function pcSaveEmail(){
+  const inp=document.getElementById('pcEmail'), b=document.getElementById('pcEmailSave'); if(!_pcName) return;
+  if(setPlayerEmail(_pcName,inp.value)){ inp.value=emailOfPlayer(_pcName); inp.classList.remove('bad'); b.textContent=inp.value?'✓ Saved':'Cleared'; }
+  else { inp.classList.add('bad'); b.textContent='Check it'; }
+  clearTimeout(pcSaveEmail._t); pcSaveEmail._t=setTimeout(function(){ b.textContent='Save'; },1500);
+}
+document.getElementById('pcEmailSave').onclick=pcSaveEmail;
+document.getElementById('pcEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); pcSaveEmail(); this.blur(); } });
+document.getElementById('pcEmail').addEventListener('change',pcSaveEmail);
 document.getElementById('playerCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('pcDone').click(); });
 document.getElementById('pcRename').onclick=function(){
   const name=_pcName; document.getElementById('playerCard').classList.add('hidden');
@@ -2348,7 +2434,7 @@ var LS_BKEMAIL='darts_backup_email_v1';
 var LS_BKFP='darts_backup_fp_v1';
 var bkTimer=null;
 function bkPayload(){
-  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, groups:groupLib, stats:statsLib,
+  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, groups:groupLib, stats:statsLib,
           league:{on:!!LG.on, active:LG.active||null, list:LG.list.map(function(x){return {id:x.id,name:x.name};})}, fat6:f6log, v:1};
 }
 function bkFingerprint(){ return JSON.stringify(bkPayload()); }
@@ -2430,6 +2516,7 @@ async function bkRestore(){
     (d.players||[]).forEach(n=>{ if(n&&!roster.includes(n)){ roster.push(n); added++; } });
     (d.teams||[]).forEach(t=>{ if(t&&!teamLib.includes(t)) teamLib.push(t); });
     Object.assign(playerTeams, d.pteams||{});
+    Object.assign(playerEmails, d.pemails||{}); savePlayerEmails();
     Object.assign(duoTeams, d.duoTeams||{});
     (d.groups||[]).forEach(g=>{
       if(!g||!g.name) return;
@@ -4315,11 +4402,11 @@ var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
 // leagues this device belongs to, and which one is ACTIVE. `league` is always
 // the active league's record (or LG.local — history kept before joining any
 // league, which Create uploads). Matches, reports and Stats act on `league`.
-function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],lastSync:o.lastSync||0}; }
+function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},lastSync:o.lastSync||0}; }
 var LG=(function(){
   var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
   if(!v||typeof v!=='object') v={};
-  if(Array.isArray(v.list)){ v.list=v.list.map(lgRec).filter(function(x){return x.id;}); v.local=lgRec(v.local); v.on=!!v.on; v.cur=v.cur||null; v.active=v.active||null; return v; }
+  if(Array.isArray(v.list)){ v.list=v.list.map(lgRec).filter(function(x){return x.id;}); v.local=lgRec(v.local); v.on=!!v.on; v.cur=v.cur||null; v.active=v.active||null; v.me=v.me||''; return v; }
   // older shapes: a single league record at the top level, or nothing yet
   var out={on:!!v.on, cur:v.cur||null, active:null, list:[], local:lgRec({seasons:[]})};
   var seasons=v.seasons||[];
@@ -4408,7 +4495,8 @@ function lgAdopt(Lg, makeActive){
   if(!Lg||!Lg.id) return null;
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
-  rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||'';
+  rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
+  lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
   if(makeActive||!LG.active) lgSelect(rec.id);
   saveLeague(); renderLeagueUI();
@@ -4422,13 +4510,60 @@ function lgSyncOne(rec, cb){
   var st=_lgSyncState[rec.id]||(_lgSyncState[rec.id]={busy:false,again:false});
   if(st.busy){ st.again=true; if(cb) cb(null); return; }
   st.busy=true;
-  relayLeague({op:'push',league:rec.id,data:{seasons:rec.seasons}}).then(function(r){
+  relayLeague({op:'push',league:rec.id,data:{seasons:lgSeasonsForPush(rec),assign:lgAssignments(),me:LG.me||'',emails:lgEmails()}}).then(function(r){
     st.busy=false; if(r&&r.ok&&r.league) lgAdopt(r.league); else lgDetachIf(r,rec);
     if(cb) cb(r);
     if(st.again){ st.again=false; lgSyncOne(rec); }
   }).catch(function(){ st.busy=false; st.again=false; if(cb) cb(null); });
 }
 function lgSync(cb){ lgSyncOne(league&&league.id?league:null, cb); }          // the active league
+// ---- team rosters (Nathan, 2026-08-22): sponsored membership ----
+// The league keeps a roster per team. The first player onto a team founds it;
+// a player added by an approved member of that team (LG.me = which roster name
+// is this device's user) is approved; anyone else is PENDING until an approved
+// member or the league creator approves them. While pending, matches they play
+// stay on this device — nothing of theirs reaches the Pi or the league.
+function lgTeamEntry(rec,name){ var t=(rec&&rec.teams)||{}; for(var k in t){ if(t[k]&&t[k][name]) return {team:k,st:t[k][name].st}; } return null; }
+function lgPlayerPending(rec,name){ var e=lgTeamEntry(rec,name); return !!(e&&e.st==='pending'); }
+function lgIsOkMember(rec,team,name){ var t=(rec&&rec.teams)||{}; return !!(name&&t[team]&&t[team][name]&&t[team][name].st==='ok'); }
+function lgCanApprove(rec,team){ return !!rec&&((rec.creator&&rec.creator===lgEmail())||lgIsOkMember(rec,team,LG.me)); }
+function lgAssignments(){ var a={}; roster.forEach(function(n){ var t=teamOfPlayer(n); if(t) a[n]=t; }); return a; }
+// Player-Card e-mails for the push: every stamped entry, blanks included (a
+// cleared address has to reach the other devices too).
+function lgEmails(){ var o={}; roster.forEach(function(n){ var r=playerEmails[n]; if(r&&(r.e||r.at)) o[n]={e:r.e||'',at:r.at||0}; }); return o; }
+// What the Pi holds wins when its stamp is newer than ours (or we have nothing).
+function lgAdoptEmails(em){
+  if(!em||typeof em!=='object') return;
+  var ch=false;
+  Object.keys(em).forEach(function(n){ var r=em[n], loc=playerEmails[n]; if(!r||typeof r!=='object'||!roster.includes(n)) return;
+    var e=String(r.e||'').slice(0,80), at=+r.at||0; if(e&&!EMAIL_OK.test(e)) return;
+    if(!loc||at>(+loc.at||0)){ if(!loc&&!e) return; playerEmails[n]={e:e,at:at}; ch=true; } });
+  if(!ch) return;
+  savePlayerEmails();
+  var pc=document.getElementById('playerCard'); if(_pcName&&pc&&!pc.classList.contains('hidden')) document.getElementById('pcEmail').value=emailOfPlayer(_pcName);
+}
+function lgSeasonsForPush(rec){
+  var held=function(m){ return (m.sides||[]).some(function(sd){ return (sd.members||[]).some(function(n){ return lgPlayerPending(rec,n); }); }); };
+  return (rec.seasons||[]).map(function(s){ return Object.assign({},s,{tournaments:(s.tournaments||[]).map(function(t){ return Object.assign({},t,{matches:(t.matches||[]).filter(function(m){ return !held(m); })}); })}); });
+}
+function lgHeldCount(rec){ var n=0; (rec.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ if((m.sides||[]).some(function(sd){ return sd.members.some(function(x){ return lgPlayerPending(rec,x); }); })) n++; }); }); }); return n; }
+// a team assignment made in the Player Library is reported to the active league straight away
+var _setPlayerTeamBase=setPlayerTeam;
+setPlayerTeam=function(name,team){
+  _setPlayerTeamBase(name,team);
+  if(!league||!league.id||!team||!lgEmail()) return;
+  lgCall({op:'team_set',league:league.id,team:team,player:name,me:LG.me||''},function(){}).then(function(r){
+    if(r&&r.ok&&r.league) lgAdopt(r.league);
+    if(r&&r.status==='pending') try{ bkMsg('⏳ '+shortName(name)+' is on '+team+' but waiting for a '+team+' member to approve — their matches stay on this device until then.'); }catch(e){}
+    try{ renderLibrary(); }catch(e){}
+  }).catch(function(){});
+};
+function lgTeamDecision(team,player,approve){
+  return lgCall({op:approve?'team_approve':'team_decline',league:league.id,team:team,player:player,me:LG.me||''},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league); lgHint((approve?'✓ Approved ':'Removed ')+shortName(player)+(approve?' for ':' from ')+team+'.'); lgSync(); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not do that.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
+}
 function lgSyncAll(){ LG.list.slice().forEach(function(rec){ lgSyncOne(rec); }); }
 // The Pi says this device no longer belongs to that league (deleted, or
 // removed from it): drop it from the list, keep nothing of it.
@@ -4480,6 +4615,20 @@ function renderLeagueUI(){
   var ll=document.getElementById('lgLeagueLine');
   if(ll&&inL) ll.innerHTML='<b>'+esc(league.name)+'</b> · '+league.members.length+' member'+(league.members.length===1?'':'s')+' · synced '+esc(lgAgo(league.lastSync))
     +(league.creator===lgEmail()?' · you created it':'');
+  var me=document.getElementById('lgMe');
+  if(me&&inL&&document.activeElement!==me){
+    me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+'</option>'; }).join('');
+  }
+  var rq=document.getElementById('lgRequests');
+  if(rq&&inL){
+    var rows=[], waiting=[];
+    var teams=league.teams||{};
+    Object.keys(teams).forEach(function(tm){ Object.keys(teams[tm]||{}).forEach(function(pl){ var e=teams[tm][pl]; if(!e||e.st!=='pending') return;
+      if(lgCanApprove(league,tm)) rows.push('<div class="lgReq"><span class="who"><b>'+esc(shortName(pl))+'</b> wants to join <b>'+esc(tm)+'</b></span><button class="primary" data-ok="1" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Approve</button><button class="warn" data-ok="0" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Decline</button></div>');
+      else if(roster.indexOf(pl)>=0) waiting.push('⏳ '+shortName(pl)+' is waiting for a '+tm+' member to approve'); }); });
+    var held=lgHeldCount(league);
+    rq.innerHTML=(rows.length?'<div class="lgListHead">Team requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
+  }
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
   var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
   if(line){
@@ -4510,6 +4659,8 @@ document.getElementById('leagueBtn').onclick=openLeagueCard;
 document.getElementById('lgToggle').onclick=function(){ LG.on=!LG.on; saveLeague(); renderLeagueUI(); };
 document.getElementById('lgDone').onclick=function(){ document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); };
+document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
+document.getElementById('lgRequests').addEventListener('click',function(e){ var b=e.target.closest('button[data-team]'); if(!b) return; lgTeamDecision(b.dataset.team,b.dataset.player,b.dataset.ok==='1'); });
 document.getElementById('lgList').addEventListener('click',function(e){
   var row=e.target.closest('.lgRow'); if(!row) return;
   if(lgMatchOpen()){ lgHint('Finish or quit the match in progress before switching leagues.'); return; }
@@ -4763,7 +4914,7 @@ function lgTablesHTML(st, title){
   var any01=st.players.some(function(e){return e.turns>0;});
   html+='<div class="stH">'+esc(title)+' · Players</div><table class="st"><tr><th>Player</th><th>Matches</th><th>Legs</th>'+(any01?'<th title="3-dart average">Avg</th><th>High</th><th>180s</th>':'')+'</tr>';
   if(!st.players.length) html+='<tr><td colspan="6" class="stEmpty">No matches yet</td></tr>';
-  st.players.forEach(function(e){ html+='<tr><td>'+esc(shortName(e.name))+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td>'+(any01?'<td>'+lgAvg(e)+'</td><td>'+(e.best||'—')+'</td><td>'+(e.t180||0)+'</td>':'')+'</tr>'; });
+  st.players.forEach(function(e){ html+='<tr class="stP" data-player="'+esc(e.name)+'"><td>'+esc(shortName(e.name))+' <span class="stMore">›</span></td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td>'+(any01?'<td>'+lgAvg(e)+'</td><td>'+(e.best||'—')+'</td><td>'+(e.t180||0)+'</td>':'')+'</tr>'; });
   html+='</table>';
   return html;
 }
@@ -4837,6 +4988,7 @@ function openStats(){
 document.getElementById('statsBtn').onclick=openStats;
 document.getElementById('statsTabs').addEventListener('click',function(e){ var b=e.target.closest('button[data-tab]'); if(!b) return; _statsTab=b.dataset.tab; renderStats(_statsTab); });
 document.getElementById('statsBody').addEventListener('click',function(e){
+  var pr=e.target.closest('tr.stP'); if(pr){ openPlayerCard(pr.dataset.player); return; }
   var lp=e.target.closest('button[data-league]'); if(lp){ if(lgMatchOpen()){ document.getElementById('statsMsg').textContent='Finish or quit the match in progress before switching leagues.'; return; } lgSelect(lp.dataset.league); saveLeague(); _statsSeason=null; renderStats('league'); lgSync(function(r){ if(r&&r.ok) renderStats('league'); }); return; }
   var sp=e.target.closest('button[data-season]'); if(sp){ _statsSeason=sp.dataset.season; renderStats('league'); return; }
   var th=e.target.closest('.stT'); if(th){ var id=th.dataset.t; _statsOpenT[id]=!(_statsOpenT[id]!=null?_statsOpenT[id]:th.querySelector('.tri').textContent==='▾'); renderStats('league'); }
