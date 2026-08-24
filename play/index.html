@@ -505,6 +505,38 @@
   #bdOuts{display:none;}
   #game.bdopen #bdOuts{display:flex;position:absolute;top:10px;right:10px;gap:0;z-index:2;align-items:center;}
   #bdCalls .bc.out{color:var(--gold);text-shadow:0 3px 0 #000,0 0 16px rgba(232,200,118,.8);}
+  #bdCalls .bc.tx{color:#e8dcc0;text-shadow:0 3px 0 #000,0 0 14px rgba(232,200,118,.45);}
+  /* ---- Extras picker ---- */
+  #extrasSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
+  #extrasSplash.hidden{display:none;}
+  #extrasSplash .card{max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #extrasGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  #extrasGrid .xg{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:12px 14px;font-size:20px;}
+  #extrasGrid .xg b{font-family:var(--display);letter-spacing:1px;}
+  #extrasGrid .xg span{font-family:var(--sans,inherit);font-size:12.5px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;line-height:1.25;}
+  #extrasGrid .xg.on{outline:2px solid var(--gold);}
+  @media (max-width:600px){ #extrasGrid{grid-template-columns:1fr;} }
+  /* ---- Extras in play: full-board screen with a status strip up top ---- */
+  #xStrip{display:none;}
+  #game.xgame #xStrip{display:flex;position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:0;right:0;flex-direction:column;align-items:center;gap:5px;z-index:2;pointer-events:none;padding:0 90px;}
+  #xStrip .xTitle{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:1px;color:var(--gold);text-shadow:0 2px 0 #000,0 0 16px rgba(232,200,118,.5);text-align:center;line-height:1.1;}
+  #xStrip .xSub{font-family:var(--num);font-size:16px;color:#cbbd9a;text-shadow:0 2px 0 #000;}
+  #xStrip .xChips{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;max-width:900px;}
+  #xStrip .xc{font-family:var(--num);font-size:16px;font-weight:600;color:#d8cfc0;background:rgba(10,8,14,.72);border:1.5px solid #3a3324;border-radius:9px;padding:3px 9px;text-shadow:0 1px 0 #000;}
+  #xStrip .xc b{color:var(--gold);font-weight:700;}
+  #xStrip .xc.cur{border-color:#7fb8ef;color:#cfe6ff;box-shadow:0 0 10px rgba(74,168,255,.5);}
+  #xStrip .xc.dead{opacity:.42;text-decoration:line-through;}
+  #game.xgame #bdCalls{top:calc(env(safe-area-inset-top,0px) + 108px) !important;min-height:46px;}   /* !important: outranks the old max-width:800px board rule */
+  #game.xgame #bdCalls .bc{font-size:44px;}
+  /* the strip + calls own the top band; the board gets what's left */
+  #game.xgame #playArea{padding-top:calc(env(safe-area-inset-top,0px) + 172px);box-sizing:border-box;}
+  #game.xgame #boardwrap svg{height:min(calc(100vh - env(safe-area-inset-top,0px) - 248px),94vw);width:auto;}
+  @media (max-width:600px){
+    #xStrip{padding:0 68px;} #xStrip .xTitle{font-size:18px;} #xStrip .xc{font-size:13px;padding:2px 6px;} #xStrip .xSub{font-size:13px;}
+    #game.xgame #bdCalls{top:calc(env(safe-area-inset-top,0px) + 128px) !important;} #game.xgame #bdCalls .bc{font-size:28px;}
+    #game.xgame #playArea{padding-top:calc(env(safe-area-inset-top,0px) + 168px);}
+    #game.xgame #boardwrap svg{height:min(calc(100vh - env(safe-area-inset-top,0px) - 240px),94vw);}
+  }
   /* ---- game-shot call (Nathan, 2026-08-23) ---- */
   #winCall{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:absolute;left:50%;transform:translate(-50%,-50%);z-index:3;max-width:92%;
     background:rgba(8,6,4,.88);border:2px solid var(--gold);border-radius:22px;padding:26px 44px;box-shadow:0 0 50px rgba(0,0,0,.85),0 0 34px rgba(232,200,118,.35);animation:wcpop .5s cubic-bezier(.2,1.5,.4,1);}
@@ -1495,7 +1527,7 @@
         <button data-game="301">301</button>
         <button data-game="501" class="on">501</button>
         <button data-game="cricket">Cricket</button>
-        <button data-game="fat6">Fat 6</button>
+        <button data-game="extras" id="extrasPill">Extras ▾</button>
       </div>
     </div>
 
@@ -1589,6 +1621,16 @@
   <!-- ================= PLAYER CARD (Nathan, 2026-08-22) =================
        Tap a name in the Player Library. Everything here is derived from the
        ledger (statsLib), the Fat 6 log and the league records at open time. -->
+  <!-- ================= EXTRAS (Nathan, 2026-08-23) =================
+       One pill, eight party games: Fat 6 plus the seven new free-for-all games.
+       All of them: 2-8 individual players, bull-order start, stats cards, no league. -->
+  <div id="extrasSplash" class="hidden">
+    <div class="card">
+      <h2>🎉 Extras</h2>
+      <div id="extrasGrid"></div>
+      <button class="ghost" id="extrasCancel" style="width:100%;margin-top:10px;">Cancel</button>
+    </div>
+  </div>
   <div id="playerCard" class="hidden">
     <div class="card">
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
@@ -1768,6 +1810,7 @@
 
     <div class="card" id="playArea">
       <button id="backBtn" class="ghost">← Back</button>
+      <div id="xStrip"></div>
       <div id="bdCalls"></div>
       <!-- (2026-08-23) "out in N darts" pickers — see goOut() -->
       <div id="bdOuts" class="hidden"></div>
@@ -1868,7 +1911,11 @@ const LS_PEMAIL='darts_player_emails_v1';
 let playerEmails=loadPlayerEmails(); // { playerName: {e:'who@where', at:ms} } — the Player Card e-mail; league reports go here
 let config={game:'501',mode:'2p'};  // selection
 let teamSel=[[],[]];                 // [Team 1 names, Team 2 names]
-let f6Sel=[];                        // Fat 6: selected player names (unordered)
+let f6Sel=[];                        // free-for-all games (Fat 6 + Extras): selected player names (unordered)
+// ---- EXTRAS (Nathan, 2026-08-23): the party games behind the Extras pill ----
+const XGAMES={fat6:'Fat 6',killer:'Killer',shanghai:'Shanghai',atw:'Around The World',halveit:'Halve-It',baseball:'Baseball',gotcha:'Gotcha',golf:'Golf'};
+const XTAG={fat6:'the classic — lives on the fat & skinny',killer:'get your double, then take their lives',shanghai:'single + double + triple = instant win',atw:'race 1 to 20, in order',halveit:'miss the target, lose half your points',baseball:'9 innings on the 1–9',gotcha:'race to exactly 301 — land on them, they reset',golf:'9 holes, fewest strokes wins'};
+function isFFA(g){ return !!XGAMES[g]; }
 const LS_DUOS='darts_duoteams_v1';
 const LS_GROUPS='darts_groups_v1';
 let duoTeams=loadDuoTeams();         // { 'a|b' (sorted, lowercased names): team name }
@@ -1914,7 +1961,7 @@ function teamOf(name){
 function renderColumns(){
   // NOTE: the head boxes are owned by renderLineup now (they hold each side's
   // picks). Never write their textContent here — that wipes their inner spans.
-  if(config.game==='fat6'){
+  if(isFFA(config.game)){
     const el=document.getElementById('col1');
     el.innerHTML='';
     document.getElementById('col2').innerHTML='';
@@ -2093,7 +2140,7 @@ function reqPerTeam(){return 2;}
 // 1+1 = 1v1, 2+2 = 2v2, 2+1 (either way round) = Ironman.
 function reqFor(t){ return 2; }
 function inferMode(){
-  if(config.game==='fat6') return;
+  if(isFFA(config.game)) return;
   var a=teamSel[0].length, b=teamSel[1].length;
   config.mode = (a===2&&b===2) ? '2t'
               : ((a===2&&b===1)||(a===1&&b===2)) ? 'iron'
@@ -2143,7 +2190,7 @@ function updateStart(){
   // Start Game sits just above the Select Players card in every mode now — no
   // relocation needed since the Match-up card is gone.
   var _sb=document.getElementById('startBtn');
-  if(config.game==='fat6'){
+  if(isFFA(config.game)){
     _sb.disabled = f6Sel.length<2; fitMenu(); return;
   }
   // Any 1-or-2 per side is a playable combo: 1+1, 2+2, or 2+1 Ironman.
@@ -2158,8 +2205,9 @@ function updateStart(){
 // one function so no path can drift (the bug: a reload restored a cricket game,
 // the menu pill still showed the static 501 default, Start launched cricket).
 function syncGamePill(){
-  [...document.getElementById('gameSel').children].forEach(c=>c.classList.toggle('on',c.dataset.game===config.game));
-  document.getElementById('setup').classList.toggle('fat6',config.game==='fat6');
+  [...document.getElementById('gameSel').children].forEach(c=>c.classList.toggle('on',c.dataset.game===config.game || (c.dataset.game==='extras'&&isFFA(config.game))));
+  document.getElementById('setup').classList.toggle('fat6',isFFA(config.game));
+  var _xp=document.getElementById('extrasPill'); if(_xp) _xp.textContent=(isFFA(config.game)?XGAMES[config.game]:'Extras')+' ▾';
 }
 function setGame(g){
   config.game=g;
@@ -2169,8 +2217,21 @@ function setGame(g){
 }
 document.getElementById('gameSel').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.game==='extras'){ openExtras(); return; }
   setGame(b.dataset.game);
 });
+function openExtras(){
+  const grid=document.getElementById('extrasGrid');
+  grid.innerHTML=Object.keys(XGAMES).map(g=>'<button class="xg'+(config.game===g?' on':'')+'" data-xg="'+g+'"><b>'+XGAMES[g]+'</b><span>'+XTAG[g]+'</span></button>').join('');
+  document.getElementById('extrasSplash').classList.remove('hidden');
+}
+document.getElementById('extrasGrid').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-xg]'); if(!b) return;
+  document.getElementById('extrasSplash').classList.add('hidden');
+  setGame(b.dataset.xg);
+});
+document.getElementById('extrasCancel').onclick=()=>document.getElementById('extrasSplash').classList.add('hidden');
+document.getElementById('extrasSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('extrasCancel').click(); });
 /* (Mode picker removed — the mode is inferred from the picks:
    1+1 = 1v1, 2+2 = 2v2, 2+1 either way round = Ironman.) */
 let lastAdd=0;
@@ -2230,7 +2291,7 @@ document.getElementById('startBtn').onclick=function(){
   // The engine assumes the Ironman DUO is teamSel[0] (buildTeams, piddle order,
   // labels). Mode is inferred now, so if the solo side was picked on the left,
   // swap sides before the piddle.
-  if(config.game!=='fat6'){
+  if(!isFFA(config.game)){
     inferMode();
     if(config.mode==='iron' && teamSel[0].length===1){
       teamSel=[teamSel[1],teamSel[0]];
@@ -2409,6 +2470,11 @@ function openPlayerCard(name){
   h+=pcSec('Cricket', pcWL(d.cricket),
     '<div class="pcGrid">'+pcStat(s.cd?pcPct(s.ch||0,s.cd):'—','Darts that counted',(s.cd?(s.ch+' of '+s.cd+' darts'):'no board data'),true)
     +pcStat(s.cd?pcAvg(s.cm||0,(s.cd)/3,2):'—','Marks per round',(s.cd?'3 darts = a round':''))+pcStat(s.cd||0,'Darts thrown')+'</div>');
+  const pgRows=Object.keys(XGAMES).filter(k=>k!=='fat6').map(k=>({k,e:(statsLib[name]&&statsLib[name].byGame&&statsLib[name].byGame[k])||null})).filter(x=>x.e&&x.e.g);
+  if(pgRows.length){
+    h+=pcSec('Party games','',
+      '<div class="pcGrid">'+pgRows.map(x=>pcStat(x.e.w+'–'+(x.e.g-x.e.w),XGAMES[x.k])).join('')+'</div>');
+  }
   h+=pcSec('Fat 6', pcWL(d.fat6),
     '<div class="pcGrid">'+pcStat(d.f6?d.f6.g:0,'Games')+pcStat(d.f6?pcAvg(d.f6.sum,d.f6.g):'—','Avg finish',null,true)+pcStat(d.f6&&d.f6.g?(d.f6.best===1?'🥇':d.f6.best):'—','Best finish')+'</div>');
   const recTable=(rows,who)=>{ if(!rows.length) return ''; let t='<table class="st pcTab"><tr><th>'+who+'</th><th>Matches</th><th>Legs</th></tr>';
@@ -2641,7 +2707,7 @@ function renderGroups(){
   el.innerHTML=html;
 }
 function setGroupHint(msg){ const el=document.getElementById('groupHint'); if(el) el.textContent=msg; }
-function currentLineup(){ return config.game==='fat6' ? f6Sel.slice() : teamSel[0].concat(teamSel[1]); }
+function currentLineup(){ return isFFA(config.game) ? f6Sel.slice() : teamSel[0].concat(teamSel[1]); }
 function saveGroupFromLineup(){
   const name=document.getElementById('groupName').value.trim();
   if(!name){ setGroupHint('Type a pairing name first.'); return; }
@@ -2659,7 +2725,7 @@ function loadGroup(id){
   saveRoster&&saveRoster();
   document.getElementById('groupName').value=g.name;
   const m=g.members;
-  if(config.game==='fat6'){ f6Sel=m.slice(); }
+  if(isFFA(config.game)){ f6Sel=m.slice(); }
   else if(m.length===2){ config.mode='2p'; teamSel=[[m[0]],[m[1]]]; }
   else if(m.length===4){ config.mode='2t'; teamSel=[[m[0],m[1]],[m[2],m[3]]]; }
   else if(m.length===3){ config.mode='iron'; teamSel=[[m[0],m[1]],[m[2]]]; }
@@ -2684,14 +2750,14 @@ function refreshDuoCard(){
 let pidPicks=[];   // ordered: pidPicks[0]=1st place, [1]=2nd ; each {team,idx}
 function showPiddle(){
   pidPicks=[];
-  document.getElementById('piddle').classList.toggle('fat6',config.game==='fat6'||config.mode==='iron');
+  document.getElementById('piddle').classList.toggle('fat6',isFFA(config.game)||config.mode==='iron');
   ['setup','game','winScreen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
   document.getElementById('piddle').classList.remove('hidden');
   renderPiddle();
 }
 function renderPiddle(){
   const _ph1=document.querySelector('#piddle .teamcol-head.head1');
-  if(config.game!=='fat6' && config.mode==='iron'){
+  if(!isFFA(config.game) && config.mode==='iron'){
     if(_ph1) _ph1.textContent='Bull order';
     const ironNames=[...teamSel[0],...teamSel[1]];
     document.getElementById('pidCol2').innerHTML='';
@@ -2709,7 +2775,7 @@ function renderPiddle(){
     document.getElementById('pidStartBtn').disabled=!done;
     return;
   }
-  if(config.game==='fat6'){
+  if(isFFA(config.game)){
     if(_ph1) _ph1.textContent='Bull order';
     document.getElementById('pidCol2').innerHTML='';
     document.getElementById('pidCol1').innerHTML = f6Sel.map((n,idx)=>{
@@ -2747,12 +2813,12 @@ function renderPiddle(){
   document.getElementById('pidStartBtn').disabled = pidPicks.length<2;
 }
 function pidTap(team,idx){
-  if(config.game!=='fat6' && config.mode==='iron'){
+  if(!isFFA(config.game) && config.mode==='iron'){
     const ex=pidPicks.findIndex(p=>p.idx===idx);
     if(ex>=0) pidPicks.splice(ex,1); else if(pidPicks.length<3) pidPicks.push({team:9,idx:idx});
     renderPiddle(); return;
   }
-  if(config.game==='fat6'){
+  if(isFFA(config.game)){
     const ex=pidPicks.findIndex(p=>p.idx===idx);
     if(ex>=0) pidPicks.splice(ex,1); else pidPicks.push({team:0,idx:idx});
     renderPiddle(); return;
@@ -2850,6 +2916,174 @@ function startFat6(order){
   renderGame();
 }
 
+//============================ EXTRAS ENGINE (Nathan, 2026-08-23) ============================
+// Seven party games behind the Extras pill. Every one: 2-8 individual players
+// (each is a one-member "team" so the whole turn/undo/rotation machinery just
+// works), the big tap board full-screen, three darts then ✓ Score It.
+function xTarget(){                       // what this round is thrown at (null = no fixed target)
+  switch(G.game){
+    case 'shanghai': case 'baseball': case 'golf': return Math.min(G.round,20);
+    case 'halveit': return ['20','19','18','D','T','B'][Math.min(G.round-1,5)] || null;
+    default: return null;
+  }
+}
+function xRounds(){ return {shanghai:7,halveit:6,baseball:9,golf:9}[G.game]||0; }
+function startX(game, order){
+  try{ dkPing('play'); }catch(e){}
+  const teams=order.map(n=>({name:n,members:[n],memberIdx:0,score:(game==='atw'?1:0),opened:true,marks:{},pts:0,history:[],
+                             lives:3,killer:false,kNum:0,dead:false}));
+  if(game==='killer'){                    // everyone draws a number — unique, random
+    const pool=[]; for(let i=1;i<=20;i++) pool.push(i);
+    teams.forEach(t=>{ t.kNum=pool.splice(Math.floor(Math.random()*pool.length),1)[0]; });
+  }
+  G={game:game, mode:'ffa', isCricket:false, isFat6:false, isX:true,
+     teams:teams, cur:0, startTeam:0, darts:[],
+     ironOrder:null, ironPos:0,
+     turnStartScore:teams[0].score, turnStartOpened:true,
+     turnLocked:false, pendingWin:null, round:1, over:false};
+  history=[]; redoStack.length=0;
+  xApplyScreen();
+  renderGame();
+}
+function xApplyScreen(){                  // DOM/mode classes — also used by resume
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('winScreen').classList.add('hidden');
+  document.getElementById('cricketBoard').classList.add('hidden');
+  const g=document.getElementById('game');
+  g.classList.remove('cricket','board-open','fat6','pendwin');
+  g.classList.add('kpmode','bdopen','xgame');     // kpmode+bdopen = the existing full-board overlay
+  g.classList.remove('hidden');
+  document.getElementById('kpWrap').classList.add('hidden');
+  document.getElementById('missBtn').textContent='Miss / 0';
+  var row=document.querySelector('#playArea .gamebtns');   // Undo ▸ Confirm ▸ Redo, like openBoard01
+  var u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn'), c=document.getElementById('endTurnBtn');
+  if(row&&u&&r&&c){ row.insertBefore(u,c); row.appendChild(r); }
+  var back=document.getElementById('backBtn'); if(back) back.textContent='✕ Quit';
+  buildBoard();
+}
+// One dart just landed (throwDart pushed it). t = the thrower.
+function applyExtras(value,mult,region){
+  const t=curTeam(), d=G.darts[G.darts.length-1], n=xTarget();
+  if(G.game==='killer'){
+    d.noCount=true;
+    if(mult!==2 || value===25) return;                 // only number doubles matter
+    if(value===t.kNum){
+      d.noCount=false;
+      if(!t.killer){ t.killer=true; flashToast(shortName(t.name)+' is a KILLER'); }
+      else { t.lives--; flashToast('Own double — lost a life!'); }
+    } else if(t.killer){
+      const v=G.teams.find(p=>!p.dead && p!==t && p.kNum===value);
+      if(v){ d.noCount=false; v.lives--; flashToast(shortName(v.name)+' loses a life'); if(v.lives<=0){ v.dead=true; try{ fat6OutSplash(v.name); }catch(e){} } }
+    }
+    if(t.lives<=0){ t.dead=true; G.turnLocked=true; try{ fat6OutSplash(t.name); }catch(e){} }
+    const alive=G.teams.filter(p=>!p.dead);
+    if(alive.length===1) xPendWin(G.teams.indexOf(alive[0]),'Last one standing');
+    return;
+  }
+  if(G.game==='shanghai'){
+    if(value===n){ t.pts+=value*mult; }
+    else d.noCount=true;
+    const my=G.darts.filter(x=>x.value===n);
+    if([1,2,3].every(m=>my.some(x=>x.mult===m))) xPendWin(G.cur,'SHANGHAI on the '+n+'!');
+    return;
+  }
+  if(G.game==='atw'){
+    if(value===t.score && value!==25){ t.score++; if(t.score>20){ xPendWin(G.cur,'Around the world!'); } }
+    else d.noCount=true;
+    return;
+  }
+  if(G.game==='halveit'){
+    let pts=0;
+    if(n==='D'){ if(mult===2) pts=value*2; }
+    else if(n==='T'){ if(mult===3) pts=value*3; }
+    else if(n==='B'){ if(value===25) pts=25*mult; }
+    else if(value===parseInt(n,10)) pts=value*mult;
+    if(pts>0) t.pts+=pts; else d.noCount=true;
+    return;
+  }
+  if(G.game==='baseball'){
+    if(value===n) t.pts+=mult; else d.noCount=true;
+    return;
+  }
+  if(G.game==='gotcha'){
+    const rem=t.score+value*mult;
+    if(rem>301){ d.bust=true; t.score=G.turnStartScore; G.turnLocked=true; flashToast('BUST!'); return; }
+    t.score=rem;
+    if(value*mult>0) G.teams.forEach(p=>{ if(p!==t && p.score===t.score && p.score>0){ p.score=0; flashToast('GOTCHA! '+shortName(p.name)+' back to 0'); } });
+    if(t.score===301) xPendWin(G.cur,'Exactly 301!');
+    return;
+  }
+  if(G.game==='golf'){
+    if(value!==n) d.noCount=true;
+    return;
+  }
+}
+function xPendWin(idx,detail){
+  G.pendingWin={teamIdx:idx,detail:detail};
+  G.turnLocked=true;
+  flashToast('Game shot! Confirm to finish');
+}
+// The turn is being committed (all darts in, Score It pressed) — per-game bookkeeping.
+function xTurnSettle(){
+  const t=curTeam();
+  if(G.game==='halveit'){
+    if(!G.darts.some(d=>!d.noCount && !d.bust && d.value>0)){ t.pts=Math.floor(t.pts/2); if(t.pts>0||true) flashToast('Halved!'); }
+  }
+  if(G.game==='golf'){
+    const n=xTarget(); let stroke=5;
+    G.darts.forEach(d=>{ if(d.value===n){ const s=d.mult===3?1:d.mult===2?2:(d.region==='in'?3:4); if(s<stroke) stroke=s; } });
+    t.pts+=stroke;
+  }
+}
+function xSkipDead(){ let guard=0; while(G.teams[G.cur] && G.teams[G.cur].dead && guard++<20){ G.cur=(G.cur+1)%G.teams.length; if(G.cur===G.startTeam) G.round++; } }
+// A round just finished (everyone threw) — is the game over?
+function xRoundCheck(prevRound){
+  if(G.round===prevRound || G.pendingWin || G.over) return;
+  const R=xRounds(); if(!R || G.round<=R) return;
+  const best=G.game==='golf' ? Math.min(...G.teams.map(t=>t.pts)) : Math.max(...G.teams.map(t=>t.pts));
+  const leaders=G.teams.filter(t=>t.pts===best);
+  if(leaders.length===1){
+    const i=G.teams.indexOf(leaders[0]);
+    xPendWin(i, G.game==='golf' ? (best+' strokes') : (best+' points'));
+  }
+  // tied → play on: shanghai/baseball/golf continue up the numbers, halve-it repeats its last target
+}
+function xStatusLine(){
+  const t=curTeam(), n=xTarget(), R=xRounds();
+  switch(G.game){
+    case 'killer': return [ (t.killer?'KILLER — hunt their doubles':'Hit D'+t.kNum+' to become a killer'), shortName(t.name)+' throws · you are '+t.kNum ];
+    case 'shanghai': return ['Round '+G.round+(G.round>R?' · tie-break':'')+' — throw at '+n, shortName(t.name)+' throws · single + double + triple = SHANGHAI'];
+    case 'atw': return ['Throw at '+t.score, shortName(t.name)+' throws · first to 20 wins'];
+    case 'halveit': return ['Round '+Math.min(G.round,6)+(G.round>R?' · tie-break':'')+' — target: '+(n==='D'?'any Double':n==='T'?'any Triple':n==='B'?'Bull':n), shortName(t.name)+' throws · miss all 3 = half your points'];
+    case 'baseball': return ['Inning '+G.round+(G.round>R?' · extra':'')+' — throw at '+n, shortName(t.name)+' bats'];
+    case 'gotcha': return ['Race to exactly 301', shortName(t.name)+' throws · '+(301-t.score)+' to go'];
+    case 'golf': return ['Hole '+G.round+(G.round>R?' · playoff':'')+' — the '+n, shortName(t.name)+' tees off · T=1 D=2 skinny=3 fat=4 miss=5'];
+  }
+  return ['',''];
+}
+function xChipVal(t){
+  switch(G.game){
+    case 'killer': return t.kNum+' '+'♥'.repeat(Math.max(0,t.lives));
+    case 'atw': return t.score>20?'🏁':('on '+t.score);
+    case 'gotcha': return t.score;
+    case 'golf': return t.pts;
+    default: return t.pts;
+  }
+}
+function renderX(){
+  const el=document.getElementById('xStrip'); if(!el) return;
+  const line=xStatusLine();
+  el.innerHTML='<div class="xTitle">'+esc(XGAMES[G.game])+' · '+esc(line[0])+'</div>'
+    +'<div class="xSub">'+esc(line[1])+'</div>'
+    +'<div class="xChips">'+G.teams.map((t,i)=>'<div class="xc'+(i===G.cur&&!G.over?' cur':'')+(t.dead?' dead':'')+'">'+esc(shortName(t.name))+' <b>'+esc(String(xChipVal(t)))+'</b></div>').join('')+'</div>';
+  renderBdCalls();
+  const confirmBtn=document.getElementById('endTurnBtn');
+  confirmBtn.disabled=G.over;
+  confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':(G.darts.length?'✓ Score It':'Miss');
+  document.getElementById('undoBtn').disabled=history.length===0;
+  var _r=document.getElementById('redoBtn'); if(_r) _r.disabled=redoStack.length===0;
+}
+
 //============================ DART INPUT ============================
 function curTeam(){return G.teams[G.cur];}
 function thrower(){const t=curTeam();return t.members[t.memberIdx];}
@@ -2899,16 +3133,17 @@ function throwDart(value,mult,region){
   pushHistory();
   const score=value*mult;
   const label=dartLabel(value,mult);
-  G.darts.push({value,mult,score,label,bust:false,noCount:false});
+  G.darts.push({value,mult,score,label,region,bust:false,noCount:false});
   // PLAYER CARD (Nathan, 2026-08-22): remember what the board looked like
   // before this dart so it can be classified afterwards (double-in attempt,
   // double-out attempt, cricket hit). Lives in G.pstats → snapshotted → Undo
   // takes it back like everything else; folded into the ledger at the win.
-  const pre=(!G.isFat6&&G.teams)?(function(){ const t=curTeam(); return {t:t,name:t.members[t.memberIdx],opened:t.opened,score:t.score,
+  const pre=(!G.isFat6&&!G.isX&&G.teams)?(function(){ const t=curTeam(); return {t:t,name:t.members[t.memberIdx],opened:t.opened,score:t.score,
       marks:G.isCricket?Object.assign({},t.marks):null,pts:t.pts}; })():null;
 
   if(G.isCricket){ applyCricket(value,mult); }
   else if(G.isFat6){ applyFat6(value,mult,region); }
+  else if(G.isX){ applyExtras(value,mult,region); }
   else{ applyX01(value,mult); }
   if(pre) dkDartStat(pre,value,mult);
 
@@ -2934,7 +3169,7 @@ const MIN_OUT=(()=>{ const m={}, segs=Array.from(X01_SEGS);
   return m; })();
 // Is a finish on for the thrower this turn? → {min, thrown, score} or null.
 function outState(){
-  if(!G||G.over||G.pendingWin||G.turnLocked||G.isCricket||G.isFat6) return null;   // locked = bust or 3 thrown
+  if(!G||G.over||G.pendingWin||G.turnLocked||G.isCricket||G.isFat6||G.isX) return null;   // locked = bust or 3 thrown
   const t=curTeam(); if(G.requireDoubleIn&&!t.opened) return null;
   const min=MIN_OUT[t.score]; if(!min) return null;
   const thrown=G.darts.length;                         // board: darts already thrown this turn
@@ -2970,7 +3205,7 @@ function outsHTML(st){
 // "NAME has won the match with their Nth dart" — while the game shot waits for Confirm.
 function renderWinCall(){
   const el=document.getElementById('winCall'); if(!el) return;
-  if(!G||!G.pendingWin||G.isCricket||G.isFat6){ el.innerHTML=''; el.classList.add('hidden'); return; }
+  if(!G||!G.pendingWin||G.isCricket||G.isFat6){ el.innerHTML=''; el.classList.add('hidden'); return; }   // X games DO show the call
   const t=G.teams[G.pendingWin.teamIdx]; if(!t){ el.classList.add('hidden'); return; }
   const who=shortName(t.members[t.memberIdx]||t.name||'');
   const k=t.coDarts, ord=k===1?'1st':k===2?'2nd':k===3?'3rd':'';
@@ -3120,8 +3355,10 @@ function checkCricketWin(){
 function commitTurn(){
   if(G.over)return;
   const t=curTeam();
+  const _xPrevRound=G.round;
+  if(G.isX) xTurnSettle();
   // record this turn's points scored (0 on a bust) for 01 games
-  if(!G.isCricket){ t.history.push(G.turnStartScore - t.score); }
+  if(!G.isCricket && !G.isX){ t.history.push(G.turnStartScore - t.score); }
   if(G.ironOrder){                     // Ironman: fixed individual rotation (e.g. A → C → B)
     G.ironPos=(G.ironPos+1)%G.ironOrder.length;
     const nx=G.ironOrder[G.ironPos];
@@ -3137,6 +3374,7 @@ function commitTurn(){
   G.darts=[];
   G.turnLocked=false;
   G.pendingWin=null; G._coNoted=false;
+  if(G.isX){ xSkipDead(); xRoundCheck(_xPrevRound); }
   G.turnStartScore=curTeam().score;
   G.turnStartOpened=curTeam().opened;
   renderGame();
@@ -3152,8 +3390,7 @@ function endTurnManual(){            // the "✓ Score It" button
     G.darts.push({value:0,mult:1,score:0,label:'Miss',bust:false,noCount:false});
   }
   commitTurn();
-  closeBoard();
-  closeBoard01();
+  if(!G.isX){ closeBoard(); closeBoard01(); }
 }
 
 //------- Fat 6 logic (outcome-based input) -------
@@ -3251,12 +3488,27 @@ function pendWin(teamIdx,detail){          // winning dart thrown — wait for C
 // for both the board and calculator paths. Win-screen Undo restores the
 // pre-turn snapshot, so this is undone with everything else.
 function noteCheckout(teamIdx){
-  if(!G || G.isCricket || G.isFat6) return;
+  if(!G || G.isCricket || G.isFat6 || G.isX) return;
   var t=G.teams[teamIdx]; if(!t) return;
   var pts=(G.turnStartScore||0)-(t.score||0);
   if(pts>0 && !G._coNoted){ t.history.push(pts); G._coNoted=true; }
 }
 function declareWin(teamIdx,detail){
+  if(G.isX){
+    G.over=true;
+    const w=G.teams[teamIdx];
+    try{
+      const losers=[]; G.teams.forEach((p,i)=>{ if(i!==teamIdx) losers.push(p.members[0]); });
+      recordGameResult(w.members.slice(), losers, G.game, {});
+    }catch(e){}
+    document.getElementById('game').classList.add('hidden');
+    document.getElementById('winScreen').classList.remove('hidden');
+    document.getElementById('winName').textContent=shortName(w.name);
+    document.getElementById('winDetail').textContent=detail||'';
+    try{ lgOnWin(-1); }catch(e){}
+    clearGameState();
+    return;
+  }
   G.over=true;
   const t=G.teams[teamIdx];
   try{
@@ -3308,6 +3560,12 @@ function placeSessionButtons(){
 }
 function renderGame(){
   placeSessionButtons();
+  if(G.isX){
+    renderX();
+    try{ renderWinCall(); }catch(e){}
+    gsQueue();
+    return;
+  }
   if(G.isFat6){
     renderFat6();
     document.getElementById('undoBtn').disabled=history.length===0;
@@ -3898,6 +4156,7 @@ function closeBoard(){
   fitScreen();
 }
 function backBoard(){
+  if(G && G.isX){ document.getElementById('quitBtn').click(); return; }
   while(G.darts.length>0) undo();
   redoStack.length=0;
   if(document.getElementById('game').classList.contains('bdopen')) closeBoard01(); else closeBoard();
@@ -3961,7 +4220,7 @@ document.getElementById('missBtn').onclick=()=>{ if(G&&G.isFat6){f6LifeBtn();} e
 const LS_INPUT='darts_input_v1';
 let inputMode=localStorage.getItem(LS_INPUT)||'board';
 let kpExpr='';
-function kpAllowed(){ return !!G && !G.isCricket && !G.isFat6; }
+function kpAllowed(){ return !!G && !G.isCricket && !G.isFat6 && !G.isX; }
 function applyInputMode(){
   const g=document.getElementById('game');
   const kp=kpAllowed();                       // 01 games: the calculator IS the home screen
@@ -3995,7 +4254,7 @@ function renderBdCalls(){                      // live dart calls across the top
   const el=document.getElementById('bdCalls'); if(!el)return;
   if(!G||G.isCricket||G.isFat6){ el.innerHTML=''; return; }
   el.innerHTML=G.darts.map(d=>{
-    const cls=d.bust?' bust':d.out?' out':(d.value===0?' miss':' t'+G.cur)+(String(d.label).length>8?' lng':'');   // >8: "D. Bull" stays full size
+    const cls=d.bust?' bust':d.out?' out':(d.value===0||d.noCount?' miss':(G.isX?' tx':' t'+G.cur))+(String(d.label).length>8?' lng':'');   // >8: "D. Bull" stays full size
     return `<span class="bc${cls}">${esc(d.bust?'BUST':d.label)}</span>`;
   }).join('');
 }
@@ -4154,7 +4413,7 @@ document.getElementById('quitBtn').onclick=()=>{
   } else toMenu();
 };
 let pausedSig=null;
-function gameSig(){ return JSON.stringify({g:config.game,m:config.mode,t:teamSel,f:config.game==='fat6'?f6Sel:null}); }
+function gameSig(){ return JSON.stringify({g:config.game,m:config.mode,t:teamSel,f:isFFA(config.game)?f6Sel:null}); }
 function refreshResume(){
   const b=document.getElementById('resumeBtn'); if(!b) return;
   const mid=!!(G && !G.over);                       // a leg (or plain game) is paused
@@ -4208,7 +4467,7 @@ document.getElementById('pidStartBtn').onclick=function(){
   // as before, just through one door.
   var spec=pidStartSpec();
   document.getElementById('piddle').classList.add('hidden');
-  if(leagueOn() && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (Fat 6 is not a league game)
+  if(leagueOn() && spec.kind!=='ffa' && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (free-for-all games are not league games)
   lgAbandon();                                       // a plain game supersedes any half-played match
   lgRunStart(spec,0);
 };
@@ -4288,6 +4547,7 @@ function restoreGameState(){
     // Re-run the real starters so the DOM, mode classes and board are set up
     // exactly as they would be normally, then swap the saved state back in.
     if(s.G.isFat6) startFat6((s.G.players||[]).map(function(p){return p.name;}));
+    else if(s.G.isX){ G=s.G; xApplyScreen(); }
     else startGame(s.G.startTeam||0,{},s.G.ironOrder||undefined);
     G=s.G;
     history.length=0; (s.hist||[]).forEach(function(h){ history.push(h); });
@@ -4373,7 +4633,7 @@ function fitMenu(force){
   // both needs and affords more: Nathan wants at least 6 there, 4 in the
   // two-column games. If a tight screen can't do it at full size the whole menu
   // zooms down uniformly (below) rather than dropping a row.
-  var MINROWS=(config.game==='fat6')?6:4;
+  var MINROWS=isFFA(config.game)?6:4;
   var FLOOR=rowsPx(MINROWS);
   var MIN3=rowsPx(Math.max(3,MINROWS-1));         // absolute floor before we allow scrolling
   ls.style.maxHeight=FLOOR+'px';
@@ -4911,7 +5171,7 @@ document.getElementById('lgEndSeason').onclick=function(){
 //---------------------------- legs ----------------------------
 // What the bull-off decided, in a form that can be replayed with a rotation.
 function pidStartSpec(){
-  if(config.game==='fat6') return {kind:'fat6', order:pidPicks.map(function(p){return f6Sel[p.idx];})};
+  if(isFFA(config.game)) return {kind:'ffa', game:config.game, order:pidPicks.map(function(p){return f6Sel[p.idx];})};
   if(config.mode==='iron') return {kind:'iron', ironOrder:pidPicks.map(function(p){return p.idx<2?{t:0,m:p.idx}:{t:1,m:0};})};
   var first=pidPicks[0].team, leadoff={}; pidPicks.forEach(function(p){ leadoff[p.team]=p.idx; });
   return {kind:'std', first:first, leadoff:leadoff};
@@ -4920,7 +5180,7 @@ function lgRot(a,k){ k=((k%a.length)+a.length)%a.length; return a.slice(k).conca
 // Leg k of a spec: the same players, the starter rotated k places on.
 function lgRunStart(spec,k){
   k=k||0;
-  if(spec.kind==='fat6'){ startFat6(lgRot(spec.order,k)); return; }
+  if(spec.kind==='ffa'||spec.kind==='fat6'){ var _o=lgRot(spec.order,k); if(!spec.game||spec.game==='fat6') startFat6(_o); else startX(spec.game,_o); return; }
   if(spec.kind==='iron'){ var o=lgRot(spec.ironOrder,k); startGame(o[0].t,{},o); return; }
   startGame((spec.first+k)%2, spec.leadoff||{});
 }
@@ -5285,7 +5545,7 @@ renderColumns();renderLineup();updateStart();
 // whatever was chosen last time instead of snapping back to 501.
 try{
   var _lg=localStorage.getItem('darts_lastgame_v1');
-  if(_lg && _lg!==config.game && document.querySelector('#gameSel button[data-game="'+_lg+'"]')) setGame(_lg);
+  if(_lg && _lg!==config.game && (isFFA(_lg) || document.querySelector('#gameSel button[data-game="'+_lg+'"]'))) setGame(_lg);
 }catch(e){}
 restoreGameState();          // bring back an in-progress game after an app restart
 // Bake the board's sisal texture now, while nothing is happening, so the first
