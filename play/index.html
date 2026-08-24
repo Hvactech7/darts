@@ -2824,11 +2824,9 @@ function renderPiddle(){
       return `<div class="pid-name${picked?' picked':''}" data-team="${team}" data-idx="${idx}"><span>${esc(shortName(n))}</span><span class="pid-badge">${badge}</span></div>`;
     }).join('') || '<div class="small" style="padding:10px;">—</div>';
   });
-  const slot=pl=>{ const p=pidPicks[pl]; const lbl=pl===0?'🥇 1st — throws first':'🥈 2nd';
-    if(!p) return `<div class="pid-slot">${lbl}</div>`;
-    const nm=(teamSel[p.team]||[])[p.idx]||'';
-    return `<div class="pid-slot filled">${lbl}<br><b>${esc(shortName(nm))}</b></div>`; };
-  document.getElementById('pidOrder').innerHTML=slot(0)+slot(1);
+  // The 1st/2nd summary boxes are gone (Nathan) — the 🥇/🥈 badges on the
+  // names already say everything they said.
+  document.getElementById('pidOrder').innerHTML='';
   var hint=document.getElementById('pidHint');
   if(hint) hint.textContent = (config.mode==='2p')
     ? 'Each player throws one dart at the bull — tap whoever was closest. They go first; the other player is automatically second.'
@@ -2945,11 +2943,11 @@ function startFat6(order){
 // Plain-English rules for whatever is being played right now.
 const RULES={
   '301':[['Get from 301 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
-    ['<b>Double in:</b> nothing counts until you hit a double (the thin outer ring, or the bull).'],
-    ['<b>Double out:</b> the dart that lands you exactly on zero must be a double.','Going past zero — or leaving 1 — is a <b>bust</b>: the whole turn is wiped and you keep the score you started the turn with.'],
+    ['<b>Double in:</b> nothing counts until you hit a double (the thin outer ring, or the Double Bull).'],
+    ['<b>Double out:</b> the dart that lands you exactly on zero must be a double (the thin outer ring, or the Double Bull).','Going past zero — or leaving 1 — is a <b>bust</b>: the whole turn is wiped and you keep the score you started the turn with.'],
     ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
   '501':[['Get from 501 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
-    ['No double needed to start — but the dart that lands you exactly on zero must be a <b>double</b> (thin outer ring, or the bull).'],
+    ['No double needed to start — but the dart that lands you exactly on zero must be a <b>double</b> (the thin outer ring, or the Double Bull).'],
     ['Going past zero — or leaving 1 — is a <b>bust</b>: the turn is wiped and you keep the score you started the turn with.'],
     ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
   cricket:[['Close the numbers <b>20, 19, 18, 17, 16, 15</b> and the <b>bull</b> by hitting each one three times.','Singles count once, doubles twice, triples three times (double bull counts two).'],
@@ -3694,7 +3692,7 @@ function placeSessionButtons(){
     var boardUp = gx.classList.contains('fat6') || gx.classList.contains('bdopen') || gx.classList.contains('board-open');
     var bw=document.getElementById('boardwrap');
     if(boardUp && bw){ if(rb.parentElement!==bw) bw.appendChild(rb); }
-    else if(G.isCricket){ var sa0=document.getElementById('scoreActions'); if(sa0&&rb.parentElement!==sa0) sa0.appendChild(rb); }
+    else if(G.isCricket){ var sa0=document.getElementById('scoreActions'); if(sa0&&(rb.parentElement!==sa0||rb.previousElementSibling!==q)) sa0.insertBefore(rb,q.nextSibling); }   // just right of Quit (Nathan)
     else { if(rb.parentElement!==q.parentElement || rb.previousElementSibling!==q) q.parentElement.insertBefore(rb,q.nextSibling); }
   }
 }
