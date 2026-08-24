@@ -2,8 +2,9 @@
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Dart Keeper — darts scorekeeper for 301, 501, Cricket &amp; Fat 6</title>
-<meta name="description" content="A free dartboard scorekeeper for the people who actually play. 301, 501, Cricket and Fat 6 — on your phone or tablet, offline, no account.">
+<title>Dart Keeper — darts scorekeeper for 301, 501, Cricket, Killer &amp; more</title>
+<style>.card .gi{display:block;width:96px;height:96px;border-radius:14px;margin:0 auto 10px;box-shadow:0 4px 14px rgba(0,0,0,.5);} .card{text-align:center;} .card .pip{justify-content:center;}</style>
+<meta name="description" content="A free dartboard scorekeeper for the people who actually play. Eleven games — 301, 501, Cricket, Fat 6, Killer, Shanghai, Gotcha and more — on your phone or tablet, offline, no account.">
 <meta name="theme-color" content="#070a12">
 <link rel="canonical" href="https://dartkeeper.net/">
 <link rel="icon" href="lp-icon-180.png" sizes="180x180">
@@ -11,7 +12,7 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Dart Keeper">
 <meta property="og:title" content="Dart Keeper — keep the score, settle the argument">
-<meta property="og:description" content="Free darts scorekeeper for 301, 501, Cricket and Fat 6. Works offline on the tablet at your board.">
+<meta property="og:description" content="Free darts scorekeeper with eleven games — 301, 501, Cricket, Killer, Shanghai and more. Works offline on the tablet at your board.">
 <meta property="og:url" content="https://dartkeeper.net/">
 <meta property="og:image" content="https://dartkeeper.net/lp-banner.jpg">
 <meta property="og:image:width" content="1240">
@@ -182,8 +183,8 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
   <img class="banner" src="lp-banner.jpg" alt="Dart Keeper">
   <div class="pitch">
     <h1>Keep the score. <em>Settle the argument.</em></h1>
-    <p>A proper dartboard scorekeeper for the tablet on the wall — four games, real teams,
-       lifetime stats, and not one second of setup.</p>
+    <p>A proper dartboard scorekeeper for the tablet on the wall — eleven games, real teams,
+       lifetime stats, built-in rules, and not one second of setup.</p>
     <div class="cta-row">
       <a class="btn play" href="/play/">Play Now</a>
       <a class="btn" href="#games">See the Games</a>
@@ -193,24 +194,39 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
 </section>
 
 <div class="strip"><div class="in">
-  <div class="stat"><div class="n b">4</div><div class="l">Games</div></div>
-  <div class="stat"><div class="n">2–6</div><div class="l">Players</div></div>
+  <div class="stat"><div class="n b">11</div><div class="l">Games</div></div>
+  <div class="stat"><div class="n">2–8</div><div class="l">Players</div></div>
   <div class="stat"><div class="n f">0</div><div class="l">Signal needed</div></div>
   <div class="stat"><div class="n">∞</div><div class="l">Undo</div></div>
 </div></div>
 
 <div class="wrap">
-  <h2 id="games">Four Ways to Play</h2>
+  <h2 id="games">Eleven Ways to Play</h2>
   <div class="grid">
-    <div class="card"><p class="pip">Classic</p><h3>501</h3>
+    <div class="card rcard" data-game="501" role="button" tabindex="0"><img class="gi" src="icons/game-501.webp" alt="501 icon" loading="lazy" width="96" height="96"><h3>501</h3>
       <p>Race from 501 to exactly zero, finishing on a double. Solo, doubles, or Ironman.</p></div>
-    <div class="card"><p class="pip">Classic</p><h3>301</h3>
+    <div class="card rcard" data-game="301" role="button" tabindex="0"><img class="gi" src="icons/game-301.webp" alt="301 icon" loading="lazy" width="96" height="96"><h3>301</h3>
       <p>Same race, shorter — and you must open on a double before a single point counts.</p></div>
-    <div class="card"><p class="pip">Tactics</p><h3>Cricket</h3>
+    <div class="card rcard" data-game="cricket" role="button" tabindex="0"><img class="gi" src="icons/game-cricket.webp" alt="Cricket icon" loading="lazy" width="96" height="96"><h3>Cricket</h3>
       <p>Close 15 through 20 and the bull. Sword-blade marks, live points, dead numbers grey out.</p></div>
-    <div class="card f"><p class="pip">House rules</p><h3>Fat 6</h3>
+    <div class="card f rcard" data-game="fat6" role="button" tabindex="0"><img class="gi" src="icons/game-fat6.webp" alt="Fat 6 icon" loading="lazy" width="96" height="96"><h3>Fat 6</h3>
       <p>Everyone in, five lives each. Set the target or lose a heart. Last one standing wins.</p></div>
+    <div class="card f rcard" data-game="killer" role="button" tabindex="0"><img class="gi" src="icons/game-killer.webp" alt="Killer icon" loading="lazy" width="96" height="96"><h3>Killer</h3>
+      <p>Throw for your number, arm on your own double, then hunt theirs. Three lives — last one standing.</p></div>
+    <div class="card rcard" data-game="shanghai" role="button" tabindex="0"><img class="gi" src="icons/game-shanghai.webp" alt="Shanghai icon" loading="lazy" width="96" height="96"><h3>Shanghai</h3>
+      <p>Seven rounds, one number each. Single + double + triple in one turn wins on the spot.</p></div>
+    <div class="card rcard" data-game="atw" role="button" tabindex="0"><img class="gi" src="icons/game-atw.webp" alt="Around The World icon" loading="lazy" width="96" height="96"><h3>Around The World</h3>
+      <p>Hit 1 through 20, in order. Any part of the number counts. First to the 20 wins.</p></div>
+    <div class="card rcard" data-game="halveit" role="button" tabindex="0"><img class="gi" src="icons/game-halveit.webp" alt="Halve-It icon" loading="lazy" width="96" height="96"><h3>Halve-It</h3>
+      <p>Six targets, one round each. Miss with all three darts and your score gets cut in half.</p></div>
+    <div class="card rcard" data-game="baseball" role="button" tabindex="0"><img class="gi" src="icons/game-baseball.webp" alt="Baseball icon" loading="lazy" width="96" height="96"><h3>Baseball</h3>
+      <p>Nine innings on the 1–9. Singles, doubles and triples score 1, 2 and 3 runs.</p></div>
+    <div class="card f rcard" data-game="gotcha" role="button" tabindex="0"><img class="gi" src="icons/game-gotcha.webp" alt="Gotcha icon" loading="lazy" width="96" height="96"><h3>Gotcha</h3>
+      <p>Race up to exactly 301 — and land on someone's score to knock them back to zero.</p></div>
+    <div class="card rcard" data-game="golf" role="button" tabindex="0"><img class="gi" src="icons/game-golf.webp" alt="Golf icon" loading="lazy" width="96" height="96"><h3>Golf</h3>
+      <p>Nine holes on the 1–9. A triple is one stroke, a fat single is four. Fewest strokes wins.</p></div>
   </div>
+  <p class="micro" style="text-align:center;margin-top:14px;">Tap any game for its rules — the same 📖 Rules button lives right at the board in the app.</p>
 </div>
 
 <div class="rows">
@@ -244,6 +260,17 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
     </div>
     <div><div class="shot"><img src="shots/shot-fat6.jpg" alt="Fat 6 in Dart Keeper — the full board with player hearts" loading="lazy"></div></div>
   </div>
+
+  <div class="row">
+    <div class="rtext">
+      <p class="kicker">Party games</p>
+      <h3>Killer, Shanghai, Gotcha &amp; friends</h3>
+      <p>Seven party games live behind the <b>Extras</b> button — up to eight players, everyone
+         for themselves. Killer starts the honest way: throw a dart, and whatever number you
+         hit is yours. Arm on your double, take their hearts, last one standing.</p>
+    </div>
+    <div><div class="shot"><img src="shots/shot-killer.jpg" alt="Killer in Dart Keeper — four players, armed killers and hearts on the line" loading="lazy"></div></div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -253,6 +280,7 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
     <div class="feat"><span class="ico">↺</span><div><b>Undo anything</b><span>Miscount, misread, wrong player — undo and redo as far back as you need, even after a win.</span></div></div>
     <div class="feat"><span class="ico">☁</span><div><b>Your players, kept</b><span>Roster, teams and lifetime stats back up on their own and restore to any device.</span></div></div>
     <div class="feat"><span class="ico">⚡</span><div><b>No signal, no problem</b><span>Runs entirely on the device — garages and basements included — and quietly updates itself when you're back online.</span></div></div>
+    <div class="feat"><span class="ico">📖</span><div><b>Rules on tap</b><span>Every game explains itself — one button at the board settles how it's played before the first dart flies.</span></div></div>
   </div>
 
   <h2 id="install">Put It On Your Home Screen</h2>
@@ -283,5 +311,87 @@ footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(217
   var q='?src='+encodeURIComponent(m[1]);
   [].forEach.call(document.querySelectorAll('a[href="/play/"]'), function(a){ a.href='/play/'+q; });
 })();
+</script>
+
+<!-- ============ game rules modal (tap any game card) ============ -->
+<style>
+.rcard{cursor:pointer;transition:transform .15s ease, box-shadow .15s ease;}
+.rcard:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.55);}
+.rcard .rhint{display:block;margin-top:10px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8f8065;}
+#ruleModal{position:fixed;inset:0;z-index:500;background:rgba(4,3,8,.84);display:flex;align-items:center;justify-content:center;padding:18px;}
+#ruleModal.hidden{display:none;}
+#ruleModal .card{max-width:600px;width:100%;max-height:calc(100vh - 36px);display:flex;flex-direction:column;text-align:left;cursor:auto;}
+#ruleModal h3{text-align:center;font-size:28px;margin:0 0 12px;}
+#ruleBody{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:16.5px;line-height:1.55;}
+#ruleBody p{margin:0 0 10px;}
+#ruleBody b{color:#e8c876;}
+#ruleClose{display:block;width:100%;margin-top:14px;font:inherit;font-weight:700;font-size:18px;letter-spacing:1px;padding:12px;border-radius:12px;border:1px solid #6a5a34;background:linear-gradient(180deg,#2b5f96,#1c3f68 60%,#122844);color:#fff;cursor:pointer;}
+</style>
+<div id="ruleModal" class="hidden" aria-modal="true" role="dialog">
+  <div class="card">
+    <h3 id="ruleTitle">Rules</h3>
+    <div id="ruleBody"></div>
+    <button id="ruleClose">Got it</button>
+  </div>
+</div>
+<script>
+// The SAME rules the app shows at the board — lifted verbatim so they never drift.
+const RULES={
+  '301':[['Get from 301 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
+    ['<b>Double in:</b> nothing counts until you hit a double (the thin outer ring, or the Double Bull).'],
+    ['<b>Double out:</b> the dart that lands you exactly on zero must be a double (the thin outer ring, or the Double Bull).','Going past zero — or leaving 1 — is a <b>bust</b>: the whole turn is wiped and you keep the score you started the turn with.'],
+    ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
+  '501':[['Get from 501 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
+    ['No double needed to start — but the dart that lands you exactly on zero must be a <b>double</b> (the thin outer ring, or the Double Bull).'],
+    ['Going past zero — or leaving 1 — is a <b>bust</b>: the turn is wiped and you keep the score you started the turn with.'],
+    ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
+  cricket:[['Close the numbers <b>20, 19, 18, 17, 16, 15</b> and the <b>bull</b> by hitting each one three times.','Singles count once, doubles twice, triples three times (double bull counts two).'],
+    ['Once YOU have closed a number, more hits on it score points — until the other side closes it too.'],
+    ['Win by closing everything with at least as many points as the other side.']],
+  fat6:[['Everyone starts with <b>5 lives</b>. The first target is <b>FAT 6</b>.'],
+    ['On your turn you must hit the current target. Hit it, and a following dart <b>sets the new target</b> for the next player — whatever it lands in: FAT (outer single), SKINNY (inner single), any double, any triple, or a bull. Tap that segment on the board.'],
+    ['Cannot hit the target with your three darts? Tap <b>💔 Lose a life</b>. Out of lives and you are out of the game.'],
+    ['Last player standing wins.']],
+  killer:[['Everyone throws a dart at the board — <b>whatever number you hit, that is your number</b>. Bull does not count, and a taken number means throw again. After your throw, tap the number you hit.'],
+    ['Then <b>arm yourself</b>: hit the double of your own number. You are now a killer 🗡.'],
+    ['Then hunt: hit the <b>double of another player\'s number</b> and they lose a life (everyone has three ♥). A killer who hits their own double again loses one of their own.'],
+    ['Lose all three lives and you are out. Last player standing wins.']],
+  shanghai:[['Seven rounds, one number per round: round 1 is the 1s, round 2 the 2s, up to the 7s.'],
+    ['Only the round\'s number counts. Single scores it, double scores twice, triple scores three times.'],
+    ['Hit the <b>single, double AND triple</b> of the number in one turn — that is a <b>SHANGHAI</b> and wins instantly.'],
+    ['Otherwise, most points after round 7 wins. Tied? Play on until a round ends with one leader.']],
+  atw:[['Race around the board: hit <b>1 through 20, in order</b>.'],
+    ['Any part of the number counts — single, double or triple. Each hit moves you to the next number, and you can advance more than once in a turn.'],
+    ['First player to hit the 20 wins.']],
+  halveit:[['Six rounds, six targets: <b>20s, 19s, 18s, any double, any triple, the bull</b>.'],
+    ['Every dart that hits the round\'s target adds its value to your score.'],
+    ['Miss the target with all three darts and your score is <b>cut in half</b>.'],
+    ['Highest score after the bull round wins. Tied? Play on.']],
+  baseball:[['Nine innings. In inning 1 you throw at the 1s, inning 2 the 2s… up to the 9s.'],
+    ['Only the inning\'s number counts: a single is <b>1 run</b>, a double <b>2 runs</b>, a triple <b>3 runs</b>.'],
+    ['Most runs after nine innings wins. Tied? Extra innings.']],
+  gotcha:[['Race UP to <b>exactly 301</b>. Every dart adds to your score.'],
+    ['Go past 301 and the turn is a <b>bust</b> — you keep the score you started the turn with.'],
+    ['Land exactly on another player\'s score and <b>GOTCHA</b> — they get knocked back to zero.'],
+    ['First to exactly 301 wins.']],
+  golf:[['Nine holes: hole 1 is the 1s, hole 2 the 2s… up to the 9s. Lowest total wins.'],
+    ['Up to three darts per hole — your <b>best</b> dart counts: triple = <b>1</b> stroke, double = <b>2</b>, skinny single (inside the triple ring) = <b>3</b>, fat single = <b>4</b>, nothing = <b>5</b>.'],
+    ['Tied after the 9th? Playoff holes.']]
+};
+var RULE_NAMES={'501':'501','301':'301',cricket:'Cricket',fat6:'Fat 6',killer:'Killer',shanghai:'Shanghai',atw:'Around The World',halveit:'Halve-It',baseball:'Baseball',gotcha:'Gotcha',golf:'Golf'};
+function openRule(g){
+  var r=RULES[g]; if(!r) return;
+  document.getElementById('ruleTitle').textContent='\ud83d\udcd6 '+RULE_NAMES[g];
+  document.getElementById('ruleBody').innerHTML=r.map(function(par){return '<p>'+par.join(' ')+'</p>';}).join('');
+  document.getElementById('ruleModal').classList.remove('hidden');
+  document.getElementById('ruleBody').scrollTop=0;
+}
+document.querySelectorAll('.rcard').forEach(function(c){
+  c.addEventListener('click',function(){ openRule(c.dataset.game); });
+  c.addEventListener('keydown',function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openRule(c.dataset.game); } });
+});
+document.getElementById('ruleClose').onclick=function(){ document.getElementById('ruleModal').classList.add('hidden'); };
+document.getElementById('ruleModal').addEventListener('click',function(e){ if(e.target===this) this.classList.add('hidden'); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') document.getElementById('ruleModal').classList.add('hidden'); });
 </script>
 </body></html>
