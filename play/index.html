@@ -506,6 +506,17 @@
   #game.bdopen #bdOuts{display:flex;position:absolute;top:10px;right:10px;gap:0;z-index:2;align-items:center;}
   #bdCalls .bc.out{color:var(--gold);text-shadow:0 3px 0 #000,0 0 16px rgba(232,200,118,.8);}
   #bdCalls .bc.tx{color:#e8dcc0;text-shadow:0 3px 0 #000,0 0 14px rgba(232,200,118,.45);}
+  /* ---- Rules ---- */
+  #rulesCard{position:fixed;inset:0;z-index:320;background:rgba(4,3,8,.82);display:flex;align-items:center;justify-content:center;padding:16px;}
+  #rulesCard.hidden{display:none;}
+  #rulesCard .card{max-width:560px;width:100%;max-height:calc(100vh - 32px);display:flex;flex-direction:column;}
+  #rulesBody{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:16.5px;line-height:1.5;color:#e6dcc4;}
+  #rulesBody p{margin:0 0 10px;}
+  #rulesBody b{color:var(--gold);}
+  #rulesBtn{white-space:nowrap;}
+  /* on any screen with the big board, Rules parks in the open lower-left corner */
+  .boardwrap #rulesBtn{position:absolute;left:8px;bottom:6px;z-index:3;font-size:16px;padding:9px 14px;}
+  @media (max-width:600px){ .boardwrap #rulesBtn{font-size:13px;padding:7px 10px;left:4px;bottom:2px;} }
   /* ---- Extras picker ---- */
   #extrasSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
   #extrasSplash.hidden{display:none;}
@@ -516,23 +527,24 @@
   #extrasGrid .xg span{font-family:var(--sans,inherit);font-size:12.5px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;line-height:1.25;}
   #extrasGrid .xg.on{outline:2px solid var(--gold);}
   @media (max-width:600px){ #extrasGrid{grid-template-columns:1fr;} }
-  /* ---- Extras in play: full-board screen with a status strip up top ---- */
+  /* ---- Extras in play: Fat 6's layout, with Score It + dart slots instead of Lose-a-life ---- */
   #xStrip{display:none;}
-  #game.xgame #xStrip{display:flex;position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:0;right:0;flex-direction:column;align-items:center;gap:5px;z-index:2;pointer-events:none;padding:0 90px;}
-  #xStrip .xTitle{font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:1px;color:var(--gold);text-shadow:0 2px 0 #000,0 0 16px rgba(232,200,118,.5);text-align:center;line-height:1.1;}
-  #xStrip .xSub{font-family:var(--num);font-size:16px;color:#cbbd9a;text-shadow:0 2px 0 #000;}
-  #xStrip .xChips{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;max-width:900px;}
-  #xStrip .xc{font-family:var(--num);font-size:16px;font-weight:600;color:#d8cfc0;background:rgba(10,8,14,.72);border:1.5px solid #3a3324;border-radius:9px;padding:3px 9px;text-shadow:0 1px 0 #000;}
-  #xStrip .xc b{color:var(--gold);font-weight:700;}
-  #xStrip .xc.cur{border-color:#7fb8ef;color:#cfe6ff;box-shadow:0 0 10px rgba(74,168,255,.5);}
-  #xStrip .xc.dead{opacity:.42;text-decoration:line-through;}
-  #game.xgame #bdCalls{top:calc(env(safe-area-inset-top,0px) + 108px) !important;min-height:46px;}   /* !important: outranks the old max-width:800px board rule */
-  #game.xgame #bdCalls .bc{font-size:44px;}
-  /* the strip + calls own the top band; the board gets what's left */
-  #game.xgame #playArea{padding-top:calc(env(safe-area-inset-top,0px) + 172px);box-sizing:border-box;}
-  #game.xgame #boardwrap svg{height:min(calc(100vh - env(safe-area-inset-top,0px) - 248px),94vw);width:auto;}
+  #game.fat6.xgame #missBtn{display:none;}
+  #game.fat6.xgame #endTurnBtn{display:block;flex:1;font-size:28px;}
+  #game.fat6.xgame .darts{display:flex;}
+  #game.xgame .f6-target .lbl{color:var(--gold);}
+  #game.xgame .f6-target .val.long{font-size:44px;}
+  #game.xgame .x-hint{font-family:var(--num);font-size:15px;color:var(--muted);margin-top:2px;}
+  #game.xgame .f6-p .lv{line-height:1.15;}
+  #game.xgame .f6-p.xsc .lv{color:var(--gold);text-shadow:0 0 8px rgba(232,200,118,.7),0 1px 2px rgba(0,0,0,.6);}
+  /* the game-shot call: centred over the board, same panel as the board screen */
+  #game.xgame #winCall{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;}
   @media (max-width:600px){
-    #xStrip{padding:0 68px;} #xStrip .xTitle{font-size:18px;} #xStrip .xc{font-size:13px;padding:2px 6px;} #xStrip .xSub{font-size:13px;}
+    #game.xgame .f6-target .val{font-size:52px;} #game.xgame .f6-target .val.long{font-size:26px;}
+    #game.xgame .f6-target .lbl{font-size:12px;letter-spacing:2px;} #game.xgame .f6-who{font-size:18px;}
+    #game.xgame .x-hint{font-size:12px;}
+    #game.xgame .f6-p{min-width:70px;padding:4px 7px;} #game.xgame .f6-p .nm{font-size:16px;} #game.xgame .f6-p .lv{font-size:14px;letter-spacing:1px;}
+    #game.fat6.xgame #endTurnBtn{font-size:22px;}
     #game.xgame #bdCalls{top:calc(env(safe-area-inset-top,0px) + 128px) !important;} #game.xgame #bdCalls .bc{font-size:28px;}
     #game.xgame #playArea{padding-top:calc(env(safe-area-inset-top,0px) + 168px);}
     #game.xgame #boardwrap svg{height:min(calc(100vh - env(safe-area-inset-top,0px) - 240px),94vw);}
@@ -706,7 +718,8 @@
     font-size:16px;white-space:nowrap;}
   /* symmetry (Nathan): Quit = Undo+Redo+gap exactly, so the wider Dart Board
      sits on the true centreline of the row */
-  #game:not(.cricket):not(.fat6) #playArea .turnbar #quitBtn{width:224px;flex:0 0 auto;padding-left:0;padding-right:0;white-space:nowrap;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #quitBtn{width:110px;flex:0 0 auto;padding-left:0;padding-right:0;white-space:nowrap;}
+  #game:not(.cricket):not(.fat6) #playArea .turnbar #rulesBtn{width:110px;flex:0 0 auto;padding-left:0;padding-right:0;white-space:nowrap;}
   #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:1 1 auto;min-width:0;}   /* fills between the aligned flanks */
   #game:not(.cricket):not(.fat6) #playArea #undoBtn{margin-top:0;order:2;}
   #game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:3;}
@@ -1624,6 +1637,15 @@
   <!-- ================= EXTRAS (Nathan, 2026-08-23) =================
        One pill, eight party games: Fat 6 plus the seven new free-for-all games.
        All of them: 2-8 individual players, bull-order start, stats cards, no league. -->
+  <!-- ================= RULES (Nathan, 2026-08-23) =================
+       One button, every screen: how do you play the game on the board right now. -->
+  <div id="rulesCard" class="hidden">
+    <div class="card">
+      <h2 id="rulesTitle">📖 Rules</h2>
+      <div id="rulesBody"></div>
+      <button class="primary" id="rulesDone" style="width:100%;margin-top:12px;">Done</button>
+    </div>
+  </div>
   <div id="extrasSplash" class="hidden">
     <div class="card">
       <h2>🎉 Extras</h2>
@@ -1858,7 +1880,8 @@
 
     <!-- ☰ Menu removed 2026-08-07 (Nathan) — Quit to Menu alone, centred. -->
     <div class="gamebtns" id="sessionBtns">
-      <button class="warn" id="quitBtn">Quit to Menu</button>
+      <button class="warn" id="quitBtn">Quit</button>
+      <button class="ghost" id="rulesBtn">📖 Rules</button>
     </div>
   </div>
 
@@ -2875,6 +2898,7 @@ function startGame(startTeam, leadoff, ironOrder){
     turnLocked:false, pendingWin:null, round:1, over:false
   };
   history=[];
+  try{ xCleanup(); }catch(e){}
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('game').classList.remove('hidden');
@@ -2891,6 +2915,7 @@ function startGame(startTeam, leadoff, ironOrder){
 
 function startFat6(order){
   try{ dkPing('play'); }catch(e){}
+  try{ xCleanup(); }catch(e){}
   G={game:'fat6', mode:'ffa', isCricket:false, isFat6:true,
      players:order.map(n=>({name:n,lives:5,out:false})),
      cur:0, darts:[], target:{v:6,m:1,r:'out'}, phase:'hunt',
@@ -2916,10 +2941,70 @@ function startFat6(order){
   renderGame();
 }
 
+//============================ RULES (Nathan, 2026-08-23) ============================
+// Plain-English rules for whatever is being played right now.
+const RULES={
+  '301':[['Get from 301 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
+    ['<b>Double in:</b> nothing counts until you hit a double (the thin outer ring, or the bull).'],
+    ['<b>Double out:</b> the dart that lands you exactly on zero must be a double.','Going past zero — or leaving 1 — is a <b>bust</b>: the whole turn is wiped and you keep the score you started the turn with.'],
+    ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
+  '501':[['Get from 501 to exactly zero.','Each turn is three darts; what you score comes off your total.'],
+    ['No double needed to start — but the dart that lands you exactly on zero must be a <b>double</b> (thin outer ring, or the bull).'],
+    ['Going past zero — or leaving 1 — is a <b>bust</b>: the turn is wiped and you keep the score you started the turn with.'],
+    ['When you are close, the checkout suggestion shows a way out, and the three darts by the score light up when a finish is on — tap the dart you went out with.']],
+  cricket:[['Close the numbers <b>20, 19, 18, 17, 16, 15</b> and the <b>bull</b> by hitting each one three times.','Singles count once, doubles twice, triples three times (double bull counts two).'],
+    ['Once YOU have closed a number, more hits on it score points — until the other side closes it too.'],
+    ['Win by closing everything with at least as many points as the other side.']],
+  fat6:[['Everyone starts with <b>5 lives</b>. The first target is <b>FAT 6</b>.'],
+    ['On your turn you must hit the current target. Hit it, and a following dart <b>sets the new target</b> for the next player — whatever it lands in: FAT (outer single), SKINNY (inner single), any double, any triple, or a bull. Tap that segment on the board.'],
+    ['Cannot hit the target with your three darts? Tap <b>💔 Lose a life</b>. Out of lives and you are out of the game.'],
+    ['Last player standing wins.']],
+  killer:[['Everyone throws a dart at the board — <b>whatever number you hit, that is your number</b>. Bull does not count, and a taken number means throw again. After your throw, tap the number you hit.'],
+    ['Then <b>arm yourself</b>: hit the double of your own number. You are now a killer 🗡.'],
+    ['Then hunt: hit the <b>double of another player\'s number</b> and they lose a life (everyone has three ♥). A killer who hits their own double again loses one of their own.'],
+    ['Lose all three lives and you are out. Last player standing wins.']],
+  shanghai:[['Seven rounds, one number per round: round 1 is the 1s, round 2 the 2s, up to the 7s.'],
+    ['Only the round\'s number counts. Single scores it, double scores twice, triple scores three times.'],
+    ['Hit the <b>single, double AND triple</b> of the number in one turn — that is a <b>SHANGHAI</b> and wins instantly.'],
+    ['Otherwise, most points after round 7 wins. Tied? Play on until a round ends with one leader.']],
+  atw:[['Race around the board: hit <b>1 through 20, in order</b>.'],
+    ['Any part of the number counts — single, double or triple. Each hit moves you to the next number, and you can advance more than once in a turn.'],
+    ['First player to hit the 20 wins.']],
+  halveit:[['Six rounds, six targets: <b>20s, 19s, 18s, any double, any triple, the bull</b>.'],
+    ['Every dart that hits the round\'s target adds its value to your score.'],
+    ['Miss the target with all three darts and your score is <b>cut in half</b>.'],
+    ['Highest score after the bull round wins. Tied? Play on.']],
+  baseball:[['Nine innings. In inning 1 you throw at the 1s, inning 2 the 2s… up to the 9s.'],
+    ['Only the inning\'s number counts: a single is <b>1 run</b>, a double <b>2 runs</b>, a triple <b>3 runs</b>.'],
+    ['Most runs after nine innings wins. Tied? Extra innings.']],
+  gotcha:[['Race UP to <b>exactly 301</b>. Every dart adds to your score.'],
+    ['Go past 301 and the turn is a <b>bust</b> — you keep the score you started the turn with.'],
+    ['Land exactly on another player\'s score and <b>GOTCHA</b> — they get knocked back to zero.'],
+    ['First to exactly 301 wins.']],
+  golf:[['Nine holes: hole 1 is the 1s, hole 2 the 2s… up to the 9s. Lowest total wins.'],
+    ['Up to three darts per hole — your <b>best</b> dart counts: triple = <b>1</b> stroke, double = <b>2</b>, skinny single (inside the triple ring) = <b>3</b>, fat single = <b>4</b>, nothing = <b>5</b>.'],
+    ['Tied after the 9th? Playoff holes.']]
+};
+function openRules(){
+  const g=(G&&!G.over)?G.game:config.game;
+  const key=RULES[g]?g:(parseInt(g,10)?String(g):null);
+  const body=document.getElementById('rulesBody');
+  document.getElementById('rulesTitle').textContent='📖 '+(XGAMES[g]||(g==='cricket'?'Cricket':g)+'').replace(/^(\d+)$/,'$1');
+  body.innerHTML=(RULES[key]||[["No rules written for this one yet."]]).map(par=>'<p>'+par.join(' ')+'</p>').join('');
+  document.getElementById('rulesCard').classList.remove('hidden');
+  body.scrollTop=0;
+}
+document.getElementById('rulesDone').onclick=()=>document.getElementById('rulesCard').classList.add('hidden');
+document.getElementById('rulesCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('rulesDone').click(); });
+document.getElementById('rulesBtn').onclick=openRules;
+
 //============================ EXTRAS ENGINE (Nathan, 2026-08-23) ============================
 // Seven party games behind the Extras pill. Every one: 2-8 individual players
 // (each is a one-member "team" so the whole turn/undo/rotation machinery just
 // works), the big tap board full-screen, three darts then ✓ Score It.
+// Killer opens with everyone throwing for a number (Nathan): kNum stays 0 until
+// the player taps the number their dart hit. Unique 1-20 only.
+function xClaiming(){ return !!G && G.isX && G.game==='killer' && G.teams.some(p=>!p.kNum); }
 function xTarget(){                       // what this round is thrown at (null = no fixed target)
   switch(G.game){
     case 'shanghai': case 'baseball': case 'golf': return Math.min(G.round,20);
@@ -2932,10 +3017,6 @@ function startX(game, order){
   try{ dkPing('play'); }catch(e){}
   const teams=order.map(n=>({name:n,members:[n],memberIdx:0,score:(game==='atw'?1:0),opened:true,marks:{},pts:0,history:[],
                              lives:3,killer:false,kNum:0,dead:false}));
-  if(game==='killer'){                    // everyone draws a number — unique, random
-    const pool=[]; for(let i=1;i<=20;i++) pool.push(i);
-    teams.forEach(t=>{ t.kNum=pool.splice(Math.floor(Math.random()*pool.length),1)[0]; });
-  }
   G={game:game, mode:'ffa', isCricket:false, isFat6:false, isX:true,
      teams:teams, cur:0, startTeam:0, darts:[],
      ironOrder:null, ironPos:0,
@@ -2945,26 +3026,43 @@ function startX(game, order){
   xApplyScreen();
   renderGame();
 }
-function xApplyScreen(){                  // DOM/mode classes — also used by resume
+// Leaving an Extras game (for Fat 6, 01, cricket): every trace must go — the
+// mode classes, the header, the calls, and the buttons xApplyScreen moved.
+// (8/23: Nathan started Fat 6 after Baseball and got Baseball's banner painted
+// over it, with the bottom buttons scrambled. Never again.)
+function xCleanup(){
+  const g=document.getElementById('game');
+  g.classList.remove('xgame');
+  const xs=document.getElementById('xStrip'); if(xs) xs.innerHTML='';
+  const bc=document.getElementById('bdCalls'); if(bc) bc.innerHTML='';
+  const os=document.getElementById('outSplash'); if(os) os.classList.remove('show');   // a mid-splash quit must not haunt the next game
+}
+function xApplyScreen(){                  // Fat 6's skeleton (Nathan): header in flow, board at full Fat 6 size
   document.getElementById('setup').classList.add('hidden');
   document.getElementById('winScreen').classList.add('hidden');
   document.getElementById('cricketBoard').classList.add('hidden');
   const g=document.getElementById('game');
-  g.classList.remove('cricket','board-open','fat6','pendwin');
-  g.classList.add('kpmode','bdopen','xgame');     // kpmode+bdopen = the existing full-board overlay
+  g.classList.remove('cricket','board-open','kpmode','bdopen','pendwin');
+  var _os=document.getElementById('outSplash'); if(_os) _os.classList.remove('show');
+  g.classList.add('fat6','xgame');          // fat6 = the layout; xgame = the Extras-only tweaks
   g.classList.remove('hidden');
   document.getElementById('kpWrap').classList.add('hidden');
-  document.getElementById('missBtn').textContent='Miss / 0';
-  var row=document.querySelector('#playArea .gamebtns');   // Undo ▸ Confirm ▸ Redo, like openBoard01
-  var u=document.getElementById('undoBtn'), r=document.getElementById('redoBtn'), c=document.getElementById('endTurnBtn');
-  if(row&&u&&r&&c){ row.insertBefore(u,c); row.appendChild(r); }
-  var back=document.getElementById('backBtn'); if(back) back.textContent='✕ Quit';
   buildBoard();
 }
 // One dart just landed (throwDart pushed it). t = the thrower.
 function applyExtras(value,mult,region){
   const t=curTeam(), d=G.darts[G.darts.length-1], n=xTarget();
   if(G.game==='killer'){
+    if(xClaiming()){                                   // opening throws: claim your number
+      G.darts=[];                                      // claim taps are not turn darts
+      if(value===25||value<1){ flashToast('Bull does not count — throw again'); renderGame(); return; }
+      if(G.teams.some(p=>p.kNum===value)){ flashToast(value+' is taken — throw again'); renderGame(); return; }
+      t.kNum=value; flashToast(shortName(t.name)+' is the '+value);
+      const nxt=G.teams.findIndex(p=>!p.kNum);
+      if(nxt>=0){ G.cur=nxt; G.turnStartScore=G.teams[nxt].score; }
+      else { G.cur=0; G.round=1; flashToast('Game on — hit your own double to arm'); }
+      renderGame(); return;
+    }
     d.noCount=true;
     if(mult!==2 || value===25) return;                 // only number doubles matter
     if(value===t.kNum){
@@ -3048,40 +3146,67 @@ function xRoundCheck(prevRound){
   }
   // tied → play on: shanghai/baseball/golf continue up the numbers, halve-it repeats its last target
 }
-function xStatusLine(){
-  const t=curTeam(), n=xTarget(), R=xRounds();
+// The header wears Fat 6's clothes: game + round as the small gold label, the
+// thing to throw at HUGE in white, the thrower's name in blue under it, and
+// every player as a bordered card on the right.
+function xHeader(){
+  const t=curTeam(), n=xTarget(), R=xRounds(), extra=R&&G.round>R;
+  const H={lbl:'',val:'',who:shortName(t.name),hint:'',cards:[]};
+  const card=(p,lv,scored)=>({nm:shortName(p.name),lv:lv,cls:(G.teams.indexOf(p)===G.cur&&!G.over?' active':'')+(p.dead?' out':'')+(scored?' xsc':'')});
   switch(G.game){
-    case 'killer': return [ (t.killer?'KILLER — hunt their doubles':'Hit D'+t.kNum+' to become a killer'), shortName(t.name)+' throws · you are '+t.kNum ];
-    case 'shanghai': return ['Round '+G.round+(G.round>R?' · tie-break':'')+' — throw at '+n, shortName(t.name)+' throws · single + double + triple = SHANGHAI'];
-    case 'atw': return ['Throw at '+t.score, shortName(t.name)+' throws · first to 20 wins'];
-    case 'halveit': return ['Round '+Math.min(G.round,6)+(G.round>R?' · tie-break':'')+' — target: '+(n==='D'?'any Double':n==='T'?'any Triple':n==='B'?'Bull':n), shortName(t.name)+' throws · miss all 3 = half your points'];
-    case 'baseball': return ['Inning '+G.round+(G.round>R?' · extra':'')+' — throw at '+n, shortName(t.name)+' bats'];
-    case 'gotcha': return ['Race to exactly 301', shortName(t.name)+' throws · '+(301-t.score)+' to go'];
-    case 'golf': return ['Hole '+G.round+(G.round>R?' · playoff':'')+' — the '+n, shortName(t.name)+' tees off · T=1 D=2 skinny=3 fat=4 miss=5'];
+    case 'killer':
+      if(xClaiming()){
+        H.lbl='KILLER · THROW FOR YOUR NUMBER'; H.val='?';
+        H.hint='throw, then tap the number you hit';
+        H.cards=G.teams.map(p=>card(p, p.kNum?String(p.kNum):'—'));
+        break;
+      }
+      H.lbl='KILLER · YOUR DOUBLE'; H.val='D'+t.kNum;
+      if(t.killer){ H.who+=' 🗡'; H.hint='armed — hit their doubles'; } else H.hint='double yourself in to arm';
+      H.cards=G.teams.map(p=>card(p, p.dead?'💀':('D'+p.kNum+(p.killer?' 🗡':'')+'<br>'+'♥'.repeat(Math.max(0,p.lives)))));
+      break;
+    case 'shanghai':
+      H.lbl='SHANGHAI · ROUND '+Math.min(G.round,R)+' OF '+R+(extra?' · TIE':''); H.val=String(n);
+      H.hint='single + double + triple = instant win';
+      H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
+    case 'atw':
+      H.lbl='AROUND THE WORLD'; H.val=String(Math.min(t.score,20));
+      H.hint='first to hit 1–20 in order';
+      H.cards=G.teams.map(p=>card(p,'on '+Math.min(p.score,20),true)); break;
+    case 'halveit':
+      H.lbl='HALVE-IT · ROUND '+Math.min(G.round,R)+' OF '+R+(extra?' · TIE':'');
+      H.val=(n==='D'?'DOUBLE':n==='T'?'TRIPLE':n==='B'?'BULL':String(n));
+      H.hint='miss all 3 and your points halve';
+      H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
+    case 'baseball':
+      H.lbl='BASEBALL · INNING '+G.round+(extra?' · EXTRA':' OF '+R); H.val=String(n);
+      H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
+    case 'gotcha':
+      H.lbl='GOTCHA · RACE TO 301'; H.val=String(301-t.score)+' TO GO';
+      H.hint='land on their score — they reset';
+      H.cards=G.teams.map(p=>card(p,p.score,true)); break;
+    case 'golf':
+      H.lbl='GOLF · HOLE '+G.round+(extra?' · PLAYOFF':' OF '+R); H.val=String(n);
+      H.hint='T 1 · D 2 · skinny 3 · fat 4 · miss 5';
+      H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
   }
-  return ['',''];
-}
-function xChipVal(t){
-  switch(G.game){
-    case 'killer': return t.kNum+' '+'♥'.repeat(Math.max(0,t.lives));
-    case 'atw': return t.score>20?'🏁':('on '+t.score);
-    case 'gotcha': return t.score;
-    case 'golf': return t.pts;
-    default: return t.pts;
-  }
+  return H;
 }
 function renderX(){
-  const el=document.getElementById('xStrip'); if(!el) return;
-  const line=xStatusLine();
-  el.innerHTML='<div class="xTitle">'+esc(XGAMES[G.game])+' · '+esc(line[0])+'</div>'
-    +'<div class="xSub">'+esc(line[1])+'</div>'
-    +'<div class="xChips">'+G.teams.map((t,i)=>'<div class="xc'+(i===G.cur&&!G.over?' cur':'')+(t.dead?' dead':'')+'">'+esc(shortName(t.name))+' <b>'+esc(String(xChipVal(t)))+'</b></div>').join('')+'</div>';
-  renderBdCalls();
+  const el=document.getElementById('fat6Board'); if(!el) return;
+  const H=xHeader();
+  el.innerHTML='<div class="f6-head">'
+    +'<div class="f6-target"><div class="lbl">'+esc(H.lbl)+'</div><div class="val'+(String(H.val).length>4?' long':'')+'">'+esc(H.val)+'</div>'
+    +'<div class="f6-who">'+(G.over?'':esc(H.who))+'</div>'+(H.hint?'<div class="x-hint">'+esc(H.hint)+'</div>':'')+'</div>'
+    +'<div class="f6-players">'+H.cards.map(c=>'<div class="f6-p'+c.cls+'"><div class="nm">'+esc(c.nm)+'</div><div class="lv">'+c.lv+'</div></div>').join('')+'</div>'
+    +'</div>';
+  renderDarts();                                  // the three dart slots in the turnbar, like 01
   const confirmBtn=document.getElementById('endTurnBtn');
-  confirmBtn.disabled=G.over;
-  confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':(G.darts.length?'✓ Score It':'Miss');
+  confirmBtn.disabled=G.over||xClaiming();
+  confirmBtn.textContent=G.pendingWin?'🏆 Confirm Winner':(xClaiming()?'Numbers first — tap the board':(G.darts.length?'✓ Score It':'Miss'));
   document.getElementById('undoBtn').disabled=history.length===0;
   var _r=document.getElementById('redoBtn'); if(_r) _r.disabled=redoStack.length===0;
+  fitScreen();
 }
 
 //============================ DART INPUT ============================
@@ -3215,6 +3340,7 @@ function renderWinCall(){
   // controls (#playArea sinks to the bottom with margin-top:auto). Board screen: CSS
   // centres it over the board. Offsets are in #game's own (unscaled) space.
   const g=document.getElementById('game');
+  if(G && G.isX){ return; }                       // CSS centres it over the board (like bdopen)
   if(g && !g.classList.contains('bdopen')){
     const sb=document.getElementById('scoreboard'), pa=document.getElementById('playArea');
     if(sb && pa){
@@ -3382,6 +3508,7 @@ function commitTurn(){
 
 function endTurnManual(){            // the "✓ Score It" button
   if(G && G.isFat6) return;          // Fat 6: turn passes only via target tap / elimination
+  if(G && G.isX && xClaiming()) return;   // Killer's opening throws: numbers come from board taps only
   if(G.over)return;
   if(G.pendingWin){ declareWin(G.pendingWin.teamIdx,G.pendingWin.detail); closeBoard(); closeBoard01(); return; }
   pushHistory();
@@ -3549,13 +3676,26 @@ function placeSessionButtons(){
   if(G.isCricket){
     var sa=document.getElementById('scoreActions'), su=document.getElementById('scoreUndoBtn');
     if(sa&&su&&q.parentElement!==sa) sa.insertBefore(q,su);
-  }else if(!G.isFat6){
+  }else if(!G.isFat6 && !G.isX){
     var tb=document.querySelector('#playArea .turnbar');
     if(tb&&q.parentElement!==tb) tb.insertBefore(q,tb.firstChild);
   }else{
-    // Fat 6 (Nathan): Quit on the LEFT, Undo+Redo paired on the RIGHT
+    // Fat 6 and the Extras games: Quit on the LEFT, Undo+Redo paired on the RIGHT
     var tb2=document.querySelector('#playArea .turnbar'), ud=document.getElementById('undoBtn');
     if(tb2&&ud&&ud.parentElement===tb2&&q.nextSibling!==ud) tb2.insertBefore(q,ud);
+  }
+  // Rules (Nathan): runs AFTER Quit settles, so both land in one pass. On every
+  // screen with the big board it parks in the board's open lower-left corner;
+  // on the calculator it takes the room freed by the shorter Quit button;
+  // cricket's table puts it beside Score It.
+  var rb=document.getElementById('rulesBtn');
+  if(rb){
+    var gx=document.getElementById('game');
+    var boardUp = gx.classList.contains('fat6') || gx.classList.contains('bdopen') || gx.classList.contains('board-open');
+    var bw=document.getElementById('boardwrap');
+    if(boardUp && bw){ if(rb.parentElement!==bw) bw.appendChild(rb); }
+    else if(G.isCricket){ var sa0=document.getElementById('scoreActions'); if(sa0&&rb.parentElement!==sa0) sa0.appendChild(rb); }
+    else { if(rb.parentElement!==q.parentElement || rb.previousElementSibling!==q) q.parentElement.insertBefore(rb,q.nextSibling); }
   }
 }
 function renderGame(){
@@ -3770,7 +3910,7 @@ function renderScoreboard(){
 function renderFloats(){
   const fl=document.getElementById('dartFloatL'), fr=document.getElementById('dartFloatR');
   if(!fl||!fr) return;
-  if(!G || G.isCricket || G.isFat6){ fl.innerHTML=''; fr.innerHTML=''; return; }
+  if(!G || G.isCricket || G.isFat6 || G.isX){ fl.innerHTML=''; fr.innerHTML=''; return; }
   const compact=d=> d.bust?'BUST' : d.value===25?(d.mult===2?'D-BULL':'BULL') : d.label;
   const html=G.darts.map(d=>{
     const c=compact(d);
@@ -3971,6 +4111,11 @@ function bakeBoardTexture(){
   }catch(e){ _texBaking=false; }
 }
 function buildBoard(){
+  // The Rules button may be parked inside the boardwrap (lower-left corner) —
+  // rebuilding the board wipes that container, so lift it out first or the
+  // button is destroyed for good (placeSessionButtons re-parks it after).
+  var _rb=document.getElementById('rulesBtn');
+  if(_rb && _rb.closest('#boardwrap')) document.body.appendChild(_rb);
   // NOTE: gradient stop colours below carry a baked saturate(1.2) — see svg.board in the CSS
   const cx=268,cy=268;
   // wider double (16→22) and triple (12→22) bands = bigger tap targets
@@ -4156,7 +4301,6 @@ function closeBoard(){
   fitScreen();
 }
 function backBoard(){
-  if(G && G.isX){ document.getElementById('quitBtn').click(); return; }
   while(G.darts.length>0) undo();
   redoStack.length=0;
   if(document.getElementById('game').classList.contains('bdopen')) closeBoard01(); else closeBoard();
