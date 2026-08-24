@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://dartkeeper.net/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://dartkeeper.net/play/</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://dartkeeper.net/rules/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/501/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/301/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/cricket/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/fat-6/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/killer/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/shanghai/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/around-the-world/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/halve-it/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/baseball/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/gotcha/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dartkeeper.net/rules/golf/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+</urlset>
