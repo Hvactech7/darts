@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dart Keeper — stay-awake test</title>
+<style>
+ body{margin:0;background:#0b0f18;color:#eef2f8;font:16px/1.5 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;padding:18px;}
+ h1{font-size:21px;color:#e8c876;margin:0 0 4px;} .sub{color:#9fb0c8;font-size:14px;margin-bottom:16px;}
+ .row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #223;}
+ .k{color:#9fb0c8;} .v{font-weight:700;text-align:right;word-break:break-word;}
+ .ok{color:#5fd08a;} .bad{color:#ff8b8b;} .warn{color:#e8c876;}
+ #clock{font-size:44px;font-weight:800;color:#e8c876;text-align:center;margin:18px 0 4px;font-variant-numeric:tabular-nums;}
+ .note{background:#141a26;border:1px solid #2b3d63;border-radius:12px;padding:14px;margin-top:16px;font-size:14.5px;color:#cfd8e6;}
+ b{color:#e8c876;}
+</style></head><body>
+<h1>Stay-awake test</h1>
+<div class="sub">Open this on the iPad that dims, then leave it alone.</div>
+<div id="clock">0:00</div>
+<div class="sub" style="text-align:center">seconds since the page loaded — if the screen dims, tell Nathan the number it stopped at</div>
+<div id="rows"></div>
+<div class="note">
+ <b>What to do:</b> tap the screen once, then set the iPad down and don't touch it.
+ Watch whether it dims/locks. Also check <b>Settings &rsaquo; Display &amp; Brightness &rsaquo; Auto-Lock</b>
+ and whether <b>Low Power Mode</b> is on — Low Power Mode overrides all of this.
+</div>
+<script>
+var MP4='data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAM1bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAmB0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAIAAAACAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHYbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABg21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAUNzdGJsAAAAu3N0c2QAAAAAAAAAAQAAAKthdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAIAAgBIAAAASAAAAAAAAAABFUxhdmM2MS4xOS4xMDAgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAMWF2Y0MBQsAe/+EAGGdCwB7ZH4iIwEQAAAMABAAAAwAQPFi5IAEABmjLgGUsgAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAAqAAAAKgAAAABhzdHRzAAAAAAAAAAEAAAAEAAAgAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAAEAAAAAQAAACRzdHN6AAAAAAAAAAAAAAAEAAACgwAAAAoAAAAKAAAACQAAABRzdGNvAAAAAAAAAAEAAANlAAAAYXVkdGEAAABZbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAsaWxzdAAAACSpdG9vAAAAHGRhdGEAAAABAAAAAExhdmY2MS43LjEwMAAAAAhmcmVlAAACqG1kYXQAAAJwBgX//2zcRem95tlIt5Ys2CDZI+7veDI2NCAtIGNvcmUgMTY0IHIzMTkwIDdlZDc1M2IgLSBILjI2NC9NUEVHLTQgQVZDIGNvZGVjIC0gQ29weWxlZnQgMjAwMy0yMDI0IC0gaHR0cDovL3d3dy52aWRlb2xhbi5vcmcveDI2NC5odG1sIC0gb3B0aW9uczogY2FiYWM9MCByZWY9MyBkZWJsb2NrPTE6MDowIGFuYWx5c2U9MHgxOjB4MTExIG1lPWhleCBzdWJtZT03IHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MTYgY2hyb21hX21lPTEgdHJlbGxpcz0xIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD0yNTAga2V5aW50X21pbj0yIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj01MS4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAC2WIhAU8mKAAIQOAAAAABkGaOAp6gAAAAAZBmlQCnqAAAAAFQZpgEvU=';
+var t0=Date.now(), lock=null, lockErr='', vid=null, vidErr='', playCount=0, pauseCount=0, lastT=0, advanced=false;
+function row(k,v,cls){ return '<div class="row"><span class="k">'+k+'</span><span class="v '+(cls||'')+'">'+v+'</span></div>'; }
+function yn(b){ return b?'yes':'no'; }
+function iosVer(){ var m=navigator.userAgent.match(/OS (\d+)[_.](\d+)/); return m?(m[1]+'.'+m[2]):'unknown'; }
+function startVideo(){
+  if(!vid){
+    vid=document.createElement('video');
+    vid.setAttribute('playsinline',''); vid.setAttribute('webkit-playsinline','');
+    vid.setAttribute('muted',''); vid.muted=true; vid.loop=true; vid.setAttribute('title','stay awake');
+    vid.style.cssText='position:fixed;right:2px;bottom:2px;width:8px;height:8px;opacity:.02;pointer-events:none;';
+    vid.src=MP4; document.body.appendChild(vid);
+    vid.addEventListener('playing',function(){ playCount++; });
+    vid.addEventListener('pause',function(){ pauseCount++; try{ vid.play(); }catch(e){} });
+    vid.addEventListener('timeupdate',function(){ if(vid.currentTime!==lastT){ advanced=true; lastT=vid.currentTime; } });
+  }
+  try{ var p=vid.play(); if(p&&p.catch) p.catch(function(e){ vidErr=(e&&e.name)||'play() rejected'; }); }catch(e){ vidErr=e.message; }
+}
+function getLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{ navigator.wakeLock.request('screen').then(function(l){ lock=l; lockErr='';
+        l.addEventListener('release',function(){ lock=null; lockErr='released by the system'; }); })
+      .catch(function(e){ lockErr=(e&&e.name)+': '+(e&&e.message||''); }); }catch(e){ lockErr=e.message; }
+}
+function draw(){
+  var s=Math.floor((Date.now()-t0)/1000);
+  document.getElementById('clock').textContent=Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);
+  var api=('wakeLock' in navigator);
+  var h='';
+  h+=row('iOS version', iosVer(), 'warn');
+  h+=row('Wake Lock API', yn(api), api?'ok':'bad');
+  if(api){ h+=row('lock held right now', yn(!!lock), lock?'ok':'bad');
+           if(lockErr) h+=row('lock note', lockErr, 'bad'); }
+  h+=row('video element', yn(!!vid), vid?'ok':'bad');
+  if(vid){ h+=row('video playing', yn(!vid.paused), vid.paused?'bad':'ok');
+           h+=row('video time advancing', yn(advanced), advanced?'ok':'bad');
+           h+=row('readyState', vid.readyState, vid.readyState>=3?'ok':'bad');
+           h+=row('play/pause events', playCount+' / '+pauseCount, pauseCount>2?'warn':'');
+           if(vidErr) h+=row('video error', vidErr, 'bad'); }
+  h+=row('standalone (home screen)', yn(navigator.standalone===true), navigator.standalone?'ok':'warn');
+  h+=row('page visible', document.visibilityState, '');
+  document.getElementById('rows').innerHTML=h;
+}
+getLock(); startVideo();
+document.addEventListener('touchstart', function(){ getLock(); startVideo(); }, {passive:true});
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ getLock(); startVideo(); } });
+setInterval(draw, 500); draw();
+</script></body></html>
