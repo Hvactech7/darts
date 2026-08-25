@@ -181,17 +181,19 @@
   .team1.active{border-color:var(--blue);background:linear-gradient(160deg,rgba(79,124,255,.30),rgba(18,13,46,.92));
        box-shadow:0 0 34px rgba(79,124,255,.6),inset 0 0 28px rgba(79,124,255,.16);}
   .team1.active::before{background:var(--blue);box-shadow:0 0 16px rgba(79,124,255,.9);}
-  .team2.active{border-color:var(--yellow);background:linear-gradient(160deg,rgba(255,212,0,.24),rgba(18,13,46,.92));
+  .team2.active{border-color:#e08a80;background:linear-gradient(160deg,rgba(160,58,48,.30),rgba(18,13,46,.92));
        box-shadow:0 0 34px rgba(255,212,0,.55),inset 0 0 28px rgba(255,212,0,.14);}
-  .team2.active::before{background:var(--yellow);box-shadow:0 0 16px rgba(255,212,0,.9);}
+  .team2.active::before{background:#e08a80;box-shadow:0 0 16px rgba(232,96,79,.9);}
   .team .name{font-family:var(--display);font-size:22px;color:var(--txt);font-weight:700;letter-spacing:.6px;text-transform:uppercase;line-height:1.05;}
   .team1 .name{color:var(--blue-lt);}
-  .team2 .name{color:var(--yellow);}
-  .team .thrower{font-family:var(--display);font-size:49px;color:var(--yellow);margin-top:4px;min-height:20px;font-weight:800;line-height:1.02;}
+  .team2 .name{color:#ffe3de;}
+  .team .thrower{font-family:var(--display);font-size:49px;color:#ffe3de;margin-top:4px;min-height:20px;font-weight:800;line-height:1.02;}
   .team1 .thrower{color:var(--blue-lt);}
   .team .big{font-family:var(--display);font-size:131px;font-weight:900;line-height:1;margin-top:12px;letter-spacing:1px;}
-  .team1.active .big{color:var(--blue);text-shadow:0 2px 3px rgba(0,0,20,.7),0 0 12px rgba(79,124,255,.8),0 0 34px rgba(79,124,255,.45);}
-  .team2.active .big{color:var(--yellow);text-shadow:0 2px 3px rgba(20,10,0,.7),0 0 12px rgba(255,212,0,.75),0 0 34px rgba(255,212,0,.4);}
+  .team1.active .big{color:#fff;text-shadow:0 2px 3px rgba(0,0,20,.7),0 0 12px rgba(79,124,255,.8),0 0 34px rgba(79,124,255,.45);}
+  .team2.active .big{color:#fff;text-shadow:0 2px 3px rgba(20,10,0,.7),0 0 12px rgba(232,96,79,.75),0 0 34px rgba(232,96,79,.4);}
+  /* the thrower's name matches the score — white while it is their turn */
+  .team.active .thrower{color:#fff;text-shadow:0 2px 3px rgba(0,0,20,.6);}
   .team-hist{display:flex;flex-direction:column;gap:5px;justify-content:flex-end;flex-shrink:0;}
   /* the strip lists EVERY turn and scrolls; capped at roughly five chips so the
      score card keeps the height it has always had */
@@ -1141,15 +1143,15 @@
     box-shadow:0 14px 30px rgba(0,0,0,.75), inset 0 0 40px rgba(0,0,0,.5); }
   .team:not(.active){ opacity:1; filter:saturate(.55) brightness(.75); }  /* dim without transparency — board must not bleed through */
   .team1.active{ background:linear-gradient(160deg,#20355c,#101c33 70%,#0c1526); }
-  .team2.active{ background:linear-gradient(160deg,#3a1c0c,#241206 70%,#180b04); }
+  .team2.active{ background:linear-gradient(160deg,#a03a30,#71241d 55%,#4c1611); }   /* the Miss button's reds */
   .team.active{ border-width:12px; }   /* keep the frame width identical to inactive — no content shift */
   .team.active::before{ display:none; }
   .team1.active{ box-shadow:0 0 30px rgba(74,168,255,.5), 0 14px 30px rgba(0,0,0,.75), inset 0 0 34px rgba(74,168,255,.12); }
-  .team2.active{ box-shadow:0 0 30px rgba(255,122,46,.5), 0 14px 30px rgba(0,0,0,.75), inset 0 0 34px rgba(255,122,46,.14); }
+  .team2.active{ box-shadow:0 0 30px rgba(232,96,79,.55), 0 14px 30px rgba(0,0,0,.75), inset 0 0 34px rgba(232,96,79,.16); }
   .team .name,.team .thrower{ font-family:'Cinzel',serif; letter-spacing:1.5px; }
-  .team2 .name,.team2 .thrower{ color:#ffae5a; }
-  .team1.active .big{ color:#8fc7ff; text-shadow:0 2px 0 #000, 0 0 16px rgba(74,168,255,.9), 0 0 44px rgba(74,168,255,.45); }
-  .team2.active .big{ color:#ffae5a; text-shadow:0 2px 0 #000, 0 0 16px rgba(255,122,46,.9), 0 0 44px rgba(255,122,46,.45); }
+  .team2 .name,.team2 .thrower{ color:#ffe3de; }   /* Miss button's text colour */
+  .team1.active .big{ color:#fff; text-shadow:0 2px 0 #000, 0 0 16px rgba(74,168,255,.9), 0 0 44px rgba(74,168,255,.45); }
+  .team2.active .big{ color:#fff; text-shadow:0 2px 0 #000, 0 0 16px rgba(232,96,79,.9), 0 0 44px rgba(232,96,79,.5); }
   #game:not(.cricket) .scoreboard .team .name{ top:120px; font-size:16px; letter-spacing:2px; opacity:.9; }
   .histscore{ background:linear-gradient(180deg,#151009,#1d150c); border:1.5px solid #57451c; border-radius:6px; color:#c9b788;
     box-shadow:inset 0 2px 6px rgba(0,0,0,.7); }
