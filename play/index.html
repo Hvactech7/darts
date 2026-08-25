@@ -482,6 +482,8 @@
     white-space:nowrap;overflow:hidden;flex:1 1 auto;min-width:0;}
   #kpHint{font-family:var(--num);font-size:42px;font-weight:600;color:var(--muted);white-space:nowrap;}
   #kpHint.bust{color:var(--danger);}
+  /* calculator live preview of the resulting score */
+  .team.active .big.kpbust{color:#ff6a5a !important;text-shadow:0 2px 0 #000,0 0 18px rgba(255,90,70,.85),0 0 44px rgba(255,90,70,.4) !important;}
   /* checkout suggestion — equation-sized and gold (Nathan), not a small aside.
      Only ever shares the display with a lone "0", and kpFit shrinks the
      SUGGESTION (never the zero) if a long one can't fit. */
@@ -1256,7 +1258,7 @@
     #appBanner{ margin-bottom:6px; }
     #setup h2{ font-size:13px; margin:0 0 3px; }
     #setup .card{ padding:2px 12px 8px; margin-bottom:7px; }
-    #gameSel button{ font-size:20px; padding:7px 6px; }   /* +35% (Nathan) */
+    #gameSel button{ font-size:24px; padding:7px 6px; }   /* +35%, then +20% again (Nathan) */
     #startBtn{ font-size:20px !important; padding:9px !important; margin:7px 0 0 !important; }   /* matches Manage Players */
     #azBar button{ padding:2px 0; font-size:12px; }
     /* Match-up lives here now: fixed-height heads holding each side's picks */
@@ -1333,7 +1335,7 @@
     #appBanner::before,#appBanner::after{ display:none; content:none; }
     #setup h2{ font-size:13px; margin:0 0 4px; letter-spacing:1.6px; }
     #setup .card{ padding:2px 9px 7px; margin-bottom:6px; border-width:8px; border-image-width:8px; }
-    #gameSel button{ font-size:17px; padding:6px 3px; letter-spacing:.6px; }   /* +35% (Nathan) */
+    #gameSel button{ font-size:20px; padding:6px 2px; letter-spacing:.2px; white-space:nowrap; }   /* +35%, then +20% again (Nathan); nowrap or "Extras ▾" breaks in two */
     #startBtn{ font-size:17px !important; padding:8px !important; margin:6px 0 0 !important; }   /* matches Manage Players */
     /* Match-up lives here now: fixed-height heads holding each side's picks */
     .teamcol-head{ font-size:15px; padding:4px 4px; letter-spacing:.6px; }
@@ -4001,6 +4003,7 @@ function renderScoreboard(){
   // Pin each strip to the newest score — top of the list on tablets (vertical),
   // left end on phones (horizontal). Newest is first in the DOM either way.
   el.querySelectorAll('.hist-scroll').forEach(s=>{ s.scrollTop=0; s.scrollLeft=0; });
+  kpPreview();                       // a redraw must not wipe the typed preview
 }
 
 function renderFloats(){
@@ -4576,6 +4579,22 @@ const CHECKOUTS={
   24:'D12',23:'7 D8',22:'D11',21:'5 D8',20:'D10',19:'3 D8',18:'D9',17:'1 D8',16:'D8',15:'7 D4',
   14:'D7',13:'5 D4',12:'D6',11:'3 D4',10:'D5',9:'1 D4',8:'D4',7:'3 D2',6:'D3',5:'1 D2',4:'D2',3:'1 D1',2:'D1'
 };
+// (Nathan, 2026-08-24) While anything is typed into the calculator, the active
+// player's big number shows what pressing Score It would LEAVE THEM ON — it
+// updates on every digit and walks back one digit at a time on backspace.
+function kpPreview(){
+  var el=document.querySelector('#scoreboard .team.active .big');
+  if(!el) return;
+  if(!kpAllowed()||!G||G.over||G.pendingWin||!kpExpr){          // nothing typed: the real score
+    if(el._kpOn){ el.textContent=el._kpWas; el.classList.remove('kpprev','kpbust'); el._kpOn=false; }
+    return;
+  }
+  if(!el._kpOn){ el._kpWas=el.textContent; el._kpOn=true; }     // remember what it really says
+  var rem=curTeam().score-kpEval(kpExpr);
+  el.textContent=rem;
+  el.classList.add('kpprev');
+  el.classList.toggle('kpbust', rem<0||rem===1);                // that turn would bust
+}
 function kpRender(){
   const elV=document.getElementById('kpVal'), elH=document.getElementById('kpHint');
   if(!elV) return;
@@ -4606,6 +4625,7 @@ function kpRender(){
   // one is possible) — say so. Anything typed = it scores.
   if(ok) ok.textContent = kpExpr ? '✓ Score It'
     : (kpAllowed()&&G&&!G.over&&!G.pendingWin ? missLabel01() : '✓ Score It');
+  kpPreview();
 }
 function kpCommit(total){
   if(!kpAllowed()||G.over||G.pendingWin) return;
