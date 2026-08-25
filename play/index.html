@@ -4586,12 +4586,25 @@ function kpFit(){
   if(hint){
     hint.style.fontSize='';
     if(hint.classList.contains('out')){
+      // (8/25) Fit the suggestion by measuring its RIGHT EDGE against the box's
+      // inner edge and shrinking until it is inside. Arithmetic on widths kept
+      // coming up a few px short once the three out-darts moved in beside the
+      // 0 — an overflowing flex child does not grow the container, so nothing
+      // reported the spill. Measuring the edge cannot be fooled.
       const disp=document.getElementById('kpDisplay');
-      if(disp && disp.clientWidth>0){
-        const over=disp.scrollWidth-disp.clientWidth;
-        if(over>0 && hint.scrollWidth>over){
-          const hb=parseFloat(getComputedStyle(hint).fontSize)||96;
-          hint.style.fontSize=Math.max(18,Math.floor(hb*(hint.scrollWidth-over)/hint.scrollWidth))+'px';
+      if(disp && disp.clientWidth>0 && hint.textContent){
+        const padR=parseFloat(getComputedStyle(disp).paddingRight)||0;
+        // No safety margin here: the box is justify-content:space-between, so a
+        // hint that FITS sits exactly on the padding line. Only a genuine spill
+        // pushes past it, hence the half-pixel tolerance.
+        const limit=disp.getBoundingClientRect().right-padR;
+        let size=parseFloat(getComputedStyle(hint).fontSize)||96;
+        let guard=0;
+        while(hint.getBoundingClientRect().right>limit+0.5 && size>16 && guard++<22){
+          const over=hint.getBoundingClientRect().right-limit;
+          const step=Math.max(1,Math.min(Math.ceil(size*0.12),Math.ceil(over/3)));
+          size-=step;
+          hint.style.fontSize=size+'px';
         }
       }
     }
