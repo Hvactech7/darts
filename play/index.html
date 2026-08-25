@@ -3307,7 +3307,7 @@ function xHeader(){
       H.cards=G.teams.map(p=>card(p, p.dead?'💀':('D'+p.kNum+(p.killer?' 🗡':'')+'<br>'+'♥'.repeat(Math.max(0,p.lives)))));
       break;
     case 'shanghai':
-      H.lbl='SHANGHAI · ROUND '+Math.min(G.round,R)+' OF '+R+(extra?' · TIE':''); H.val=String(n);
+      H.lbl='SHANGHAI · ROUND '+G.round+(extra?' · TIE-BREAK':' OF '+R); H.val=String(n);
       H.hint='single + double + triple = instant win';
       H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
     case 'atw':
@@ -3315,7 +3315,7 @@ function xHeader(){
       H.hint='first to hit 1–20 in order';
       H.cards=G.teams.map(p=>card(p,'on '+Math.min(p.score,20),true)); break;
     case 'halveit':
-      H.lbl='HALVE-IT · ROUND '+Math.min(G.round,R)+' OF '+R+(extra?' · TIE':'');
+      H.lbl='HALVE-IT · ROUND '+G.round+(extra?' · TIE-BREAK':' OF '+R);
       H.val=(n==='D'?'DOUBLE':n==='T'?'TRIPLE':n==='B'?'BULL':String(n));
       H.hint='miss all 3 and your points halve';
       H.cards=G.teams.map(p=>card(p,p.pts,true)); break;
