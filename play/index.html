@@ -1914,7 +1914,6 @@
       <h2>📊 Stats</h2>
       <div class="seg-toggle" id="statsTabs">
         <button data-tab="league" class="on">League</button>
-        <button data-tab="fat6">Fat 6</button>
         <button data-tab="all">All-time</button>
       </div>
       <div id="statsBody"></div>
@@ -5592,6 +5591,7 @@ function lgTablesHTML(st, title){
 function lgMatchLineHTML(m){
   return '<div class="stMatch"><span class="when">'+lgDay(m.ts)+' · '+lgGameLabel(m.game)+' · bo'+m.legs+'</span><span class="res">'+esc(lgScoreText(m))+'</span></div>';
 }
+var LEAGUE_GAMES=['301','501','cricket'];   // the only games that produce stats (Nathan)
 var _statsTab='league', _statsSeason=null, _statsOpenT={};
 function renderStats(tab){
   var body=document.getElementById('statsBody'), html='';
@@ -5638,12 +5638,15 @@ function renderStats(tab){
       html+='</table><div class="stNote">'+f6log.length+' game'+(f6log.length===1?'':'s')+' logged</div>';
     }
   }else{
-    var names=Object.keys(statsLib).sort(function(a,b){ return (statsLib[b].w||0)-(statsLib[a].w||0) || (statsLib[b].g||0)-(statsLib[a].g||0) || a.localeCompare(b); });
+    var _lg=function(n){ var bg=(statsLib[n]||{}).byGame||{}, g=0, w=0;
+      LEAGUE_GAMES.forEach(function(k){ var e=bg[k]; if(e){ g+=e.g||0; w+=e.w||0; } });
+      return {g:g,w:w}; };
+    var names=Object.keys(statsLib).filter(function(n){ return _lg(n).g>0; }).sort(function(a,b){ return (_lg(b).w)-(_lg(a).w) || (_lg(b).g)-(_lg(a).g) || a.localeCompare(b); });
     if(!names.length) html='<div class="stEmpty">No games recorded yet.</div>';
     else{
       html+='<div class="stH">All-time · every game</div><table class="st"><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>Avg</th><th>High</th><th>180s</th></tr>';
-      names.forEach(function(n){ var s=statsLib[n];
-        html+='<tr><td>'+esc(shortName(n))+'</td><td>'+(s.g||0)+'</td><td>'+(s.w||0)+'</td><td>'+(s.g?Math.round(100*(s.w||0)/s.g)+'%':'—')+'</td><td>'+lgAvg(s)+'</td><td>'+(s.best||'—')+'</td><td>'+(s.t180||0)+'</td></tr>'; });
+      names.forEach(function(n){ var s=statsLib[n], c=_lg(n);
+        html+='<tr><td>'+esc(shortName(n))+'</td><td>'+c.g+'</td><td>'+c.w+'</td><td>'+(c.g?Math.round(100*c.w/c.g)+'%':'—')+'</td><td>'+lgAvg(s)+'</td><td>'+(s.best||'—')+'</td><td>'+(s.t180||0)+'</td></tr>'; });
       html+='</table>';
     }
   }
@@ -5720,7 +5723,7 @@ function lgStandingsData(st){
            players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.dts?+(e.pts*3/e.dts).toFixed(1):(e.turns?+(e.pts/e.turns).toFixed(1):null),best:e.best||null,t180:e.t180||0};}) };
 }
 function lgReportData(t,s){
-  return { name:league.name||'', league:league.id, email:lgEmail(), when:Date.now(),
+  return { name:league.name||'', league:league.id, email:lgEmail(), when:Date.now(), tid:t.id, sid:s.id,
     tournament:{ when:t.ts, standings:lgStandingsData(lgStandings(t.matches)),
       matches:t.matches.map(function(m){ return {game:lgGameLabel(m.game),legs:m.legs,sides:[lgSideLabel(m,0),lgSideLabel(m,1)],score:m.score.slice(),winner:m.winner}; }) },
     season:{ name:s.name, tournaments:s.tournaments.filter(function(x){return x.endTs;}).length, standings:lgStandingsData(lgStandings(lgSeasonMatches(s))) } };
