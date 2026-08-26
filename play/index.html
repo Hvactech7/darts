@@ -446,7 +446,7 @@
   .f6-p.out{opacity:.4;filter:grayscale(1);}
   .f6-target{text-align:left;margin:0;flex:0 0 auto;}
   .f6-target .lbl{font-family:var(--display);font-size:16px;color:var(--muted);letter-spacing:3px;}
-  .f6-target .val{font-family:var(--num);font-size:94px;font-weight:700;line-height:1;color:#fff;
+  .f6-target .val{font-family:var(--num);font-size:94px;font-weight:700;line-height:1;color:#fff;white-space:nowrap;
     text-shadow:0 3px 4px rgba(0,0,0,.8),0 0 14px rgba(255,255,255,.55),0 0 44px rgba(255,255,255,.25);}
   .f6-who{font-family:var(--display);font-size:25px;font-weight:800;color:var(--blue-lt);margin-top:2px;}
   .f6-target .val.long{font-size:55px;line-height:1.1;padding-top:10px;}
@@ -1288,6 +1288,26 @@
   #game.pendwin #endTurnBtn,#game.pendwin #cricketConfirmBtn{animation:winpulse 1.1s ease-in-out infinite;}
   #game.cricket #cricketBoard .cricket .chead .head1 .cpts{color:var(--blue-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(74,168,255,.6);}
   #game.cricket #cricketBoard .cricket .chead .head2 .cpts{color:var(--yellow-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(255,122,46,.6);}
+
+  /* Cricket's header now matches 01: the ACTIVE player's name and points are
+     bright white on both sides, and the right card wears the Miss button's
+     reds. The visible fill is the ::before — .mcell is background:none
+     !important — so these have to be set there, not on the cell. */
+  #game.cricket #cricketBoard .cricket .chead .head2.active::before{
+    background:linear-gradient(160deg,#a03a30,#71241d 55%,#4c1611);
+    box-shadow:inset -5px 0 0 #e8604f, inset 0 0 30px rgba(232,96,79,.20);}
+  #game.cricket #cricketBoard .cricket .chead .head1.active::before{
+    background:linear-gradient(160deg,#20355c,#101c33 70%,#0c1526);
+    box-shadow:inset 6px 0 0 #7da5ff, inset 0 0 30px rgba(74,168,255,.16);}
+  #game.cricket #cricketBoard .cricket .chead .head1.active .pname{
+    color:#fff;-webkit-text-stroke:0;text-shadow:0 2px 3px rgba(0,0,20,.6);}
+  #game.cricket #cricketBoard .cricket .chead .head2.active .pname{
+    color:#fff;-webkit-text-stroke:0;text-shadow:0 2px 3px rgba(20,10,0,.6);}
+  #game.cricket #cricketBoard .cricket .chead .head1.active .cpts{
+    color:#fff;text-shadow:0 2px 0 #000,0 0 16px rgba(74,168,255,.9),0 0 44px rgba(74,168,255,.45);}
+  #game.cricket #cricketBoard .cricket .chead .head2.active .cpts{
+    color:#fff;text-shadow:0 2px 0 #000,0 0 16px rgba(232,96,79,.9),0 0 44px rgba(232,96,79,.5);}
+  #game.cricket #cricketBoard .cricket .chead .head2 .tlabel{color:#ffe3de;}
 
   /* 01 cards: player name banners the top; score sits below it — no more collisions */
   #game:not(.cricket):not(.fat6) .scoreboard .team .thrower{position:absolute;top:10px;left:14px;right:14px;
@@ -3451,10 +3471,11 @@ function renderX(){
   const el=document.getElementById('fat6Board'); if(!el) return;
   const H=xHeader();
   el.innerHTML='<div class="f6-head">'
-    +'<div class="f6-target"><div class="lbl">'+esc(H.lbl)+'</div><div class="val'+(String(H.val).length>4?' long':'')+'">'+esc(H.val)+'</div>'
+    +'<div class="f6-target"><div class="lbl">'+esc(H.lbl)+'</div><div class="val">'+esc(H.val)+'</div>'
     +'<div class="f6-who">'+(G.over?'':esc(H.who))+'</div>'+(H.hint?'<div class="x-hint">'+esc(H.hint)+'</div>':'')+'</div>'
     +'<div class="f6-players">'+H.cards.map(c=>'<div class="f6-p'+c.cls+'"><div class="nm">'+esc(c.nm)+'</div><div class="lv">'+c.lv+'</div></div>').join('')+'</div>'
     +'</div>';
+  f6FitTarget();
   renderDarts();                                  // the three dart slots in the turnbar, like 01
   const confirmBtn=document.getElementById('endTurnBtn');
   confirmBtn.disabled=G.over||xClaiming();
@@ -3974,6 +3995,7 @@ function renderGame(){
   if(G.isX){
     renderX();
     try{ renderWinCall(); }catch(e){}
+    bgFit();
     gsQueue();
     return;
   }
@@ -3982,11 +4004,13 @@ function renderGame(){
     document.getElementById('undoBtn').disabled=history.length===0;
     var _fr=document.getElementById('redoBtn'); if(_fr) _fr.disabled=redoStack.length===0;
     fitScreen();
+    bgFit();
     gsQueue();
     return;
   }
   renderScoreboard();
   if(G.isCricket){ renderCricket(); ckFit(); }
+  else bgFit();
   renderDarts();
   document.getElementById('undoBtn').disabled=history.length===0 && !kpCanBackspace();
   var _sub=document.getElementById('scoreUndoBtn'); if(_sub) _sub.disabled=history.length===0;
@@ -4117,8 +4141,8 @@ function fitScreen(){
     }
   }
 }
-window.addEventListener('resize', fitScreen);
-window.addEventListener('orientationchange', function(){ setTimeout(fitScreen,250); });
+window.addEventListener('resize', function(){ fitScreen(); bgFit(); });
+window.addEventListener('orientationchange', function(){ setTimeout(function(){ fitScreen(); bgFit(); },250); });
 
 function renderFat6(){
   const el=document.getElementById('fat6Board');
@@ -4127,7 +4151,7 @@ function renderFat6(){
   // with their hearts in the upper-RIGHT
   const _tl=fat6TargetLabel();
   let html='<div class="f6-head">';
-  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val${_tl.length>7?' long':''}">${_tl}</div>`
+  html+=`<div class="f6-target"><div class="lbl">TARGET</div><div class="val">${_tl}</div>`
       + `<div class="f6-who">${G.over?'':esc(shortName(p.name))}</div></div>`;
   html+='<div class="f6-players">'+G.players.map((q,i)=>{
     const lv=q.out?'💀':'♥'.repeat(q.lives);
@@ -4135,6 +4159,89 @@ function renderFat6(){
   }).join('')+'</div>';
   html+='</div>';
   el.innerHTML=html;
+  f6FitTarget();
+}
+
+// SKINNY 6 used to slam the target from 120px down to 50px — a step change the
+// moment the band word appeared, which re-flowed the whole header (Nathan: "the
+// page adjusts drastically"). FAT 6's look is the reference: one line, same
+// place, same size. Shrink only if the label would actually reach the player
+// chips, and only by as much as it takes.
+function f6FitTarget(){
+  var head=document.querySelector('#fat6Board .f6-head'); if(!head) return;
+  var box=head.querySelector('.f6-target'); if(!box) return;
+  var val=box.querySelector('.val'); if(!val) return;
+  var pl=head.querySelector('.f6-players');
+  val.classList.remove('long');            // whatever the markup used to say
+  val.style.fontSize='';                   // back to the media-query base
+  if(!pl) return;
+  var base=parseFloat(getComputedStyle(val).fontSize)||94;
+  var size=base, guard=0;
+  function collides(){
+    var v=val.getBoundingClientRect(), p=pl.getBoundingClientRect(), h=head.getBoundingClientRect();
+    return v.right>p.left-10 || v.right>h.right-2;
+  }
+  // The chips wrap rather than overlap, so a wide label can push them onto
+  // another row. That only matters when the chips become the TALLEST thing in
+  // the header — that is when the header actually grows and the page shifts.
+  // Chips wrapping inside the target block's own height costs nothing.
+  function chipsDriveHeight(){
+    return pl.getBoundingClientRect().height > box.getBoundingClientRect().height+1;
+  }
+  // With a full field the chips are tall no matter what; do not chase that.
+  val.style.fontSize=(base*0.40).toFixed(1)+'px';
+  var inherentlyTall=chipsDriveHeight();
+  val.style.fontSize='';
+  while((collides() || (!inherentlyTall && chipsDriveHeight())) && size>base*0.40 && guard++<70){
+    size*=0.96; val.style.fontSize=size.toFixed(1)+'px';
+  }
+}
+
+// The dartboard is a circle constrained by WIDTH, so on a tall screen the
+// leftover height underneath is space it can never use — Fat 6 and the Extras
+// games left the whole stack floating above a black band. Give that height to
+// the action row: taller buttons are the one thing that genuinely benefits,
+// since these are pressed mid-throw from arm's length. Capped, so a very tall
+// screen does not turn the row into a slab.
+function bgFit(){
+  var g=document.getElementById('game');
+  if(!g||g.classList.contains('hidden')||g.classList.contains('cricket')||g.classList.contains('kpmode')) return;
+  var pa=document.getElementById('playArea');
+  // the visible row: 01 keeps a hidden .gamebtns around and its buttons live
+  // in #scoreActions instead
+  var row=null;
+  if(pa) [].slice.call(pa.querySelectorAll('.gamebtns')).forEach(function(r){
+    if(r.getBoundingClientRect().height>0) row=r; });
+  if(!pa||!row||!pa.getBoundingClientRect().height) return;
+  var btns=[].slice.call(row.querySelectorAll('button'));
+  if(!btns.length) return;
+  // Inline, not a CSS variable: #missBtn and friends set their own padding and
+  // win on specificity (measured, not assumed).
+  btns.forEach(function(b){ b.style.paddingTop=''; b.style.paddingBottom=''; });
+  row.style.marginTop='';
+  var wrap=document.querySelector('.wrap')||document.body;
+  var padB=parseFloat(getComputedStyle(wrap).paddingBottom)||0;
+  var slack=window.innerHeight-pa.getBoundingClientRect().bottom-padB;
+  if(slack<28) return;
+  var base=btns[0].getBoundingClientRect().height;
+  var grow=Math.min(slack-10, base*0.75);
+  var cs=btns.map(function(b){ var c=getComputedStyle(b);
+    return {t:parseFloat(c.paddingTop)||0, b:parseFloat(c.paddingBottom)||0}; });
+  btns.forEach(function(b,i){
+    b.style.paddingTop=(cs[i].t+grow/2).toFixed(1)+'px';
+    b.style.paddingBottom=(cs[i].b+grow/2).toFixed(1)+'px';
+  });
+  var left=window.innerHeight-pa.getBoundingClientRect().bottom-padB;
+  if(left>12){ var mt=parseFloat(getComputedStyle(row).marginTop)||0;
+    row.style.marginTop=(mt+Math.min(left-8,28)).toFixed(1)+'px'; }
+  // never push the row off the bottom
+  for(var k=0;k<8 && pa.getBoundingClientRect().bottom>window.innerHeight-padB;k++){
+    grow*=0.8;
+    btns.forEach(function(b,i){
+      b.style.paddingTop=(cs[i].t+grow/2).toFixed(1)+'px';
+      b.style.paddingBottom=(cs[i].b+grow/2).toFixed(1)+'px';
+    });
+  }
 }
 
 function renderScoreboard(){
