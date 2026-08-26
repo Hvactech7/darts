@@ -1544,6 +1544,11 @@
     #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn::before{content:'\21B7';font-size:24px;font-family:var(--body);}
     /* cricket's row of four: Quit compact, Undo/Redo arrow-only, Score It keeps
        the room (the flex:1 on #scoreActions button would re-stretch the arrows) */
+    /* Fat 6's board was pinned to the generic 75% on phones — 282px inside a
+       376px screen — while the 99% bump lived in a min-width:601px block. That
+       is where a phone's 252px of dead space came from: the board was small in
+       BOTH directions, not height-limited by the circle. */
+    #game.fat6 svg.board{max-width:99%;}
     #scoreActions #quitBtn{font-size:13px;padding:10px 6px;flex:0 0 auto;}
     /* Rules joined this row later (v2.58) and never got the phone treatment, so
        five items needed 398px inside 380 — and a centred flex row spills out
@@ -4312,23 +4317,25 @@ function bgFit(){
   var slack=window.innerHeight-pa.getBoundingClientRect().bottom-padB;
   if(slack<28) return;
   var base=btns[0].getBoundingClientRect().height;
-  var grow=Math.min(slack-10, base*0.75);
   var cs=btns.map(function(b){ var c=getComputedStyle(b);
     return {t:parseFloat(c.paddingTop)||0, b:parseFloat(c.paddingBottom)||0}; });
-  btns.forEach(function(b,i){
-    b.style.paddingTop=(cs[i].t+grow/2).toFixed(1)+'px';
-    b.style.paddingBottom=(cs[i].b+grow/2).toFixed(1)+'px';
-  });
-  var left=window.innerHeight-pa.getBoundingClientRect().bottom-padB;
-  if(left>12){ var mt=parseFloat(getComputedStyle(row).marginTop)||0;
-    row.style.marginTop=(mt+Math.min(left-8,28)).toFixed(1)+'px'; }
+  function apply(k){ btns.forEach(function(b,i){
+    b.style.paddingTop=(cs[i].t+k/2).toFixed(1)+'px';
+    b.style.paddingBottom=(cs[i].b+k/2).toFixed(1)+'px'; }); }
+  function left(){ return window.innerHeight-pa.getBoundingClientRect().bottom-padB; }
+  // A phone running Fat 6 has far more slack than a tablet — the board is a
+  // circle capped by a narrow width, so a lot of height is left over. Let the
+  // row take more of it there (it is the button pressed every turn), but never
+  // past a slab; whatever is left becomes air above the row. Iterative, because
+  // growing the row moves what the next measurement sees.
+  var cap=slack>base*1.5 ? base*1.6 : base*0.75;
+  var grow=0, step=Math.max(4,base*0.08), guard=0;
+  while(left()>24 && grow<cap && guard++<40){ grow+=step; apply(grow); }
+  if(left()>12){ var mt=parseFloat(getComputedStyle(row).marginTop)||0;
+    row.style.marginTop=(mt+Math.max(0,left()-10)).toFixed(1)+'px'; }
   // never push the row off the bottom
   for(var k=0;k<8 && pa.getBoundingClientRect().bottom>window.innerHeight-padB;k++){
-    grow*=0.8;
-    btns.forEach(function(b,i){
-      b.style.paddingTop=(cs[i].t+grow/2).toFixed(1)+'px';
-      b.style.paddingBottom=(cs[i].b+grow/2).toFixed(1)+'px';
-    });
+    grow*=0.85; apply(grow);
   }
 }
 
