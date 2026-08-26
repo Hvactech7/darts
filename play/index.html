@@ -2619,7 +2619,10 @@ async function shareGo(){
       const n=shareMergeIn(r.data);
       const added=roster.filter(function(x){ return before.indexOf(x)<0; });
       shareMsg(n===0?'Nothing new — you already had everyone.':('Added '+n+' new player'+(n===1?'':'s')+'.'));
-      mergeAsk(added.length?added:roster.slice());        // offer to fold your profile in
+      // Only ask when the library actually brought someone. Re-taking the same
+      // code adds nothing, and asking "are you already in here?" again — after
+      // the person already answered — is just nagging (2026-08-26).
+      if(added.length) mergeAsk(added);                  // offer to fold your profile in
       document.getElementById('shareCodeIn').value='';
       document.getElementById('shareTakeRow').style.display='none';
     } else shareMsg((r&&r.error)||'Could not fetch that share.');
@@ -5635,11 +5638,19 @@ var _lgPendingAction=null;
 function lgCall(msg, hint){
   return relayLeague(msg).then(function(r){
     if(r&&r.needVerify){
-      _lgPendingAction=function(){ return lgCall(msg,hint); };
-      return relayBackup({op:'verify',email:lgEmail()}).then(function(v){
-        document.getElementById('lgVerifyRow').style.display='flex';
-        hint((v&&v.ok)?('First time with this e-mail — we sent a 6-digit code to '+lgEmail()+'. Enter it above.'):((v&&v.error)||'Could not send the code.'));
-        return {ok:false,pending:true};
+      // Hand the CALLER's .then the real answer once the code is confirmed,
+      // instead of resolving 'pending' now and replaying the call into a
+      // promise nobody is listening to. That dropped result was a dead end for
+      // a brand-new player: her league was created on the relay, the app never
+      // adopted it, and pressing Create again said the name was already taken —
+      // by her (2026-08-26).
+      return new Promise(function(resolve){
+        _lgPendingAction=function(){ lgCall(msg,hint).then(resolve, function(){ resolve({ok:false,pending:true}); }); };
+        relayBackup({op:'verify',email:lgEmail()}).then(function(v){
+          document.getElementById('lgVerifyRow').style.display='flex';
+          hint((v&&v.ok)?('First time with this e-mail — we sent a 6-digit code to '+lgEmail()+'. Enter it above.'):((v&&v.error)||'Could not send the code.'));
+          if(!(v&&v.ok)){ _lgPendingAction=null; resolve({ok:false,pending:true}); }   // no code went out: stop waiting
+        }, function(){ hint('Could not send the code.'); _lgPendingAction=null; resolve({ok:false,pending:true}); });
       });
     }
     if(r&&r.testMuted) hint('Preview build — the relay refuses league changes from here.');
