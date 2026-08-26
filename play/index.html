@@ -436,6 +436,9 @@
   #game.fat6 #playArea .turnbar #undoBtn,
   #game.fat6 #playArea .turnbar #redoBtn{ font-size:16px; padding:8px 14px; }
   .f6-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 2px;}
+  /* SKINNY 6 sits lower than FAT 6 (same size, longer word), and the board's
+     top edge was right under it — 4px of air (Nathan). */
+  #game.fat6 .f6-head,#game.xgame .f6-head{margin-bottom:6px;}
   .f6-players{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin:0;flex:0 1 auto;}
   .f6-p{border:2px solid rgba(255,255,255,.10);border-radius:14px;padding:7px 14px;min-width:118px;text-align:center;
     background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 40%),rgba(20,16,50,.6);
@@ -631,6 +634,14 @@
   #tonSplash .tsSub{font-family:var(--display);font-weight:800;font-size:min(6.5vw,44px);letter-spacing:8px;
     text-transform:uppercase;color:#ffd76a;opacity:0;margin-top:6px;text-shadow:0 3px 0 #000;
     animation:tsSub 2.9s ease-out forwards;animation-delay:.22s;}
+  /* losing a life is not a celebration — same motion, the Miss button's reds */
+  #tonSplash.bad .tsNum{font-size:min(19vw,190px);letter-spacing:3px;
+    text-shadow:0 6px 0 #000,0 0 40px rgba(232,96,79,.95),0 0 110px rgba(190,40,30,.6);}
+  #tonSplash.bad .tsSub{color:#ffb3a6;letter-spacing:5px;}
+  #tonSplash.bad .tsBurst{background:radial-gradient(circle,rgba(232,96,79,.55),rgba(120,20,14,.25) 45%,transparent 70%);}
+  #tonSplash.bad .tsRing{border-color:#e8604f;}
+  #tonSplash.bad .tsRing.r2{border-color:#ffb3a6;}
+  #tonSplash.bad .tsRays{opacity:0 !important;}
   @keyframes tsBurst{0%{transform:translate(-50%,-50%) scale(.1);opacity:0}
     12%{opacity:1}35%{opacity:.55}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
   @keyframes tsRays{0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)}
@@ -1534,9 +1545,23 @@
     /* cricket's row of four: Quit compact, Undo/Redo arrow-only, Score It keeps
        the room (the flex:1 on #scoreActions button would re-stretch the arrows) */
     #scoreActions #quitBtn{font-size:13px;padding:10px 6px;flex:0 0 auto;}
-    #scoreActions #scoreUndoBtn,#scoreActions #scoreRedoBtn{font-size:0;padding:10px 14px;flex:0 0 auto;}
+    /* Rules joined this row later (v2.58) and never got the phone treatment, so
+       five items needed 398px inside 380 — and a centred flex row spills out
+       BOTH ends, which is why Quit and Score It hung off the screen edges. */
+    #game.cricket:not(.board-open) #scoreActions{gap:6px;}
+    #scoreActions #rulesBtn{font-size:13px;padding:10px 6px;flex:0 0 auto;}
+    #scoreActions button{min-width:0;}
+    #scoreActions #scoreUndoBtn,#scoreActions #scoreRedoBtn{font-size:0;padding:10px 10px;flex:0 0 auto;}
     #scoreActions #scoreUndoBtn::before{content:'\21B6';font-size:24px;font-family:var(--body);}
     #scoreActions #scoreRedoBtn::before{content:'\21B7';font-size:24px;font-family:var(--body);}
+    /* 320px phones: the same row again, with the last of the padding taken out
+       rather than letting it hang off the edges */
+    @media (max-width:340px){
+      #game.cricket:not(.board-open) #scoreActions{gap:4px;}
+      #scoreActions #quitBtn,#scoreActions #rulesBtn{padding:10px 4px;font-size:12px;}
+      #scoreActions #scoreUndoBtn,#scoreActions #scoreRedoBtn{padding:10px 6px;}
+      #scoreActions #scoreUndoBtn::before,#scoreActions #scoreRedoBtn::before{font-size:21px;}
+    }
     /* the Undo · Dart Board · Redo row must fit a 375px phone at FULL scale —
        it used to rely on fitScreen's shrink to squeak by, and clipped Redo
        once the screen-stretch reduced that shrink */
@@ -3057,6 +3082,7 @@ function mkTeam(name,members){
   return {name,members,memberIdx:0,score:0,marks:{},pts:0,opened:false,history:[],tripleClose:{}};
 }
 function startGame(startTeam, leadoff, ironOrder){
+  splashHide();
   try{ dkPing('play'); }catch(e){}
   startTeam = startTeam || 0;
   leadoff = leadoff || {};
@@ -3113,6 +3139,7 @@ function startFat6(order){
   // game left `kpmode` (which hides #missBtn — the only way to lose a life) and
   // `bdopen` (which pins #playArea as a fullscreen overlay).
   g.classList.remove('cricket','board-open','kpmode','bdopen','pendwin');
+  splashHide();
   g.classList.add('fat6');
   // #kpWrap is hidden by its own class, not by kpmode \u2014 an 01 game un-hides it
   // and nothing here put it back, so the calculator sat above the fat6 board
@@ -3289,6 +3316,7 @@ function xTarget(){                       // what this round is thrown at (null 
 }
 function xRounds(){ return {shanghai:7,halveit:6,baseball:9,golf:9}[G.game]||0; }
 function startX(game, order){
+  splashHide();
   try{ dkPing('play'); }catch(e){}
   const teams=order.map(n=>({name:n,members:[n],memberIdx:0,score:(game==='atw'?1:0),opened:true,marks:{},pts:0,history:[],
                              lives:3,killer:false,kNum:0,dead:false}));
@@ -3318,6 +3346,7 @@ function xApplyScreen(){                  // Fat 6's skeleton (Nathan): header i
   document.getElementById('cricketBoard').classList.add('hidden');
   const g=document.getElementById('game');
   g.classList.remove('cricket','board-open','kpmode','bdopen','pendwin');
+  splashHide();
   var _os=document.getElementById('outSplash'); if(_os) _os.classList.remove('show');
   g.classList.add('fat6','xgame');          // fat6 = the layout; xgame = the Extras-only tweaks
   g.classList.remove('hidden');
@@ -3760,6 +3789,7 @@ var _tsTimer=null;
 function tonSplash(n){
   var el=document.getElementById('tonSplash'); if(!el) return;
   var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
+  el.classList.remove('bad');
   num.textContent = (n===100) ? 'TON' : String(n);
   sub.textContent = (n===180) ? 'Maximum!' : (n===100 ? '' : 'Ton ' + (n-100) + '!');
   el.classList.remove('show'); void el.offsetWidth;          // replay it back-to-back
@@ -3767,6 +3797,28 @@ function tonSplash(n){
   clearTimeout(_tsTimer);
   _tsTimer=setTimeout(function(){ el.classList.remove('show'); }, 3000);
 }
+// Pressing "Lose a life" used to be a small toast that was easy to miss across
+// a room. Same splash the tons use, in the Miss button's reds, and it says what
+// it cost you (Nathan).
+// A splash outlives its 3s timer if the game changes under it — kill it on any
+// game start (the structural suite caught this crossing fat6 -> halve it).
+function splashHide(){
+  var el=document.getElementById('tonSplash'); if(!el) return;
+  clearTimeout(_tsTimer);
+  el.classList.remove('show','bad');
+}
+function lifeSplash(name, left){
+  var el=document.getElementById('tonSplash'); if(!el) return;
+  var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
+  num.textContent='LOST A LIFE';
+  sub.textContent=shortName(name)+' — '+(left===1?'1 life left':left+' lives left');
+  el.classList.add('bad');
+  el.classList.remove('show'); void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_tsTimer);
+  _tsTimer=setTimeout(function(){ el.classList.remove('show','bad'); }, 3000);
+}
+
 function commitTurn(){
   if(G.over)return;
   const t=curTeam();
@@ -3876,7 +3928,7 @@ function f6LifeBtn(){
     flashToast(shortName(p.name)+' is OUT!');
     f6NextPlayer();                        // target stays = last target set
   }else{
-    flashToast(shortName(p.name)+' loses a life — keep throwing');   // turn STAYS with them
+    lifeSplash(p.name, p.lives);                                     // turn STAYS with them
   }
   renderGame();
 }
@@ -4427,12 +4479,22 @@ function sizeCricketHeads(){
   const STEPS=['long','xlong','xxlong'];
   board.querySelectorAll('.chead .pname').forEach(function(el){
     el.classList.remove.apply(el.classList, STEPS);
-    // A phone's header column is barely wider than the name itself; stepping the
-    // type down there just makes it small AND still clipped, so leave it big.
-    if(el.clientWidth<120) return;
+    el.style.fontSize='';
     for(let i=0;i<STEPS.length && el.scrollWidth>el.clientWidth+1;i++){
       el.classList.remove.apply(el.classList, STEPS);
       el.classList.add(STEPS[i]);
+    }
+    // The steps are sized for a tablet's header column. A phone's is barely
+    // wider than the name, so the smallest step still cut names mid-word
+    // ("NATHL"). Finish the job by measurement — a smaller whole name beats a
+    // big truncated one when you are reading it off a rail.
+    if(el.scrollWidth>el.clientWidth+1){
+      var size=parseFloat(getComputedStyle(el).fontSize)||26;
+      size=Math.max(12, size*el.clientWidth/el.scrollWidth);   // 12px floor: smaller is not worth reading
+      el.style.fontSize=size.toFixed(1)+'px';
+      for(var k=0;k<3 && el.scrollWidth>el.clientWidth+1 && size>12.1;k++){
+        size=Math.max(12,size*0.96); el.style.fontSize=size.toFixed(1)+'px';
+      }
     }
   });
 }
