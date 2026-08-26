@@ -739,7 +739,7 @@
   #kpGrid button.kpop{font-size:91px;line-height:1;padding:0;}
   #kpOK{width:100%;font-size:34px;padding:13px;}
   /* kpmode: undo the tall-board sketch layout — normal flow, cards on top */
-  #game:not(.cricket):not(.fat6){margin-top:6px;display:flex;flex-direction:column;min-height:calc(100vh - 96px);}
+  #game:not(.cricket):not(.fat6){margin-top:6px;display:flex;flex-direction:column;min-height:calc(100% - 6px);}
   #game:not(.cricket):not(.fat6) #playArea{margin-top:auto;display:flex;flex-direction:column;}
   #game:not(.cricket):not(.fat6) .scoreboard{position:static;top:auto;margin:0 0 14px;position:relative;z-index:1;}
   #game:not(.cricket):not(.fat6) .scoreboard .team{min-height:322px;}
@@ -4203,9 +4203,45 @@ function f6FitTarget(){
 // the action row: taller buttons are the one thing that genuinely benefits,
 // since these are pressed mid-throw from arm's length. Capped, so a very tall
 // screen does not turn the row into a slab.
+// Calculator mode: the keypad is the whole point of the screen and it was
+// stopping 90px short on a tall tablet. Give the slack to the key rows — a
+// bigger number key is the single most-pressed thing in the app.
+function kpGrow(){
+  var g=document.getElementById('game');
+  if(!g||g.classList.contains('hidden')||!g.classList.contains('kpmode')||g.classList.contains('bdopen')) return;
+  var grid=document.getElementById('kpGrid'), pa=document.getElementById('playArea');
+  if(!grid||!pa||!grid.getBoundingClientRect().height) return;
+  var btns=[].slice.call(grid.querySelectorAll('button'));
+  if(!btns.length) return;
+  btns.forEach(function(b){ b.style.paddingTop=''; b.style.paddingBottom=''; });
+  var cs=btns.map(function(b){ var c=getComputedStyle(b);
+    return {t:parseFloat(c.paddingTop)||0, b:parseFloat(c.paddingBottom)||0}; });
+  function apply(k){ btns.forEach(function(b,i){
+    b.style.paddingTop=(cs[i].t+k/2).toFixed(1)+'px';
+    b.style.paddingBottom=(cs[i].b+k/2).toFixed(1)+'px'; }); }
+  // #playArea carries margin-top:auto, so spare height shows up as a gap ABOVE
+  // the keypad rather than below it. Measure that gap and feed it to the keys —
+  // the number pad is the most-pressed thing in the app.
+  var wrap=document.querySelector('.wrap')||document.body;
+  var padB=parseFloat(getComputedStyle(wrap).paddingBottom)||0;
+  function slack(){
+    var below=window.innerHeight-pa.getBoundingClientRect().bottom-padB;
+    var above=parseFloat(getComputedStyle(pa).marginTop)||0;
+    return Math.max(0,below)+Math.max(0,above-10);
+  }
+  if(slack()<24) return;
+  var baseH=btns[0].getBoundingClientRect().height;
+  var per=0, step=Math.max(4,baseH*0.06), guard=0;
+  // Close the gap in steps rather than one guess: padding, line-height and the
+  // grid's own row sizing do not respond linearly.
+  while(slack()>24 && per<baseH*0.7 && guard++<40){ per+=step; apply(per); }
+  for(var j=0;j<8 && pa.getBoundingClientRect().bottom>window.innerHeight-padB;j++){ per*=0.85; apply(per); }
+}
+
 function bgFit(){
   var g=document.getElementById('game');
-  if(!g||g.classList.contains('hidden')||g.classList.contains('cricket')||g.classList.contains('kpmode')) return;
+  if(!g||g.classList.contains('hidden')||g.classList.contains('cricket')) return;
+  if(g.classList.contains('kpmode')){ kpGrow(); return; }
   var pa=document.getElementById('playArea');
   // the visible row: 01 keeps a hidden .gamebtns around and its buttons live
   // in #scoreActions instead
