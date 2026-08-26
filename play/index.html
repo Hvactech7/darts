@@ -1011,7 +1011,7 @@
   #leagueCard .card{max-height:calc(100vh - 36px);overflow-y:auto;}
   #leagueCard .row > button{flex:0 0 auto;font-size:17px;padding:11px 14px;white-space:nowrap;}
   /* short action buttons: the rivets sat under the letters */
-  #lgCreate,#lgVerifyBtn,#lgInvite{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
+  #lgCreate,#lgVerifyResend,#lgInvite{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
   #lgJoin,#lgInviteGo,#lgEndSeason.accent{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
   #lgList{margin-top:10px;}
   .lgListHead{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;margin:0 0 4px 2px;}
@@ -1856,7 +1856,10 @@
         <div class="row" style="margin-top:10px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
         <div class="row" style="margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="New league name" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
         <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit join code" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
-        <div class="row" id="lgVerifyRow" style="display:none;margin-top:8px;"><input type="text" id="lgVerifyCode" class="grow" placeholder="6-digit code from the e-mail" inputmode="numeric" maxlength="6"><button class="primary" id="lgVerifyBtn">Confirm</button></div>
+        <div class="row" id="lgVerifyRow" style="display:none;margin-top:8px;align-items:center;gap:10px;">
+          <span class="grow small" id="lgVerifyWait">📧 Waiting for you to tap the link…</span>
+          <button class="ghost" id="lgVerifyResend">Send it again</button>
+        </div>
       </div>
       <p class="small" id="lgHint" style="margin:6px 0 0;"></p>
       <div id="lgBtns"><button class="primary" id="lgDone">Done</button></div>
@@ -2297,7 +2300,14 @@ function renderLibrary(){
   roster.slice().sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).forEach(name=>{
     const row=document.createElement('div');
     row.className='librow';
-    const opts=['<option value="">— no team —</option>']
+    // The dropdown is where you go looking for a team, so it has to be able to
+    // MAKE one — a new player found only "— no team —" here and no hint that
+    // teams live behind another button (2026-08-26).
+    // "＋ New team…" rides at the TOP (Nathan). A select shows its first option
+    // when nothing is selected, so "— no team —" has to say so explicitly or an
+    // unassigned player would read as "＋ New team…".
+    const opts=['<option value="__newteam__">\uFF0B New team\u2026</option>',
+                '<option value=""'+(teamOfPlayer(name)?'':' selected')+'>— no team —</option>']
       .concat(teamLib.map(tm=>`<option value="${esc(tm)}"${teamOfPlayer(name)===tm?' selected':''}>${esc(tm)}</option>`)).join('');
     row.innerHTML=`<span class="lname"></span><select class="teamsel">${opts}</select><button class="warn" title="Delete player" aria-label="Delete player">✕</button>`;
     row.querySelector('.lname').textContent=name;
@@ -2322,7 +2332,10 @@ function renderLibrary(){
       inp.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } else if(e.key==='Escape'){ done=true; renderLibrary(); } };
       inp.onblur=commit;
     };
-    row.querySelector('.teamsel').onchange=(e)=>setPlayerTeam(name,e.target.value);
+    row.querySelector('.teamsel').onchange=(e)=>{
+      if(e.target.value==='__newteam__'){ e.target.value=teamOfPlayer(name)||''; teamInline(row,name); return; }
+      setPlayerTeam(name,e.target.value);
+    };
     if(league&&league.id&&lgPlayerPending(league,name)){ const tag=document.createElement('span'); tag.className='pendtag'; tag.textContent='⏳ pending'; tag.title='Waiting for a team member to approve'; row.querySelector('.lname').appendChild(tag); }
     row.querySelector('button').onclick=()=>{ if(confirm(`Delete "${name}"?`)) removePlayer(name); };
     el.appendChild(row);
@@ -2351,6 +2364,31 @@ function removeTeam(name){
   teamLib=teamLib.filter(t=>t!==name);
   Object.keys(playerTeams).forEach(p=>{ if(playerTeams[p]===name) delete playerTeams[p]; });
   saveTeams();savePlayerTeams();renderTeamLibrary();renderLibrary();
+}
+// Type the new team's name right where the dropdown was, the same way renaming
+// a player works. Enter commits, Escape backs out.
+function teamInline(row,name){
+  const sel=row.querySelector('.teamsel'); if(!sel||row._teamEditing) return;
+  row._teamEditing=true;
+  const inp=document.createElement('input');
+  inp.type='text'; inp.className='teamsel teamnew'; inp.placeholder='New team name…';
+  inp.setAttribute('list','teamNameList'); inp.maxLength=28; inp.autocapitalize='words';
+  sel.style.display='none'; sel.parentNode.insertBefore(inp,sel);
+  let closed=false;
+  const done=(commit)=>{
+    if(closed) return; closed=true; row._teamEditing=false;
+    const v=(inp.value||'').trim().slice(0,28);
+    try{ inp.remove(); }catch(e){}
+    sel.style.display='';
+    if(commit&&v){
+      if(!teamLib.some(t=>t.toLowerCase()===v.toLowerCase())){ teamLib.push(v); saveTeams(); }
+      const real=teamLib.filter(t=>t.toLowerCase()===v.toLowerCase())[0]||v;
+      setPlayerTeam(name,real); renderLibrary(); renderColumns();
+    }
+  };
+  inp.onkeydown=(ev)=>{ if(ev.key==='Enter'){ ev.preventDefault(); done(true); } else if(ev.key==='Escape'){ done(false); } };
+  inp.onblur=()=>done(true);
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} },30);
 }
 function setPlayerTeam(name,team){
   if(team) playerTeams[name]=team; else delete playerTeams[name];
@@ -2569,7 +2607,12 @@ document.getElementById('bkRestoreBtn').onclick=bkRestore;
 // A 6-digit code through the relay (iOS Safari has no Bluetooth for web apps).
 // Deliberately shares IDENTITY only — players, teams, pairings — never stats:
 // the receiving device's history stays its own. Merge is ADD-ONLY.
-function sharePayload(){ return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, v:1}; }
+function sharePayload(){
+  var p={players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, v:1};
+  // Carry the league so whoever takes this lands in it (Nathan, 2026-08-26).
+  try{ if(league&&league.id) p.league={id:league.id, name:league.name||''}; }catch(e){}
+  return p;
+}
 function shareMsg(t){ const el=document.getElementById('shareMsg'); if(el) el.textContent=t; if(typeof fitLibrary==='function') fitLibrary(); }
 function shareMergeIn(d){
   let added=0;
@@ -2613,12 +2656,28 @@ async function shareGo(){
   if(!/^\d{6}$/.test(code)){ shareMsg('That code should be 6 digits.'); return; }
   shareMsg('Fetching…');
   try{
-    const r=await relayBackup({op:'take', code});
+    // the address goes with it so the relay can put us in the sharer's league —
+    // but only when we are not in one already (Nathan: "if they dont currently belong to a league")
+    const r=await relayBackup({op:'take', code, email:lgEmail(), wantLeague:!(league&&league.id)});
     if(r&&r.ok&&r.data){
       const before=roster.slice();
       const n=shareMergeIn(r.data);
       const added=roster.filter(function(x){ return before.indexOf(x)<0; });
       shareMsg(n===0?'Nothing new — you already had everyone.':('Added '+n+' new player'+(n===1?'':'s')+'.'));
+      // Handed a library from a league you are not in yet? The relay put you in
+      // it (the share code was the vouch) — adopt it here so the reports and the
+      // team list follow (Nathan, 2026-08-26).
+      if(r.league && r.league.id && !(league&&league.id)){
+        lgAdopt(r.league, true);
+        LG.on=true; saveLeague(); renderLeagueUI();
+        shareMsg('Added — and you are now in '+(r.league.name||'their league')+'.');
+      }else if(r.data.league && r.data.league.name && !(league&&league.id)){
+        // The library came from a league but we could not be put in it — the
+        // only way in is an address the Pi has confirmed. Say so plainly
+        // instead of quietly handing over just the players.
+        shareMsg('Added. This library belongs to '+r.data.league.name
+                 +' — put your e-mail in the box above and tap Back up to join it.');
+      }
       // Only ask when the library actually brought someone. Re-taking the same
       // code adds nothing, and asking "are you already in here?" again — after
       // the person already answered — is just nagging (2026-08-26).
@@ -2827,7 +2886,7 @@ function dkPing(ev){
 }
 
 //============================ BACKUP (Pi relay, Battle Tees pattern) ============================
-var DK_RELAY='wss://raspi5.tail734d97.ts.net/dartkeeper';   // its own relay since 8/22 (split from Battle Tees)
+var DK_RELAY='wss://raspi5.tail734d97.ts.net/dartkeeper';   // its own relay since 8/22 (split from Battle Tees)   // its own relay since 8/22 (split from Battle Tees)
 var LS_BKEMAIL='darts_backup_email_v1';
 var LS_BKFP='darts_backup_fp_v1';
 var bkTimer=null;
@@ -2867,18 +2926,11 @@ function bkEmailVal(){
   localStorage.setItem(LS_BKEMAIL,em);
   return em;
 }
-let bkMode=null;                             // 'verify' | 'restore' while a code is pending
+let bkMode=null;                             // 'restore' while a restore code is pending
 async function bkSave(){
   const em=bkEmailVal(); if(!em) return;
-  const code=(document.getElementById('bkCode')&&document.getElementById('bkCode').value||'').trim();
-  if(bkMode==='verify' && /^\d{6}$/.test(code)){
-    bkMsg('Confirming…');
-    try{
-      const r=await relayBackup({op:'confirm',email:em,code});
-      if(!(r&&r.ok)){ bkMsg((r&&r.error)||'Could not confirm that code.'); return; }
-      bkMode=null; document.getElementById('bkCodeRow').style.display='none';
-    }catch(e){ bkMsg('Could not connect — try again.'); return; }
-  }
+  // (verification is a link now — the code path that used to live here is gone;
+  //  the code row below is still used by Restore, which is a different thing)
   bkMsg('Backing up…');
   try{
     const r=await relayBackup({op:'save',email:em,data:bkPayload()});
@@ -2886,12 +2938,25 @@ async function bkSave(){
       localStorage.setItem(LS_BKFP,bkFingerprint());
       bkMsg('✓ '+roster.length+' player'+(roster.length===1?'':'s')+' + teams, pairings and stats backed up'+(r.emailed?' — confirmation emailed':'')+'. Auto-backup is on.');
     }else if(r&&r.needVerify){
-      bkMode='verify';
-      const s=await relayBackup({op:'verify',email:em});
-      if(s&&s.ok){ document.getElementById('bkCodeRow').style.display='flex'; bkMsg('First time: we emailed a 6-digit code — enter it above, then tap Back up again.'); }
-      else bkMsg((s&&s.error)||'Could not send the code.');
+      // First backup from this address: a link in the e-mail, not a code to copy.
+      const s=await relayBackup({op:'maglink',email:em});
+      if(s&&s.ok){ bkMsg('First time — we sent a link to '+em+'. Tap it and this backs up on its own.'); bkWaitForLink(em); }
+      else bkMsg((s&&s.error)||'Could not send the e-mail.');
     }else bkMsg((r&&r.error)||'Backup failed.');
   }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+}
+var _bkWaitTimer=null;
+function bkWaitStop(){ if(_bkWaitTimer){ clearInterval(_bkWaitTimer); _bkWaitTimer=null; } }
+function bkWaitForLink(em){
+  bkWaitStop();
+  var tries=0;
+  _bkWaitTimer=setInterval(function(){
+    tries++;
+    if(tries>100){ bkWaitStop(); bkMsg('Still waiting on that e-mail. Tap Back up again to send a new link.'); return; }
+    relayBackup({op:'verified',email:em}).then(function(r){
+      if(r&&r.ok&&r.verified){ bkWaitStop(); bkMsg('✓ Confirmed — backing up…'); bkSave(); }
+    }).catch(function(){});
+  }, 3000);
 }
 async function bkRestore(){
   const em=bkEmailVal(); if(!em) return;
@@ -5635,6 +5700,44 @@ function relayLeague(msg){
 // The relay answers needVerify the first time an address is used: e-mail a
 // code, confirm it, then re-run whatever was being attempted.
 var _lgPendingAction=null;
+var _lgWaitTimer=null;
+// Verifying used to mean copying a 6-digit code out of the e-mail. Now the
+// e-mail carries a link: tapping it proves the inbox to the Pi, and this poll
+// notices and carries on with whatever was interrupted (2026-08-26).
+function lgWaitStop(){ if(_lgWaitTimer){ clearInterval(_lgWaitTimer); _lgWaitTimer=null; } }
+function lgWaitForLink(){
+  lgWaitStop();
+  var tries=0;
+  _lgWaitTimer=setInterval(function(){
+    tries++;
+    if(tries>100){ lgWaitStop(); lgHint('Still waiting on that e-mail. Tap Create again to send a new link.'); return; }
+    relayBackup({op:'verified',email:lgEmail()}).then(function(r){
+      if(r&&r.ok&&r.verified){
+        lgWaitStop();
+        document.getElementById('lgVerifyRow').style.display='none';
+        lgHint('✓ E-mail confirmed.');
+        var a=_lgPendingAction; _lgPendingAction=null; if(a) a();
+      }
+    }).catch(function(){});
+  }, 3000);
+}
+// The link opens the app with ?k=<token>. Redeeming it is what marks the
+// address verified on the Pi. Only ever verifies — it never quietly restores a
+// backup over what is already on this device.
+function lgRedeemToken(){
+  var m=/[?&]k=([A-Za-z0-9_-]{8,80})/.exec(location.search||''); if(!m) return;
+  var tok=m[1];
+  // NOTE: `history` here is the app's own undo stack — the browser's is window.history.
+  try{ window.history.replaceState(null,'',location.pathname); }catch(e){}   // don't leave a used credential in the bar
+  relayBackup({op:'redeem',code:tok}).then(function(r){
+    if(r&&r.ok&&r.email){
+      try{ if(!lgEmail()) lgSetEmail(r.email); }catch(e){}
+      flashToast('✓ ' + r.email + ' confirmed — you can set up your league now.');
+    }else{
+      flashToast((r&&r.error)||'That link did not work — ask for a new one.');
+    }
+  }).catch(function(){ flashToast('Could not reach the relay to confirm that link.'); });
+}
 function lgCall(msg, hint){
   return relayLeague(msg).then(function(r){
     if(r&&r.needVerify){
@@ -5646,11 +5749,15 @@ function lgCall(msg, hint){
       // by her (2026-08-26).
       return new Promise(function(resolve){
         _lgPendingAction=function(){ lgCall(msg,hint).then(resolve, function(){ resolve({ok:false,pending:true}); }); };
-        relayBackup({op:'verify',email:lgEmail()}).then(function(v){
-          document.getElementById('lgVerifyRow').style.display='flex';
-          hint((v&&v.ok)?('First time with this e-mail — we sent a 6-digit code to '+lgEmail()+'. Enter it above.'):((v&&v.error)||'Could not send the code.'));
-          if(!(v&&v.ok)){ _lgPendingAction=null; resolve({ok:false,pending:true}); }   // no code went out: stop waiting
-        }, function(){ hint('Could not send the code.'); _lgPendingAction=null; resolve({ok:false,pending:true}); });
+        relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
+          if(v&&v.ok){
+            document.getElementById('lgVerifyRow').style.display='flex';
+            hint('First time with this e-mail — we sent a link to '+lgEmail()+'. Tap it and this finishes on its own.');
+            lgWaitForLink();                       // no code to type: watch for the tap
+          }else{
+            _lgPendingAction=null; hint((v&&v.error)||'Could not send the e-mail.'); resolve({ok:false,pending:true});
+          }
+        }, function(){ hint('Could not send the e-mail.'); _lgPendingAction=null; resolve({ok:false,pending:true}); });
       });
     }
     if(r&&r.testMuted) hint('Preview build — the relay refuses league changes from here.');
@@ -5687,11 +5794,27 @@ function lgMergeSeasons(have, incoming){
 }
 // Merge what the Pi sent into the matching record (adding it to the list if
 // it's new). Returns the record.
+// A league's teams are the league's, not one phone's: every member should be
+// able to pick any of them. Additive only — a name that is already here is
+// left alone, and nothing is ever removed (Nathan, 2026-08-26).
+function lgTeamsIntoLibrary(rec){
+  try{
+    var names=Object.keys((rec&&rec.teams)||{});
+    if(!names.length) return;
+    var ch=false;
+    names.forEach(function(t){
+      t=String(t||'').trim().slice(0,40);
+      if(t && !teamLib.some(function(x){ return x.toLowerCase()===t.toLowerCase(); })){ teamLib.push(t); ch=true; }
+    });
+    if(ch){ saveTeams(); try{ renderTeamLibrary(); renderLibrary(); renderColumns(); }catch(e){} }
+  }catch(e){}
+}
 function lgAdopt(Lg, makeActive){
   if(!Lg||!Lg.id) return null;
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
+  lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
   if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
@@ -5897,7 +6020,8 @@ function lgReadEmail(){
 }
 document.getElementById('leagueBtn').onclick=openLeagueCard;
 document.getElementById('lgToggle').onclick=function(){ LG.on=!LG.on; saveLeague(); renderLeagueUI(); };
-document.getElementById('lgDone').onclick=function(){ document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
+document.getElementById('lgDone').onclick=function(){
+  lgWaitStop(); document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); };
 document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
 document.getElementById('lgRequests').addEventListener('click',function(e){
@@ -5933,13 +6057,11 @@ document.getElementById('lgJoin').onclick=function(){
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not join.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
 };
-document.getElementById('lgVerifyBtn').onclick=function(){
-  var code=(document.getElementById('lgVerifyCode').value||'').replace(/\D/g,'');
-  if(code.length!==6){ lgHint('The code is 6 digits.'); return; }
-  lgHint('Checking…');
-  relayBackup({op:'confirm',email:lgEmail(),code:code}).then(function(r){
-    if(r&&r.ok){ document.getElementById('lgVerifyRow').style.display='none'; document.getElementById('lgVerifyCode').value=''; lgHint('✓ E-mail confirmed.'); var a=_lgPendingAction; _lgPendingAction=null; if(a) a(); }
-    else lgHint((r&&r.error)||'That code didn’t work.');
+document.getElementById('lgVerifyResend').onclick=function(){
+  lgHint('Sending another link…');
+  relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
+    if(v&&v.ok){ lgHint('Sent again to '+lgEmail()+'. Tap the link in that e-mail.'); lgWaitForLink(); }
+    else lgHint((v&&v.error)||'Could not send the e-mail.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
 document.getElementById('lgInvite').onclick=function(){
@@ -6340,6 +6462,7 @@ function wakeRequest(){
 }
 wakeRequest();
 setTimeout(welcomeShow, 400);
+try{ lgRedeemToken(); }catch(e){}          // arrived by tapping the e-mail link
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') wakeRequest(); });
 window.addEventListener('pageshow',wakeRequest);
 window.addEventListener('focus',wakeRequest);
