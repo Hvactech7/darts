@@ -1176,6 +1176,18 @@
   /* a very long pair ("Christine B & Bartholomew F") still has to fit the
      PHONE's narrower box, where +25% overflows it — one more rung down. */
   .th-names.xxlong{ font-size:.62em; letter-spacing:0; }
+  /* Each pick carries its own X so a mis-tap is undone from the box itself
+     instead of hunting the name back down in the list (Nathan). The box is a
+     FIXED height, so the X has to live on the text's own line — it is sized in
+     em and the whole line steps down by measurement, never by guessing.
+     ONE X per side: it clears that side, both players included. */
+  .th-names .thPick{ display:inline-flex; align-items:center; gap:.3em; }
+  .th-names .thX{ font-family:var(--body); font-size:.78em; font-weight:700; line-height:1;
+    padding:.06em .3em .12em; margin:0; border-radius:6px; letter-spacing:0;
+    border:1px solid rgba(255,255,255,.25); background:rgba(0,0,0,.34); color:inherit;
+    opacity:.8; box-shadow:none; }
+  .th-names .thX:hover{ opacity:1; background:rgba(210,60,45,.55); border-color:rgba(255,140,120,.6); }
+  .th-names .thX:active{ transform:scale(.9); }
   .teamcol-head.filled .th-names{ color:inherit; text-shadow:inherit; }
   .teamcol-head.empty .th-names{ opacity:.45; font-weight:600; }
   /* pair-name input replaces the label line, so the box height never changes */
@@ -2399,12 +2411,32 @@ function renderLineup(){
     _lbl.textContent=_iron?'🦾 Ironman':'';
     _lbl.style.display=_iron?'':'none';
     const el=document.getElementById('thNames'+(t+1));
-    el.textContent = names.length ? names.map(n=>shortName(n)).join(' & ') : 'pick below';
-    // one line, always: step the type down instead of wrapping or truncating
-    const len=el.textContent.length;
-    el.classList.toggle('long', len>13 && len<=19);
-    el.classList.toggle('xlong', len>19 && len<=26);
-    el.classList.toggle('xxlong', len>26);
+    el.classList.remove('long','xlong','xxlong');
+    if(!names.length){
+      el.textContent='pick below';
+    }else{
+      el.textContent='';
+      const chip=document.createElement('span'); chip.className='thPick';
+      const nm=document.createElement('span');
+      nm.textContent=names.map(function(n){ return shortName(n); }).join(' & ');
+      chip.appendChild(nm);
+      // ONE X for the side, not one per name (Nathan) — it clears this side,
+      // both players included.
+      const x=document.createElement('button');
+      x.type='button'; x.className='thX'; x.textContent='\u00d7';
+      x.setAttribute('aria-label','Clear '+(names.length>1?'these players':'this player'));
+      x.onclick=function(e){ e.preventDefault(); e.stopPropagation();
+        teamSel[t]=[]; renderColumns(); renderLineup(); updateStart(); };
+      chip.appendChild(x);
+      el.appendChild(chip);
+      // One line, always. The X adds width the old character count could not
+      // see, so step down until it MEASURES as fitting.
+      const rungs=['long','xlong','xxlong'];
+      for(let r=0;r<rungs.length && el.scrollWidth>el.clientWidth+1;r++){
+        el.classList.remove.apply(el.classList, rungs);
+        el.classList.add(rungs[r]);
+      }
+    }
     head.classList.toggle('filled', names.length>0);
     head.classList.toggle('empty', names.length===0);
   });
