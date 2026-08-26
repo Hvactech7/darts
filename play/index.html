@@ -888,6 +888,17 @@
   /* pause/resume + quit confirm */
   #resumeBtn{width:100%;font-size:25px;padding:16px;margin:0 0 12px;}
   /* ---- Add to Home Screen splash (browser only, never once installed) ---- */
+  #welcome,#mergeCard{position:fixed;inset:0;z-index:402;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(4,3,8,.88);}
+  #welcome.hidden,#mergeCard.hidden{display:none !important;}
+  #welcome .card,#mergeCard .card{max-width:520px;width:100%;text-align:center;}
+  #welcome .lead,#mergeCard .lead{font-size:19px;color:#e6dcc4;margin:0 0 12px;line-height:1.5;}
+  #welcome .why,#mergeCard .why{font-size:13.5px;color:var(--muted);margin:10px 0 0;}
+  #wcName,#mgPick{width:100%;font-size:21px;padding:13px 14px;border-radius:10px;border:1.5px solid #57451c;
+    background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);}
+  #welcome .acts,#mergeCard .acts{margin-top:14px;}
+  .wcActs{display:flex;gap:10px;} .wcActs button{flex:1;}
+  #welcome .ic{width:74px;height:74px;border-radius:16px;margin:0 auto 8px;display:block;}
+  @media (max-width:600px){ .wcActs{flex-direction:column;} }
   #a2hs{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
     background:rgba(3,2,1,.82);padding:16px;overflow-y:auto;}
   #a2hs.hidden{display:none;}
@@ -1000,6 +1011,8 @@
   .stLeaguePick{margin-bottom:6px;}
   .lgMeRow{align-items:center;gap:8px;flex-wrap:nowrap;margin-top:8px;}
   .lgMeLbl{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;white-space:nowrap;}
+  .lgMeNote{font-size:13.5px;line-height:1.4;margin:4px 0 0 2px;color:var(--muted);}
+  .lgMeNote.ok{color:#8fd0a0;} .lgMeNote.wait{color:#e8c876;} .lgMeNote.taken{color:#ff9b8a;}
   #lgMe{flex:1 1 auto;min-width:0;padding:8px 10px;border-radius:7px;border:1.5px solid #57451c;background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);font-size:16px;font-weight:600;}
   .lgReq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 10px;border:1.5px solid #7fb8ef;border-radius:8px;background:linear-gradient(180deg,#14293f,#0d1b2c);margin-bottom:6px;}
   .lgReq .who{flex:1 1 100%;min-width:0;font-size:14px;color:#e9ddc0;line-height:1.25;}
@@ -1642,6 +1655,39 @@
   </div>
 
   <!-- ================= QUIT CONFIRM ================= -->
+  <!-- First run: who are you, and are you playing in a league? (2026-08-25) -->
+  <div id="welcome" class="hidden">
+    <div class="card">
+      <img class="ic" src="darts-icon-180.png" alt="">
+      <h2>Welcome to Dart Keeper</h2>
+      <div id="wcStep1">
+        <p class="lead">What name should go on the board?</p>
+        <input type="text" id="wcName" placeholder="Your name" autocomplete="name" autocapitalize="words" spellcheck="false">
+        <p class="why">This becomes your player. You can add everyone else later.</p>
+        <div class="acts"><button class="primary" id="wcGo" style="width:100%">Continue</button></div>
+      </div>
+      <div id="wcStep2" class="hidden">
+        <p class="lead">Playing in a league?</p>
+        <div class="acts wcActs">
+          <button class="primary" id="wcJoin">I have a join code</button>
+          <button class="accent" id="wcCreate">Start a league</button>
+        </div>
+        <button class="ghost" id="wcSkip" style="width:100%;margin-top:8px;">Just keep score for now</button>
+        <p class="why">You can do this any time from League Mode.</p>
+      </div>
+    </div>
+  </div>
+  <!-- After taking a shared library: are you already in it? -->
+  <div id="mergeCard" class="hidden">
+    <div class="card">
+      <h2>Are You Already In Here?</h2>
+      <p class="lead" id="mgLead"></p>
+      <select id="mgPick" class="grow"></select>
+      <div class="acts"><button class="primary" id="mgMerge" style="width:100%">That&rsquo;s me — merge my stats in</button></div>
+      <button class="ghost" id="mgKeep" style="width:100%;margin-top:8px;">No, I&rsquo;m new here</button>
+      <p class="why" id="mgWhy"></p>
+    </div>
+  </div>
   <div id="a2hs" class="hidden">
     <div class="card">
       <img class="ic" src="darts-icon-180.png" alt="">
@@ -1725,6 +1771,7 @@
         <div class="lgSeason">
           <div class="lgSeasonLine" id="lgLeagueLine"></div>
           <div class="row lgMeRow"><span class="lgMeLbl">I am</span><select id="lgMe" class="grow"></select></div>
+          <div id="lgMeNote" class="lgMeNote"></div>
           <div id="lgRequests"></div>
           <div class="row lgSeasonBtns"><button class="primary grow" id="lgInvite">👤 Invite a member</button><button class="ghost" id="lgSync">↻ Sync</button></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
@@ -1853,7 +1900,7 @@
         <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
       </div>
     </div>
-    <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 41 41" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m2 0h2m1 0h1m1 0h7m-33 1h1m5 0h1m3 0h2m1 0h1m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h1m3 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m4 0h2m1 0h1m3 0h1m1 0h1m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m3 0h1m2 0h1m2 0h2m1 0h2m1 0h1m3 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m4 0h6m1 0h1m2 0h1m1 0h1m2 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-21 1h1m2 0h2m2 0h1m2 0h1m1 0h1m-22 1h2m1 0h2m4 0h1m1 0h2m2 0h1m1 0h1m8 0h2m-30 1h1m5 0h1m3 0h2m1 0h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h2m1 0h1m-31 1h4m1 0h4m2 0h1m2 0h2m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1m1 0h2m-33 1h4m3 0h2m2 0h1m1 0h2m1 0h1m1 0h2m2 0h1m4 0h4m-31 1h1m2 0h1m1 0h3m3 0h1m1 0h2m4 0h1m4 0h1m1 0h1m2 0h1m2 0h1m-32 1h2m2 0h1m1 0h1m1 0h6m3 0h2m1 0h3m1 0h1m1 0h1m2 0h2m-32 1h1m3 0h3m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m7 0h2m-29 1h2m1 0h2m1 0h1m1 0h1m2 0h3m3 0h2m5 0h2m1 0h1m1 0h1m-27 1h3m2 0h2m1 0h5m1 0h3m2 0h1m1 0h4m3 0h1m-32 1h1m1 0h1m1 0h1m4 0h1m2 0h1m1 0h5m2 0h1m1 0h6m2 0h1m-33 1h9m4 0h1m3 0h2m2 0h3m1 0h3m1 0h2m1 0h1m-30 1h2m3 0h3m1 0h1m1 0h1m2 0h4m2 0h3m1 0h5m-32 1h3m1 0h1m1 0h3m3 0h2m4 0h1m5 0h1m4 0h1m1 0h1m-32 1h1m4 0h1m2 0h2m1 0h2m1 0h1m1 0h3m3 0h2m1 0h4m1 0h2m-32 1h1m1 0h2m1 0h4m1 0h1m2 0h2m1 0h2m2 0h1m2 0h1m2 0h3m1 0h3m-33 1h1m3 0h1m4 0h1m9 0h2m7 0h1m1 0h2m-32 1h3m1 0h4m2 0h1m2 0h1m1 0h3m6 0h5m3 0h1m-25 1h1m5 0h1m1 0h2m4 0h1m1 0h1m3 0h2m1 0h1m-32 1h7m1 0h1m2 0h2m2 0h1m1 0h1m3 0h4m1 0h1m1 0h1m-29 1h1m5 0h1m3 0h2m3 0h1m3 0h1m2 0h1m1 0h1m3 0h4m-32 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m5 0h1m1 0h7m1 0h1m-32 1h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h4m1 0h1m2 0h4m1 0h1m4 0h1m-33 1h1m1 0h3m1 0h1m5 0h3m1 0h1m2 0h2m3 0h1m3 0h1m1 0h3m-33 1h1m5 0h1m2 0h1m1 0h1m3 0h1m2 0h3m4 0h1m3 0h4m-33 1h7m3 0h2m2 0h1m1 0h1m1 0h2m3 0h2m1 0h1m1 0h2"/></svg></div></div>
+    <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 45 45" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m1 0h2m1 0h1m1 0h4m1 0h1m1 0h4m1 0h4m1 0h7m-37 1h1m5 0h1m4 0h3m2 0h5m3 0h1m1 0h2m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h8m3 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h4m2 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m3 0h6m1 0h1m6 0h1m1 0h3m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-26 1h1m6 0h2m3 0h2m3 0h1m-27 1h1m1 0h3m1 0h4m2 0h5m1 0h2m2 0h1m2 0h3m3 0h1m2 0h1m-37 1h2m1 0h3m2 0h1m4 0h6m3 0h2m3 0h1m2 0h1m2 0h1m1 0h2m-35 1h2m2 0h1m1 0h4m1 0h5m2 0h2m1 0h1m1 0h1m2 0h1m1 0h5m1 0h1m-35 1h4m2 0h1m1 0h1m1 0h1m3 0h4m1 0h1m2 0h4m1 0h1m1 0h1m3 0h1m-36 1h3m3 0h2m1 0h1m1 0h2m4 0h3m3 0h3m3 0h2m2 0h1m1 0h2m-35 1h1m4 0h1m4 0h1m1 0h2m2 0h7m5 0h1m2 0h2m1 0h1m-36 1h1m4 0h1m4 0h1m2 0h1m1 0h5m1 0h1m2 0h1m3 0h2m1 0h1m1 0h3m-37 1h1m3 0h1m5 0h3m3 0h2m3 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-37 1h2m2 0h3m4 0h4m3 0h1m2 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h1m-36 1h5m2 0h1m4 0h1m4 0h2m1 0h1m3 0h1m2 0h1m1 0h1m4 0h2m-36 1h2m1 0h3m1 0h2m2 0h4m2 0h3m4 0h2m3 0h3m1 0h3m-35 1h2m3 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m7 0h1m-37 1h9m2 0h1m1 0h1m1 0h5m1 0h2m2 0h1m2 0h4m3 0h2m-37 1h1m3 0h1m2 0h1m1 0h5m2 0h1m1 0h3m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m-34 1h2m1 0h2m2 0h2m2 0h2m1 0h2m4 0h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m3 0h1m4 0h1m2 0h1m1 0h1m1 0h1m3 0h4m1 0h2m2 0h1m-29 1h1m1 0h1m2 0h1m2 0h1m1 0h5m4 0h1m2 0h1m2 0h5m2 0h1m1 0h1m-35 1h2m2 0h1m1 0h2m2 0h3m1 0h1m3 0h5m1 0h3m2 0h1m2 0h1m2 0h1m-37 1h1m3 0h4m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m6 0h1m1 0h2m3 0h2m-36 1h1m3 0h1m3 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h1m3 0h4m3 0h2m2 0h4m2 0h1m3 0h1m2 0h9m-29 1h1m4 0h1m1 0h2m1 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-37 1h7m2 0h1m3 0h1m1 0h3m1 0h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h4m2 0h2m2 0h6m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m3 0h1m4 0h1m3 0h4m3 0h1m1 0h6m-37 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m3 0h2m2 0h4m2 0h1m1 0h3m2 0h1m-37 1h1m5 0h1m2 0h1m2 0h1m2 0h1m1 0h4m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m-36 1h7m3 0h4m2 0h2m1 0h1m1 0h5m1 0h2m1 0h1m1 0h1m2 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
       <div class="sub">dartkeeper.net</div></div>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
@@ -2019,6 +2066,7 @@ const EMAIL_OK=/^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 function setPlayerEmail(n,e){
   e=String(e||'').trim().toLowerCase().slice(0,80);
   if(e===emailOfPlayer(n)) return true;
+  if(!lgMayEditPlayer(league,n)) return false;      // that name belongs to someone else
   if(e&&!EMAIL_OK.test(e)) return false;
   playerEmails[n]={e:e,at:Date.now()}; savePlayerEmails();
   try{ if(LG.active&&typeof lgSync==='function') lgSync(); }catch(x){}   // the league learns it right away
@@ -2097,6 +2145,60 @@ document.getElementById('azBar').addEventListener('click',e=>{
   const list=document.getElementById('listScroll');   // the shared scroller (both columns)
   list.scrollTop += el.getBoundingClientRect().top - list.getBoundingClientRect().top;
 });
+// ---- this device's own player (2026-08-25) ----
+var LS_ME='darts_me_v1';
+function myName(){ try{ return localStorage.getItem(LS_ME)||''; }catch(e){ return ''; } }
+function setMyName(n){ try{ localStorage.setItem(LS_ME, n||''); }catch(e){} }
+
+// Fold `from` into `into` and delete `from`. Used when a shared library already
+// contains you under a different spelling — one profile, all the history.
+var STAT_SUM=['g','w','pts','turns','dts','t180','t100','cd','ch','cm','di','dio','do','doo'];
+var STAT_MAX=['best','hiOut','last'];
+function mergePlayers(from,into){
+  if(!from||!into||from===into) return false;
+  if(roster.indexOf(from)<0||roster.indexOf(into)<0) return false;
+  var a=statsLib[from], b=statsLib[into];
+  if(a){
+    if(!b) b=statsLib[into]={g:0,w:0,byGame:{}};
+    if(!b.byGame) b.byGame={};
+    STAT_SUM.forEach(function(k){ if(a[k]) b[k]=(b[k]||0)+a[k]; });
+    STAT_MAX.forEach(function(k){ if(a[k]) b[k]=Math.max(b[k]||0,a[k]); });
+    Object.keys(a.byGame||{}).forEach(function(g){
+      var src=a.byGame[g]; if(!src) return;
+      var dst=b.byGame[g]=b.byGame[g]||{g:0,w:0};
+      dst.g=(dst.g||0)+(src.g||0); dst.w=(dst.w||0)+(src.w||0);
+    });
+    delete statsLib[from];
+  }
+  if(!teamOfPlayer(into) && teamOfPlayer(from)) playerTeams[into]=playerTeams[from];
+  delete playerTeams[from];
+  var ea=playerEmails[from], eb=playerEmails[into];              // newest e-mail wins
+  if(ea && (!eb || (ea.at||0)>(eb.at||0))) playerEmails[into]=ea;
+  delete playerEmails[from];
+  var nd={};                                                     // duo keys carry both names
+  Object.keys(duoTeams).forEach(function(k){
+    var pair; try{ pair=JSON.parse(k); }catch(e){ nd[k]=duoTeams[k]; return; }
+    var lo=String(from).trim().toLowerCase(), ln=String(into).trim().toLowerCase();
+    var moved=pair.map(function(x){ return x===lo?ln:x; }).sort();
+    if(moved[0]===moved[1]) return;                              // would pair them with themselves
+    nd[JSON.stringify(moved)]=duoTeams[k];
+  });
+  duoTeams=nd;
+  (f6log||[]).forEach(function(e){                               // Fat 6 finishing places
+    if(!e||!e.places||e.places[from]===undefined) return;
+    var mine=e.places[from];
+    if(e.places[into]===undefined) e.places[into]=mine; else e.places[into]=Math.min(e.places[into],mine);
+    delete e.places[from];
+  });
+  roster=roster.filter(function(n){ return n!==from; });
+  teamSel=teamSel.map(function(arr){ return arr.map(function(n){ return n===from?into:n; })
+    .filter(function(n,i,arr2){ return arr2.indexOf(n)===i; }); });
+  f6Sel=f6Sel.map(function(n){ return n===from?into:n; }).filter(function(n,i,arr2){ return arr2.indexOf(n)===i; });
+  if(myName()===from) setMyName(into);
+  saveRoster(); saveTeams(); savePlayerTeams(); savePlayerEmails(); saveDuoTeams(); saveStats(); try{ saveF6log(); }catch(e){}
+  renderLibrary(); renderColumns(); renderLineup(); updateStart();
+  return true;
+}
 function renamePlayer(oldName,newName){
   newName=String(newName||'').trim();
   if(!newName || newName===oldName) return false;
@@ -2430,8 +2532,11 @@ async function shareGo(){
   try{
     const r=await relayBackup({op:'take', code});
     if(r&&r.ok&&r.data){
+      const before=roster.slice();
       const n=shareMergeIn(r.data);
+      const added=roster.filter(function(x){ return before.indexOf(x)<0; });
       shareMsg(n===0?'Nothing new — you already had everyone.':('Added '+n+' new player'+(n===1?'':'s')+'.'));
+      mergeAsk(added.length?added:roster.slice());        // offer to fold your profile in
       document.getElementById('shareCodeIn').value='';
       document.getElementById('shareTakeRow').style.display='none';
     } else shareMsg((r&&r.error)||'Could not fetch that share.');
@@ -2527,7 +2632,15 @@ function openPlayerCard(name){
   const d=playerCardData(name), s=d.s;
   document.getElementById('pcName').textContent=name;
   document.getElementById('pcSub').textContent=(d.team?d.team+' · ':'')+(s.g||0)+' game'+(s.g===1?'':'s')+(s.last?' · last played '+lgDay(s.last):'');
-  const mi=document.getElementById('pcEmail'); mi.value=emailOfPlayer(name); mi.classList.remove('bad'); document.getElementById('pcEmailSave').textContent='Save';
+  const mi=document.getElementById('pcEmail'); mi.value=emailOfPlayer(name); mi.classList.remove('bad');
+  // A claimed name's e-mail belongs to whoever claimed it (2026-08-25).
+  const _own=lgMayEditPlayer(league,name), _by=lgClaimOwner(league,name);
+  mi.disabled=!_own; document.getElementById('pcEmailSave').disabled=!_own;
+  const _note=document.querySelector('.pcMailNote');
+  if(_note) _note.textContent=_own
+      ? (_by===lgEmail() ? 'This name is yours. League reports are e-mailed here.' : 'League reports are e-mailed to this address.')
+      : '🔒 '+shortName(name)+' is claimed by '+_by+' — only they (or the league keeper) can change this.';
+  document.getElementById('pcEmailSave').textContent='Save';
   let h='';
   h+=pcSec('Overall', s.g?pcWL({g:s.g,w:s.w||0}):'no games yet',
     '<div class="pcGrid">'+pcStat(s.g||0,'Games')+pcStat(s.w||0,'Wins')+pcStat(pcPct(s.w||0,s.g||0),'Win rate',null,true)+'</div>');
@@ -2586,8 +2699,9 @@ document.getElementById('pcRename').onclick=function(){
 };
 
 //============================ INSTALL SOURCE (sticker / magnet QR) ============================
-// A QR on a sticker or magnet lands on dartkeeper.net/?src=<token>; the landing
-// page forwards the token into /play/. FIRST TOUCH WINS and it lives in
+// A QR on a sticker or magnet lands STRAIGHT here on /play/?src=<token> — a
+// scan puts the board in front of you, not a page about the board. (The landing
+// page still forwards the token for anyone who arrives that way.) FIRST TOUCH WINS and it lives in
 // localStorage, not sessionStorage: the question is "did the stickers bring
 // anyone who STAYED", so a scan has to stay attributed to the visits that come
 // days later. (Same reasoning as Battle Tees' btSrc.)
@@ -5163,7 +5277,7 @@ var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
 // leagues this device belongs to, and which one is ACTIVE. `league` is always
 // the active league's record (or LG.local — history kept before joining any
 // league, which Create uploads). Matches, reports and Stats act on `league`.
-function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},lastSync:o.lastSync||0}; }
+function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0}; }
 var LG=(function(){
   var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
   if(!v||typeof v!=='object') v={};
@@ -5257,6 +5371,7 @@ function lgAdopt(Lg, makeActive){
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
+  if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
   if(makeActive||!LG.active) lgSelect(rec.id);
@@ -5319,6 +5434,30 @@ setPlayerTeam=function(name,team){
     try{ renderLibrary(); }catch(e){}
   }).catch(function(){});
 };
+// ---- name claims: a roster name belongs to one address once claimed ----
+function lgClaims(rec){ return (rec&&rec.claims)||{}; }
+function lgClaimOwner(rec,player){ var c=lgClaims(rec)[player]; return (c&&c.st==='ok'&&c.email)||null; }
+function lgMayEditPlayer(rec,player){
+  if(!rec||!rec.id) return true;                       // not in a league: your own library, your rules
+  var o=lgClaimOwner(rec,player);
+  return !o || o===lgEmail() || lgEmail()===rec.creator;
+}
+function lgClaimState(player){                          // '', 'ok', 'pending', 'taken'
+  if(!league||!league.id||!player) return '';
+  var c=lgClaims(league)[player]; if(!c) return '';
+  if(c.st==='ok'&&c.email===lgEmail()) return 'ok';
+  if(c.req&&c.req[lgEmail()]) return 'pending';
+  if(c.email&&c.email!==lgEmail()) return 'taken';
+  return '';
+}
+function lgClaimDecision(player,who,approve){
+  return lgCall({op:approve?'claim_approve':'claim_decline',league:league.id,player:player,who:who},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league);
+      lgHint(approve?('✓ '+shortName(player)+' now belongs to '+who+'.'):('Declined — '+shortName(player)+' stays yours.'));
+      lgSync(); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not do that.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
+}
 function lgTeamDecision(team,player,approve){
   return lgCall({op:approve?'team_approve':'team_decline',league:league.id,team:team,player:player,me:LG.me||''},lgHint).then(function(r){
     if(r&&r.ok&&r.league){ lgAdopt(r.league); lgHint((approve?'✓ Approved ':'Removed ')+shortName(player)+(approve?' for ':' from ')+team+'.'); lgSync(); }
@@ -5378,17 +5517,36 @@ function renderLeagueUI(){
     +(league.creator===lgEmail()?' · you created it':'');
   var me=document.getElementById('lgMe');
   if(me&&inL&&document.activeElement!==me){
-    me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+'</option>'; }).join('');
+    me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ var _o=lgClaimOwner(league,n); var _tag=(_o&&_o!==lgEmail())?' — taken':''; return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+esc(_tag)+'</option>'; }).join('');
+  }
+  var mn=document.getElementById('lgMeNote');
+  if(mn){
+    var cs=inL?lgClaimState(LG.me):'';
+    mn.className='lgMeNote'+(cs==='ok'?' ok':cs==='pending'?' wait':cs==='taken'?' taken':'');
+    mn.textContent = !inL||!LG.me ? ''
+      : cs==='ok' ? '✓ That name is yours — only you can change its e-mail.'
+      : cs==='pending' ? '⏳ Someone already plays as '+shortName(LG.me)+'. They have been asked to hand it over.'
+      : cs==='taken' ? '⚠ '+shortName(LG.me)+' belongs to another device. Pick your own name, or ask them to approve.'
+      : 'Your matches and e-mails are filed under this name.';
   }
   var rq=document.getElementById('lgRequests');
   if(rq&&inL){
     var rows=[], waiting=[];
+    var cl=lgClaims(league);                       // someone wants a name you hold
+    Object.keys(cl).forEach(function(pl){ var c=cl[pl]; if(!c||!c.req) return;
+      Object.keys(c.req).forEach(function(who){
+        if(c.email===lgEmail()||lgEmail()===league.creator)
+          rows.push('<div class="lgReq"><span class="who"><b>'+esc(who)+'</b> says they are <b>'+esc(shortName(pl))+'</b></span>'
+            +'<button class="primary" data-cok="1" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Approve</button>'
+            +'<button class="warn" data-cok="0" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Decline</button></div>');
+        else if(who===lgEmail()) waiting.push('⏳ waiting to be confirmed as '+shortName(pl));
+      }); });
     var teams=league.teams||{};
     Object.keys(teams).forEach(function(tm){ Object.keys(teams[tm]||{}).forEach(function(pl){ var e=teams[tm][pl]; if(!e||e.st!=='pending') return;
       if(lgCanApprove(league,tm)) rows.push('<div class="lgReq"><span class="who"><b>'+esc(shortName(pl))+'</b> wants to join <b>'+esc(tm)+'</b></span><button class="primary" data-ok="1" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Approve</button><button class="warn" data-ok="0" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Decline</button></div>');
       else if(roster.indexOf(pl)>=0) waiting.push('⏳ '+shortName(pl)+' is waiting for a '+tm+' member to approve'); }); });
     var held=lgHeldCount(league);
-    rq.innerHTML=(rows.length?'<div class="lgListHead">Team requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
+    rq.innerHTML=(rows.length?'<div class="lgListHead">Requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
   }
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
   var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
@@ -5421,7 +5579,12 @@ document.getElementById('lgToggle').onclick=function(){ LG.on=!LG.on; saveLeague
 document.getElementById('lgDone').onclick=function(){ document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); };
 document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
-document.getElementById('lgRequests').addEventListener('click',function(e){ var b=e.target.closest('button[data-team]'); if(!b) return; lgTeamDecision(b.dataset.team,b.dataset.player,b.dataset.ok==='1'); });
+document.getElementById('lgRequests').addEventListener('click',function(e){
+  var c=e.target.closest('button[data-cok]');
+  if(c){ lgClaimDecision(c.dataset.player,c.dataset.who,c.dataset.cok==='1'); return; }
+  var b=e.target.closest('button[data-team]'); if(!b) return;
+  lgTeamDecision(b.dataset.team,b.dataset.player,b.dataset.ok==='1');
+});
 document.getElementById('lgList').addEventListener('click',function(e){
   var row=e.target.closest('.lgRow'); if(!row) return;
   if(lgMatchOpen()){ lgHint('Finish or quit the match in progress before switching leagues.'); return; }
@@ -5855,10 +6018,96 @@ function wakeRequest(){
   }catch(e){}
 }
 wakeRequest();
+setTimeout(welcomeShow, 400);
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') wakeRequest(); });
 window.addEventListener('pageshow',wakeRequest);
 window.addEventListener('focus',wakeRequest);
 document.addEventListener('pointerdown',wakeRequest,{capture:true,passive:true});
+
+//============================ FIRST RUN + PROFILE MERGE (2026-08-25) ============================
+// A fresh install asks who you are and whether you are in a league, so a new
+// player is not dropped into an empty roster wondering what to do.
+function welcomeNeeded(){
+  if(myName()) return false;
+  try{ if(localStorage.getItem('darts_welcome_seen_v1')) return false; }catch(e){ return false; }
+  return roster.length===0;                       // a library already here means this is not a first run
+}
+function welcomeShow(){
+  if(!welcomeNeeded()) return;
+  document.getElementById('wcStep1').classList.remove('hidden');
+  document.getElementById('wcStep2').classList.add('hidden');
+  document.getElementById('welcome').classList.remove('hidden');
+  setTimeout(function(){ try{ document.getElementById('wcName').focus(); }catch(e){} }, 250);
+}
+function welcomeDone(){
+  document.getElementById('welcome').classList.add('hidden');
+  try{ localStorage.setItem('darts_welcome_seen_v1','1'); }catch(e){}
+  setTimeout(function(){ try{ dkA2HSShow(); }catch(e){} }, 500);   // now offer the home-screen install
+}
+document.getElementById('wcGo').onclick=function(){
+  var n=(document.getElementById('wcName').value||'').trim().slice(0,40);
+  if(!n){ document.getElementById('wcName').focus(); return; }
+  addPlayer(n);
+  var real=roster.filter(function(x){ return x.toLowerCase()===n.toLowerCase(); })[0]||n;
+  setMyName(real); LG.me=real; try{ saveLeague(); }catch(e){}
+  document.getElementById('wcStep1').classList.add('hidden');
+  document.getElementById('wcStep2').classList.remove('hidden');
+};
+document.getElementById('wcName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcGo').click(); } });
+document.getElementById('wcSkip').onclick=welcomeDone;
+document.getElementById('wcJoin').onclick=function(){ welcomeDone(); try{ LG.on=true; saveLeague(); document.getElementById('leagueBtn').click(); }catch(e){} };
+document.getElementById('wcCreate').onclick=document.getElementById('wcJoin').onclick;
+
+// After taking someone's library: you are probably already in it under their
+// spelling. Offer to fold your own profile into that name.
+var _mgNames=[];
+// Guess which roster name is this device's player, so the picker opens on it.
+function mgScore(me,n){
+  var a=String(me).toLowerCase().trim(), b=String(n).toLowerCase().trim();
+  if(a===b) return 100;
+  var at=a.split(/\s+/), bt=b.split(/\s+/);
+  var sc=0;
+  if(at.length>1&&bt.length>1&&at[at.length-1]===bt[bt.length-1]) sc+=40;  // same last name
+  if(at[0]===bt[0]) sc+=30;                                                // same first name
+  else if(at[0].length>=2&&(bt[0].indexOf(at[0])===0||at[0].indexOf(bt[0])===0)) sc+=22; // Reg / Reggie
+  else { var i=0; while(i<at[0].length&&i<bt[0].length&&at[0][i]===bt[0][i]) i++;
+         if(i>=3) sc+=18; }                                                 // Nate / Nathan
+  if(at.length>1&&bt.length>1&&at[at.length-1][0]===bt[bt.length-1][0]) sc+=14;  // ...B / ...Breeding
+  if(b.indexOf(a)===0||a.indexOf(b)===0) sc+=12;
+  return sc;
+}
+function mgBest(me,names){
+  var best=names[0], bs=-1;
+  names.forEach(function(n){ var s=mgScore(me,n); if(s>bs){ bs=s; best=n; } });
+  return bs>=20?best:null;   // no plausible match: make them choose on purpose
+}
+function mergeAsk(added){
+  var me=myName();
+  if(!me || !added || !added.length) return false;
+  _mgNames=added.filter(function(n){ return n!==me; });
+  if(!_mgNames.length) return false;
+  var sel=document.getElementById('mgPick');
+  var best=mgBest(me,_mgNames);
+  // No plausible match? Force a deliberate pick — a merge cannot be undone.
+  sel.innerHTML=(best?'':'<option value="" selected>Choose your name…</option>')
+    +_mgNames.slice().sort(function(a,b){ return a.localeCompare(b,undefined,{sensitivity:'base'}); })
+    .map(function(n){ return '<option value="'+esc(n)+'"'+(n===best?' selected':'')+'>'+esc(n)+'</option>'; }).join('');
+  document.getElementById('mgMerge').disabled=!sel.value;
+  sel.onchange=function(){ document.getElementById('mgMerge').disabled=!sel.value; };
+  document.getElementById('mgLead').textContent='You are on this device as '+shortName(me)+'. If you are already in the library you just received, pick your name and the two will become one player.';
+  document.getElementById('mgWhy').textContent='Merging keeps every game either profile has played.';
+  document.getElementById('mergeCard').classList.remove('hidden');
+  return true;
+}
+document.getElementById('mgKeep').onclick=function(){ document.getElementById('mergeCard').classList.add('hidden'); };
+document.getElementById('mergeCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('mgKeep').click(); });
+document.getElementById('mgMerge').onclick=function(){
+  var into=document.getElementById('mgPick').value, me=myName();
+  document.getElementById('mergeCard').classList.add('hidden');
+  if(!into||!me||into===me) return;
+  if(mergePlayers(me,into)) shareMsg('Merged — you are '+shortName(into)+' now, with all your games.');
+  else shareMsg('Could not merge those two.');
+};
 
 //============================ INIT ============================
 resetSelection();
@@ -5950,6 +6199,10 @@ function dkA2HSRender(){
 }
 function dkA2HSShow(){
   if(dkStandalone()||dkSnoozed()) return;
+  // Never stack on the first-run cards — one thing to answer at a time.
+  var busy=['welcome','leagueCard','mergeCard'];
+  for(var i=0;i<busy.length;i++){ var b=document.getElementById(busy[i]);
+    if(b&&!b.classList.contains('hidden')) return; }
   dkA2HSRender();
   document.getElementById('a2hs').classList.remove('hidden');
 }
