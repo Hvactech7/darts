@@ -292,12 +292,12 @@
   /* ===== Cricket: scores-first, pop-up board ===== */
   #miniBoard{display:none;}
   #game.cricket #scoreboard{display:none;}
-  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:3px 6px;}
-  #game.cricket #cricketBoard .cricket .marks{font-size:78px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;}
-  #game.cricket #cricketBoard .cricket .tgt{font-size:73px;}
-  #game.cricket #cricketBoard .cricket .chead .mcell{font-size:29px;}
-  #game.cricket #cricketBoard .cricket .cric-pts{font-size:109px;}
-  .chead .thrower-line{font-size:39px;font-weight:800;min-height:34px;margin-top:6px;letter-spacing:.3px;}
+  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:calc(3px * var(--ckS,1)) 6px;}
+  #game.cricket #cricketBoard .cricket .marks{font-size:calc(78px * var(--ckS,1));line-height:1;display:flex;align-items:center;justify-content:center;height:1em;}
+  #game.cricket #cricketBoard .cricket .tgt{font-size:calc(73px * var(--ckS,1));}
+  #game.cricket #cricketBoard .cricket .chead .mcell{font-size:calc(29px * var(--ckS,1));}
+  #game.cricket #cricketBoard .cricket .cric-pts{font-size:calc(109px * var(--ckS,1));}
+  .chead .thrower-line{font-size:calc(39px * var(--ckS,1));font-weight:800;min-height:calc(34px * var(--ckS,1));margin-top:6px;letter-spacing:.3px;}
   #game.cricket:not(.board-open) #playArea{display:none;}
   #game.cricket #miniBoard{display:block;margin:0;max-width:112px;cursor:pointer;grid-column:2;justify-self:center;}
   #game.cricket #miniBoard .mini-inner{position:relative;border:1px solid var(--line);border-radius:16px;
@@ -358,7 +358,7 @@
   .chead .pname.xlong{font-size:23px;letter-spacing:0;}
   .chead .pname.xxlong{font-size:17px;letter-spacing:0;}
   .chead .tlabel{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
-  #game.cricket #cricketBoard .cricket .smiley{font-size:66px;line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
+  #game.cricket #cricketBoard .cricket .smiley{font-size:calc(66px * var(--ckS,1));line-height:1;display:flex;align-items:center;justify-content:center;height:1em;transform:translateY(0.07em);}
 
   #cricketThrow{display:none;}
   #game.cricket:not(.board-open) #cricketThrow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin:8px 0 0;}
@@ -1537,13 +1537,13 @@
     #kpOK{font-size:22px;padding:12px;}
     #kpWrap{gap:7px;}
     /* cricket */
-    #game.cricket #cricketBoard .cricket .marks{font-size:38px;}
-    #game.cricket #cricketBoard .cricket .marks.closed{font-size:38px;}
+    #game.cricket #cricketBoard .cricket .marks{font-size:calc(38px * var(--ckS,1));}
+    #game.cricket #cricketBoard .cricket .marks.closed{font-size:calc(38px * var(--ckS,1));}
     #game.cricket #cricketBoard .cricket .smiley{font-size:34px;}
-    #game.cricket #cricketBoard .cricket .tgt{font-size:36px;}
+    #game.cricket #cricketBoard .cricket .tgt{font-size:calc(36px * var(--ckS,1));}
     #game.cricket #cricketBoard .cricket .dt-d,#game.cricket #cricketBoard .cricket .dt-t{font-size:36px;padding:4px 5px;}
     #game.cricket #cricketBoard .cricket td.spine.tgt{padding-left:8px;padding-right:8px;}
-    #game.cricket #cricketBoard .cricket .cric-pts{font-size:52px;}
+    #game.cricket #cricketBoard .cricket .cric-pts{font-size:calc(52px * var(--ckS,1));}
     .chead .pname{font-size:26px;}
     .chead .cpts{font-size:53px;}   /* +35% (Nathan) */
     .chead .tlabel{font-size:14px;}
@@ -3986,7 +3986,7 @@ function renderGame(){
     return;
   }
   renderScoreboard();
-  if(G.isCricket)renderCricket();
+  if(G.isCricket){ renderCricket(); ckFit(); }
   renderDarts();
   document.getElementById('undoBtn').disabled=history.length===0 && !kpCanBackspace();
   var _sub=document.getElementById('scoreUndoBtn'); if(_sub) _sub.disabled=history.length===0;
@@ -4293,7 +4293,47 @@ function sizeCricketHeads(){
     }
   });
 }
-window.addEventListener('resize', function(){ if(typeof sizeCricketHeads==='function') sizeCricketHeads(); });
+// ---- CRICKET FILLS THE SCREEN --------------------------------------------
+// In cricket the table IS the scoreboard, and its type is fixed px, so a taller
+// tablet just left a dead band under the buttons (Nathan's new 11" iPad: 243px
+// of nothing). fitScreen() only ever SHRINKS — s = Math.min(1, avail/need) — so
+// nothing ever grew into that space. Scale the cricket type until the table
+// fills the height the buttons do not use, bounded by width so the mark columns
+// never push off the sides. Iterative because line-height and cell padding do
+// not respond perfectly linearly.
+function ckFit(){
+  var g=document.getElementById('game');
+  if(!g||!g.classList.contains('cricket')||g.classList.contains('board-open')) return;
+  var bd=document.getElementById('cricketBoard');
+  var tbl=bd&&bd.querySelector('.cricket');
+  if(!bd||!tbl) return;
+  var acts=document.getElementById('scoreActions');
+  var wrap=document.querySelector('.wrap')||document.body;
+  g.style.setProperty('--ckS','1');
+  var top=bd.getBoundingClientRect().top;
+  var below=acts?acts.getBoundingClientRect().height+14:0;
+  var padB=parseFloat(getComputedStyle(wrap).paddingBottom)||0;
+  var availH=window.innerHeight-top-below-padB-4;
+  var availW=wrap.clientWidth-(parseFloat(getComputedStyle(wrap).paddingLeft)||0)*2;
+  if(availH<80) return;
+  var s=1;
+  for(var i=0;i<6;i++){
+    var h=bd.getBoundingClientRect().height, w=tbl.scrollWidth;
+    if(!h) return;
+    var byH=availH/h, byW=availW>0?availW/w:99;
+    var f=Math.min(byH,byW);
+    if(f>0.995&&f<1.005) break;                 // close enough, stop hunting
+    s=Math.max(0.8,Math.min(1.8,s*f));
+    g.style.setProperty('--ckS',s.toFixed(4));
+    if(typeof sizeCricketHeads==='function') sizeCricketHeads();
+  }
+  // never leave it overflowing: back off until it fits
+  for(var j=0;j<6 && bd.getBoundingClientRect().bottom>window.innerHeight-below-padB;j++){
+    s=Math.max(0.8,s*0.97); g.style.setProperty('--ckS',s.toFixed(4));
+  }
+}
+window.addEventListener('resize', function(){ if(typeof sizeCricketHeads==='function') sizeCricketHeads(); ckFit(); });
+window.addEventListener('orientationchange', function(){ setTimeout(ckFit,260); });
 function markSVG(m,team){                 // double-ended sword blades: 1 = blade, 2 = crossed blades, 3 = crossed in the gold seal
   if(m<=0)return '';
   const CORE=team===0?'#dcefff':'#ffe6b0', EDGE=team===0?'#3f7fc4':'#c86a28';
@@ -4570,6 +4610,7 @@ function closeBoard(){
   document.getElementById('game').classList.remove('board-open');
   var b=document.getElementById('backBtn'); if(b) b.style.top='';
   sizeCricketHeads();          // header was display:none while the overlay was up
+  ckFit();                     // ...and so was the table: re-fit before fitScreen measures
   fitScreen();
 }
 function backBoard(){
