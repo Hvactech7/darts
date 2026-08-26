@@ -292,7 +292,8 @@
   /* ===== Cricket: scores-first, pop-up board ===== */
   #miniBoard{display:none;}
   #game.cricket #scoreboard{display:none;}
-  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{padding:calc(3px * var(--ckS,1)) 6px;}
+  #game.cricket #cricketBoard .cricket td,#game.cricket #cricketBoard .cricket th{
+    padding:calc(3px * var(--ckS,1) + var(--ckPadY,0px)) 6px;}
   #game.cricket #cricketBoard .cricket .marks{font-size:calc(78px * var(--ckS,1));line-height:1;display:flex;align-items:center;justify-content:center;height:1em;}
   #game.cricket #cricketBoard .cricket .tgt{font-size:calc(73px * var(--ckS,1));}
   #game.cricket #cricketBoard .cricket .chead .mcell{font-size:calc(29px * var(--ckS,1));}
@@ -4052,7 +4053,7 @@ function renderGame(){
   if(G.isX){
     renderX();
     try{ renderWinCall(); }catch(e){}
-    bgFit();
+    bgFit(); fitSettle();
     gsQueue();
     return;
   }
@@ -4061,13 +4062,14 @@ function renderGame(){
     document.getElementById('undoBtn').disabled=history.length===0;
     var _fr=document.getElementById('redoBtn'); if(_fr) _fr.disabled=redoStack.length===0;
     fitScreen();
-    bgFit();
+    bgFit(); fitSettle();
     gsQueue();
     return;
   }
   renderScoreboard();
   if(G.isCricket){ renderCricket(); ckFit(); }
   else bgFit();
+  fitSettle();
   renderDarts();
   document.getElementById('undoBtn').disabled=history.length===0 && !kpCanBackspace();
   var _sub=document.getElementById('scoreUndoBtn'); if(_sub) _sub.disabled=history.length===0;
@@ -4294,6 +4296,18 @@ function kpGrow(){
   while(slack()>24 && per<baseH*0.7 && guard++<40){ per+=step; apply(per); }
   for(var j=0;j<8 && pa.getBoundingClientRect().bottom>window.innerHeight-padB;j++){ per*=0.85; apply(per); }
 }
+
+// Every fit here measures rendered boxes, and Cinzel/the number face arrive
+// after first paint — so a fit that runs once can settle on stale numbers
+// (Killer landed 56px short or 22px short depending purely on timing). Run
+// them again after the frame, and again when the fonts are actually in.
+var _fitAgain=null;
+function fitSettle(){
+  clearTimeout(_fitAgain);
+  _fitAgain=setTimeout(function(){ try{ ckFit(); bgFit(); }catch(e){} }, 60);
+  try{ requestAnimationFrame(function(){ try{ ckFit(); bgFit(); }catch(e){} }); }catch(e){}
+}
+try{ if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ try{ ckFit(); bgFit(); }catch(e){} }); }catch(e){}
 
 function bgFit(){
   var g=document.getElementById('game');
@@ -4535,13 +4549,24 @@ function ckFit(){
     var byH=availH/h, byW=availW>0?availW/w:99;
     var f=Math.min(byH,byW);
     if(f>0.995&&f<1.005) break;                 // close enough, stop hunting
-    s=Math.max(0.8,Math.min(1.8,s*f));
+    s=Math.max(0.8,Math.min(2.4,s*f));      // 1.8 was arbitrary and a 430x932 phone hit it
     g.style.setProperty('--ckS',s.toFixed(4));
     if(typeof sizeCricketHeads==='function') sizeCricketHeads();
   }
+  // On a wide, tall screen (12.9" iPad) the type runs out of WIDTH before it
+  // runs out of height, leaving a band under the table that no amount of extra
+  // scale can reach. Hand that height to the rows instead.
+  g.style.setProperty('--ckPadY','0px');
+  var slackY=availH-bd.getBoundingClientRect().height;
+  if(slackY>24){
+    var rows=tbl.querySelectorAll('tr').length||8;
+    g.style.setProperty('--ckPadY',((slackY-8)/(rows*2)).toFixed(2)+'px');
+  }
   // never leave it overflowing: back off until it fits
-  for(var j=0;j<6 && bd.getBoundingClientRect().bottom>window.innerHeight-below-padB;j++){
-    s=Math.max(0.8,s*0.97); g.style.setProperty('--ckS',s.toFixed(4));
+  for(var j=0;j<8 && bd.getBoundingClientRect().bottom>window.innerHeight-below-padB;j++){
+    var py=parseFloat(getComputedStyle(g).getPropertyValue('--ckPadY'))||0;
+    if(py>0.5){ g.style.setProperty('--ckPadY',(py*0.8).toFixed(2)+'px'); }
+    else { s=Math.max(0.8,s*0.97); g.style.setProperty('--ckS',s.toFixed(4)); }
   }
 }
 window.addEventListener('resize', function(){ if(typeof sizeCricketHeads==='function') sizeCricketHeads(); ckFit(); });
