@@ -1965,6 +1965,17 @@
         </div>
         <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
       </div>
+      <!-- Says out loud what leaves the phone, and lets whoever holds it stop.
+           Nathan's call to collect this; the switch is what makes it fair to the
+           other three people whose names get typed in by the scorekeeper. -->
+      <label id="shareStatRow" style="display:flex;margin-top:12px;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="shareStatChk" style="width:20px;height:20px;flex:none;margin-top:3px;">
+        <span class="small" style="text-align:left;line-height:1.35;">
+          <b style="color:var(--gold-lt);">Share play data</b><br>
+          After each game this sends the game type, the names on each side and who won,
+          plus your general area. <b>No scores, no address, and you are never asked for your location.</b>
+        </span>
+      </label>
     </div>
     <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 45 45" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m1 0h2m1 0h1m1 0h4m1 0h1m1 0h4m1 0h4m1 0h7m-37 1h1m5 0h1m4 0h3m2 0h5m3 0h1m1 0h2m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h8m3 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h4m2 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m3 0h6m1 0h1m6 0h1m1 0h3m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-26 1h1m6 0h2m3 0h2m3 0h1m-27 1h1m1 0h3m1 0h4m2 0h5m1 0h2m2 0h1m2 0h3m3 0h1m2 0h1m-37 1h2m1 0h3m2 0h1m4 0h6m3 0h2m3 0h1m2 0h1m2 0h1m1 0h2m-35 1h2m2 0h1m1 0h4m1 0h5m2 0h2m1 0h1m1 0h1m2 0h1m1 0h5m1 0h1m-35 1h4m2 0h1m1 0h1m1 0h1m3 0h4m1 0h1m2 0h4m1 0h1m1 0h1m3 0h1m-36 1h3m3 0h2m1 0h1m1 0h2m4 0h3m3 0h3m3 0h2m2 0h1m1 0h2m-35 1h1m4 0h1m4 0h1m1 0h2m2 0h7m5 0h1m2 0h2m1 0h1m-36 1h1m4 0h1m4 0h1m2 0h1m1 0h5m1 0h1m2 0h1m3 0h2m1 0h1m1 0h3m-37 1h1m3 0h1m5 0h3m3 0h2m3 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-37 1h2m2 0h3m4 0h4m3 0h1m2 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h1m-36 1h5m2 0h1m4 0h1m4 0h2m1 0h1m3 0h1m2 0h1m1 0h1m4 0h2m-36 1h2m1 0h3m1 0h2m2 0h4m2 0h3m4 0h2m3 0h3m1 0h3m-35 1h2m3 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m7 0h1m-37 1h9m2 0h1m1 0h1m1 0h5m1 0h2m2 0h1m2 0h4m3 0h2m-37 1h1m3 0h1m2 0h1m1 0h5m2 0h1m1 0h3m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m-34 1h2m1 0h2m2 0h2m2 0h2m1 0h2m4 0h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m3 0h1m4 0h1m2 0h1m1 0h1m1 0h1m3 0h4m1 0h2m2 0h1m-29 1h1m1 0h1m2 0h1m2 0h1m1 0h5m4 0h1m2 0h1m2 0h5m2 0h1m1 0h1m-35 1h2m2 0h1m1 0h2m2 0h3m1 0h1m3 0h5m1 0h3m2 0h1m2 0h1m2 0h1m-37 1h1m3 0h4m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m6 0h1m1 0h2m3 0h2m-36 1h1m3 0h1m3 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h1m3 0h4m3 0h2m2 0h4m2 0h1m3 0h1m2 0h9m-29 1h1m4 0h1m1 0h2m1 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-37 1h7m2 0h1m3 0h1m1 0h3m1 0h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h4m2 0h2m2 0h6m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m3 0h1m4 0h1m3 0h4m3 0h1m1 0h6m-37 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m3 0h2m2 0h4m2 0h1m1 0h3m2 0h1m-37 1h1m5 0h1m2 0h1m2 0h1m2 0h1m1 0h4m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m-36 1h7m3 0h4m2 0h2m1 0h1m1 0h5m1 0h2m1 0h1m1 0h1m2 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
@@ -2564,6 +2575,12 @@ document.getElementById('libDoneBtn').onclick=()=>{
 document.getElementById('newPlayer').addEventListener('keydown',e=>{
   if(e.key==='Enter'){addPlayer(e.target.value);e.target.value='';}
 });
+(function(){
+  var c=document.getElementById('shareStatChk');
+  if(!c) return;
+  c.checked=dkShareOn();
+  c.onchange=function(){ dkShareSet(c.checked); };
+})();
 document.getElementById('manageTeamsBtn').onclick=()=>{
   document.getElementById('library').classList.add('hidden');
   document.getElementById('teamLibrary').classList.remove('hidden');
@@ -2727,6 +2744,7 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
   });
   all.forEach(n=>{ statFor(n).last=Date.now(); });
   saveStats();
+  try{ dkMatchPing(winnerNames,loserNames,gameType); }catch(e){}
 }
 
 //============================ PLAYER CARD (2026-08-22) ============================
@@ -2857,31 +2875,88 @@ try{
   if(_m && !localStorage.getItem(LS_SRC)) localStorage.setItem(LS_SRC,_m[1]);
   dkSrc=localStorage.getItem(LS_SRC)||'';
 }catch(e){}
-// Exactly TWO pings per device, ever: one when a QR scan first opens the app,
-// one the first time that device actually starts a game. Together they answer
-// "did the stickers bring anyone, and did they play?" — and then the app goes
-// quiet again for good. Deliberately NOT per-launch telemetry: this app has
-// never phoned home during normal use and this must not change that.
+// ---- PLAY DATA (2026-08-31) ----------------------------------------------
+// Until now the app phoned home exactly twice per device, ever, and only for QR
+// arrivals. Nathan asked for who-plays-who and roughly where, so this now sends
+// a small row after each finished game. Three rules keep that honest:
+//   1. There is a switch in Player Library > Backup & Share, and the screen says
+//      in plain words what goes out. Whoever holds the phone can shut it off.
+//   2. NO SCORES leave the device — game type, the names on each side, and who
+//      won. The scoreboard itself stays yours.
+//   3. Location is never asked for and never precise: the relay reads the public
+//      IP the connection already carries and keeps only region + a venue
+//      fingerprint. The GPS API is never called, so no player ever sees a prompt.
+var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
+var DK_VER='2.79';
+
+// One id per install now, not just for the devices that arrived by QR — the old
+// id was created INSIDE the QR ping, so a phone that typed the URL had none.
+function dkDev(){
+  var d=''; try{ d=localStorage.getItem(LS_DEV)||''; }catch(e){}
+  if(!d){ d='d'+Math.random().toString(36).slice(2,10);
+          try{ localStorage.setItem(LS_DEV,d); }catch(e){} }
+  return d;
+}
+function dkShareOn(){ try{ return localStorage.getItem(LS_SHARE)!=='0'; }catch(e){ return false; } }
+function dkShareSet(on){ try{ localStorage.setItem(LS_SHARE,on?'1':'0'); }catch(e){} }
+
+// The free half of "where": the phone's own timezone and language. No prompt,
+// no permission, and it beats an IP guess for country. The IP half happens on
+// the relay, which already sees the address without being told.
+function dkStat(ev,extra){
+  try{
+    if(!dkShareOn()) return;
+    if(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+    var tz=''; try{ tz=(Intl.DateTimeFormat().resolvedOptions()||{}).timeZone||''; }catch(e){}
+    var msg={t:'stat',app:'darts',ev:ev,dev:dkDev(),ver:DK_VER,tz:tz,
+             lang:(navigator.language||''),
+             mode:((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone)?'app':'web',
+             at:Date.now()};
+    if(dkSrc) msg.src=dkSrc;
+    var em=''; try{ em=(localStorage.getItem(LS_BKEMAIL)||'').trim(); }catch(e){}
+    if(em) msg.email=em;                       // only if they typed one themselves
+    if(extra) for(var k in extra) msg[k]=extra[k];
+    var ws=new WebSocket(DK_RELAY);
+    var done=setTimeout(function(){ try{ws.close();}catch(e){} },8000);
+    ws.onopen=function(){
+      try{ ws.send(JSON.stringify(msg)); }catch(e){}
+      setTimeout(function(){ clearTimeout(done); try{ws.close();}catch(e){} },600);
+    };
+    ws.onerror=function(){ clearTimeout(done); };
+  }catch(e){}
+}
+
+// QR attribution: still once each, forever — "did the stickers bring anyone,
+// and did they play". Unchanged in meaning, it just rides the shared sender now.
 function dkPing(ev){
   try{
     if(!dkSrc) return;                                   // no QR, nothing to attribute
-    if(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
     var sent={};
     try{ sent=JSON.parse(localStorage.getItem(LS_SRCSENT)||'{}'); }catch(e){}
     if(sent[ev]) return;                                 // once each, forever
     sent[ev]=1;
     try{ localStorage.setItem(LS_SRCSENT,JSON.stringify(sent)); }catch(e){}
-    var dev=localStorage.getItem('darts_dev_v1');
-    if(!dev){ dev='d'+Math.random().toString(36).slice(2,10); try{ localStorage.setItem('darts_dev_v1',dev); }catch(e){} }
-    var ws=new WebSocket(DK_RELAY);
-    var done=setTimeout(function(){ try{ws.close();}catch(e){} },8000);
-    ws.onopen=function(){
-      try{ ws.send(JSON.stringify({t:'stat',app:'darts',ev:ev,src:dkSrc,dev:dev,
-        mode:(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'app':'web',
-        at:Date.now()})); }catch(e){}
-      setTimeout(function(){ clearTimeout(done); try{ws.close();}catch(e){} },600);
-    };
-    ws.onerror=function(){ clearTimeout(done); };
+    dkStat(ev);
+  }catch(e){}
+}
+
+// Once per install, ever — this is what finally counts devices that never
+// touched a sticker, which is most of them.
+function dkInstallPing(){
+  try{
+    if(localStorage.getItem(LS_INST)) return;
+    localStorage.setItem(LS_INST,String(Date.now()));
+    dkStat('install');
+  }catch(e){}
+}
+
+// Who played who. Names only, plus the game and the winner — capped so a Fat 6
+// table of ten cannot turn one game into a giant row.
+function dkMatchPing(winners,losers,gameType){
+  try{
+    var w=(winners||[]).slice(0,10).map(String), l=(losers||[]).slice(0,10).map(String);
+    if(!w.length && !l.length) return;
+    dkStat('match',{game:String(gameType||''),w:w,l:l,n:w.length+l.length});
   }catch(e){}
 }
 
@@ -6595,6 +6670,7 @@ setTimeout(function(){ try{ bkQueue(); }catch(e){} }, 3000);
 window.addEventListener('online', function(){ try{ bkQueue(); }catch(e){} });
 refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
+try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
 // Shown the first time the app is opened IN A BROWSER. Android/Chrome can do
