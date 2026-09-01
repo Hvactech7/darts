@@ -1190,6 +1190,19 @@
   .th-names .thX:active{ transform:scale(.9); }
   .teamcol-head.filled .th-names{ color:inherit; text-shadow:inherit; }
   .teamcol-head.empty .th-names{ opacity:.45; font-weight:600; }
+  /* (2026-08-31, Nathan) The empty head is a team filter now: it says "Team ▾",
+     tapping opens the team list, and a pick narrows that side's names below to
+     that team. Dashed border = an affordance, not a value. */
+  .th-names .thTeamBtn{ display:inline-flex; align-items:center; gap:.35em; cursor:pointer;
+    padding:.08em .5em .14em; border-radius:8px; border:1px dashed rgba(255,255,255,.4);
+    background:rgba(0,0,0,.25); }
+  .th-names .thTeamBtn .car{ font-size:.72em; opacity:.85; }
+  .th-names .thTeamBtn:active{ transform:scale(.96); }
+  #teamPickSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
+  #teamPickSplash.hidden{display:none;}
+  #teamPickSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #teamPickGrid{display:grid;grid-template-columns:1fr;gap:9px;}
+  #teamPickGrid button{padding:13px 14px;font-size:19px;width:100%;}
   /* pair-name input replaces the label line, so the box height never changes */
   .th-team{ display:none; width:86%; margin:0 auto; text-align:center;
     font-family:'Cinzel',serif; font-weight:700; letter-spacing:1px; }
@@ -1812,6 +1825,15 @@
       <button class="ghost" id="extrasCancel" style="width:100%;margin-top:10px;">Cancel</button>
     </div>
   </div>
+  <!-- (2026-08-31, Nathan) The team list the "Team ▾" head opens. Built fresh
+       each open from teamLib; All players at the top clears the filter. -->
+  <div id="teamPickSplash" class="hidden">
+    <div class="card">
+      <h2>Pick a Team</h2>
+      <div id="teamPickGrid"></div>
+      <button class="ghost" id="teamPickCancel" style="width:100%;margin-top:10px;">Cancel</button>
+    </div>
+  </div>
   <div id="playerCard" class="hidden">
     <div class="card">
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
@@ -2177,7 +2199,11 @@ function renderColumns(){
       return;
     }
     const full=teamSel[t].length>=reqFor(t);
+    const flt=colTeam[t];
     [...roster].sort((a,b)=>a.localeCompare(b,undefined,{sensitivity:'base'})).forEach(name=>{
+      // team filter: only that team's members — plus anyone ALREADY picked on
+      // this side, so an existing pick can never be stranded invisible
+      if(flt && teamOfPlayer(name)!==flt && teamOf(name)!==t) return;
       const owner=teamOf(name);
       const selHere=owner===t;
       const inOther=owner!==-1 && owner!==t;
@@ -2195,6 +2221,9 @@ function renderColumns(){
       if(!inOther) div.onclick=()=>toggleName(name,t);
       el.appendChild(div);
     });
+    if(flt && !el.childElementCount){
+      el.innerHTML='<span class="small">Nobody on \u201c'+esc(flt)+'\u201d yet \u2014 set teams in Add/Manage Players.</span>';
+    }
   });
   renderAZ();
 }
@@ -2436,6 +2465,36 @@ function toggleName(name,team){
   } // owner===other team → un-pressable, ignore
   renderColumns();renderLineup();updateStart();
 }
+// (2026-08-31, Nathan) Per-side team filter for Select Players. The empty head
+// reads "Team ▾"; picking a team narrows that side's list to its members until
+// All players puts everyone back. Runtime-only on purpose — a filter is a
+// convenience for THIS session, not a fact worth backing up.
+var colTeam=[null,null];
+function teamPickOpen(side){
+  var grid=document.getElementById('teamPickGrid');
+  grid.innerHTML='';
+  var names=teamLib.slice().sort(function(a,b){ return a.localeCompare(b,undefined,{sensitivity:'base'}); });
+  if(!names.length){
+    grid.innerHTML='<span class="small">No teams yet — make them in Add/Manage Players \u2192 Add/Manage Teams.</span>';
+  }else{
+    var all=document.createElement('button');
+    all.className='ghost'; all.textContent='\u2014 all players \u2014';
+    all.onclick=function(){ colTeam[side]=null; teamPickClose(); renderColumns(); renderLineup(); };
+    grid.appendChild(all);
+    names.forEach(function(tm){
+      var b=document.createElement('button');
+      b.className=(colTeam[side]===tm)?'primary':'accent';
+      b.textContent=tm;
+      b.onclick=function(){ colTeam[side]=tm; teamPickClose(); renderColumns(); renderLineup(); };
+      grid.appendChild(b);
+    });
+  }
+  document.getElementById('teamPickSplash').classList.remove('hidden');
+}
+function teamPickClose(){ document.getElementById('teamPickSplash').classList.add('hidden'); }
+document.getElementById('teamPickCancel').onclick=teamPickClose;
+document.getElementById('teamPickSplash').addEventListener('click',function(e){ if(e.target===this) teamPickClose(); });
+
 // The Select Players column heads ARE the match-up: each shows its side's picks
 // as they happen. Their height is fixed by CSS, so picking never shifts layout.
 function renderLineup(){
@@ -2456,7 +2515,22 @@ function renderLineup(){
     const el=document.getElementById('thNames'+(t+1));
     el.classList.remove('long','xlong','xxlong');
     if(!names.length){
-      el.textContent='pick below';
+      // "pick below" until 2026-08-31 — now the team filter lives here
+      el.textContent='';
+      const tb=document.createElement('span');
+      tb.className='thTeamBtn';
+      const tn=document.createElement('span');
+      tn.textContent=colTeam[t]||'Team';
+      const car=document.createElement('span'); car.className='car'; car.textContent='\u25be';
+      tb.appendChild(tn); tb.appendChild(car);
+      tb.onclick=function(e){ e.preventDefault(); e.stopPropagation(); teamPickOpen(t); };
+      el.appendChild(tb);
+      // same one-line fit the picked chip gets — a long team name must not wrap
+      const rungs=['long','xlong','xxlong'];
+      for(let r=0;r<rungs.length && el.scrollWidth>el.clientWidth+1;r++){
+        el.classList.remove.apply(el.classList, rungs);
+        el.classList.add(rungs[r]);
+      }
     }else{
       el.textContent='';
       const chip=document.createElement('span'); chip.className='thPick';
@@ -2875,7 +2949,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.81';
+var DK_VER='2.82';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
