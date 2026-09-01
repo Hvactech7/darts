@@ -3012,7 +3012,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.88';
+var DK_VER='2.89';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6102,12 +6102,37 @@ function lgTeamsIntoLibrary(rec){
     if(ch){ saveTeams(); try{ renderTeamLibrary(); renderLibrary(); renderColumns(); }catch(e){} }
   }catch(e){}
 }
+// (2026-08-31, Nathan) "when someone puts their email in on one device, all
+// devices in that league are updated." The e-mail pipeline already flowed both
+// ways (newest stamp wins) — but lgAdoptEmails refuses names this device has
+// never typed, so on a device that joined by CODE rather than by shared
+// library, the player, their team AND their e-mail all fell on the floor.
+// League team members belong in every member's roster: ADDITIVE only, approved
+// names only, and a local team assignment is never overridden — the same
+// local-only-deletes ruling teams already follow.
+function lgPlayersIntoLibrary(rec){
+  try{
+    var tms=(rec&&rec.teams)||{}; var ch=false, chT=false;
+    Object.keys(tms).forEach(function(t){
+      Object.keys(tms[t]||{}).forEach(function(p){
+        if(((tms[t][p]||{}).st)!=='ok') return;
+        p=String(p||'').trim().slice(0,40); if(!p) return;
+        if(!roster.some(function(x){ return x.toLowerCase()===p.toLowerCase(); })){ roster.push(p); ch=true; }
+        if(!teamOfPlayer(p)){ playerTeams[p]=t; chT=true; }
+      });
+    });
+    if(ch) saveRoster();
+    if(chT) savePlayerTeams();
+    if(ch||chT){ try{ renderLibrary(); renderColumns(); }catch(e){} }
+  }catch(e){}
+}
 function lgAdopt(Lg, makeActive){
   if(!Lg||!Lg.id) return null;
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
   lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
+  lgPlayersIntoLibrary(rec);        // ...and so do the people ON them (else their e-mails have nowhere to land)
   if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
