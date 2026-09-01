@@ -3049,7 +3049,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.95';
+var DK_VER='2.96';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7290,23 +7290,40 @@ function dkKeepVideoOn(){
       document.body.appendChild(v);
       dkKeepVid=v;
     }
+    if(!dkKeepVid._armed){
+      dkKeepVid._armed=true;
+      // iOS pauses tiny hidden videos on its own schedule; a paused belt is no
+      // belt. Re-play on every pause while we're the visible app.
+      dkKeepVid.addEventListener('pause',function(){
+        if(document.visibilityState==='visible'){
+          var p=dkKeepVid.play(); if(p&&p.catch) p.catch(function(){});
+        }
+      });
+    }
     var pr=dkKeepVid.play();
     if(pr && pr.catch) pr.catch(function(){});   // blocked until a gesture — retried on the next tap
   }catch(e){}
 }
+// (2026-09-01, Nathan: "stay awake is STILL not working", new 11-inch iPad,
+// installed app.) The WebKit standalone bug: in HOME-SCREEN web apps the Wake
+// Lock request can RESOLVE — dkLock held, release never fired — and iPadOS
+// dims the screen anyway. Trusting the API's word is exactly what kept
+// failing. On iOS standalone the muted-video belt now runs ALONGSIDE the
+// lock, every time, instead of only when the API admits defeat.
+var DK_STANDALONE=!!((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone);
+var DK_IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 function dkKeepAwake(){
   if(document.visibilityState!=='visible') return;
-  if('wakeLock' in navigator){
-    if(dkLock) return;
+  var apiless=!('wakeLock' in navigator);
+  if(!apiless && !dkLock){
     try{
       navigator.wakeLock.request('screen').then(function(l){
         dkLock=l;
         l.addEventListener('release', function(){ dkLock=null; });
       }).catch(function(){ dkKeepVideoOn(); });   // refused (or too early) → fall back
-      return;
-    }catch(e){}
+    }catch(e){ apiless=true; }
   }
-  dkKeepVideoOn();
+  if(apiless || (DK_IOS&&DK_STANDALONE)) dkKeepVideoOn();
 }
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState==='visible') dkKeepAwake();
