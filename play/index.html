@@ -1591,6 +1591,8 @@
     /* 320px phones: the same row again, with the last of the padding taken out
        rather than letting it hang off the edges */
     @media (max-width:340px){
+      /* 320 phones: even "A. T. World" + Cricket + 301 + 501 is a squeeze */
+      #gameSel button{font-size:15px;padding:10px 3px;letter-spacing:0;}
       #game.cricket:not(.board-open) #scoreActions{gap:4px;}
       #scoreActions #quitBtn,#scoreActions #rulesBtn{padding:10px 4px;font-size:12px;}
       #scoreActions #scoreUndoBtn,#scoreActions #scoreRedoBtn{padding:10px 6px;}
@@ -2639,7 +2641,10 @@ function updateStart(){
 function syncGamePill(){
   [...document.getElementById('gameSel').children].forEach(c=>c.classList.toggle('on',c.dataset.game===config.game || (c.dataset.game==='extras'&&isFFA(config.game))));
   document.getElementById('setup').classList.toggle('fat6',isFFA(config.game));
-  var _xp=document.getElementById('extrasPill'); if(_xp) _xp.textContent=(isFFA(config.game)?XGAMES[config.game]:'Extras')+' ▾';
+  // (2026-08-31, Nathan) "Around The World" blew the pill wide open — the one
+  // long name gets a short form ON THE PILL ONLY; everywhere else stays full.
+  var _xpShort={atw:'A. T. World'};
+  var _xp=document.getElementById('extrasPill'); if(_xp) _xp.textContent=(isFFA(config.game)?(_xpShort[config.game]||XGAMES[config.game]):'Extras')+' ▾';
 }
 function setGame(g){
   config.game=g;
@@ -3007,7 +3012,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.86';
+var DK_VER='2.87';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
