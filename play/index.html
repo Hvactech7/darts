@@ -3040,7 +3040,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.92';
+var DK_VER='2.93';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6159,11 +6159,18 @@ function lgAdopt(Lg, makeActive){
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
+  if(Array.isArray(Lg.dead)) rec.dead=Lg.dead.slice(0,50);
   lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
   lgPlayersIntoLibrary(rec);        // ...and so do the people ON them (else their e-mails have nowhere to land)
   if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
+  // a deleted season stays deleted: drop local copies of anything on the dead
+  // list (the relay refuses them anyway — this clears them off THIS device)
+  if(rec.dead&&rec.dead.length){
+    rec.seasons=rec.seasons.filter(function(x){ return rec.dead.indexOf(x.id)<0; });
+    if(rec.mySeason&&rec.dead.indexOf(rec.mySeason)>=0) rec.mySeason=null;
+  }
   if(makeActive||!LG.active) lgSelect(rec.id);
   saveLeague(); renderLeagueUI();
   return rec;
@@ -6209,6 +6216,9 @@ function lgAdoptEmails(em){
   var pc=document.getElementById('playerCard'); if(_pcName&&pc&&!pc.classList.contains('hidden')) document.getElementById('pcEmail').value=emailOfPlayer(_pcName);
 }
 function lgSeasonsForPush(rec){
+  var _dead=(rec&&rec.dead)||[];
+  if(_dead.length && (rec.seasons||[]).some(function(s){return _dead.indexOf(s.id)>=0;}))
+    rec.seasons=rec.seasons.filter(function(s){ return _dead.indexOf(s.id)<0; });
   var held=function(m){ return (m.sides||[]).some(function(sd){ return (sd.members||[]).some(function(n){ return lgPlayerPending(rec,n); }); }); };
   return (rec.seasons||[]).map(function(s){ return Object.assign({},s,{tournaments:(s.tournaments||[]).map(function(t){ return Object.assign({},t,{matches:(t.matches||[]).filter(function(m){ return !held(m); })}); })}); });
 }
