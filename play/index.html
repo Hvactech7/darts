@@ -635,6 +635,15 @@
   #tonSplash .tsSub{font-family:var(--display);font-weight:800;font-size:min(6.5vw,44px);letter-spacing:8px;
     text-transform:uppercase;color:#ffd76a;opacity:0;margin-top:6px;text-shadow:0 3px 0 #000;
     animation:tsSub 2.9s ease-out forwards;animation-delay:.22s;}
+  /* (2026-09-01, Nathan) a 5- to 9-mark cricket turn gets the ton treatment,
+     in cricket's blues so it reads as marks, not points */
+  #tonSplash.ckhit .tsNum{font-size:min(20vw,200px);letter-spacing:3px;white-space:nowrap;
+    text-shadow:0 6px 0 #000,0 0 40px rgba(110,170,255,.95),0 0 110px rgba(60,110,255,.6);}
+  #tonSplash.ckhit .tsSub{color:#9cc4ff;}
+  #tonSplash.ckhit .tsBurst{background:radial-gradient(circle,rgba(90,150,255,.55),rgba(40,80,200,.22) 40%,transparent 70%);}
+  #tonSplash.ckhit .tsRays{filter:hue-rotate(195deg) saturate(1.15);}
+  #tonSplash.ckhit .tsRing{border-color:#8fb8ff;}
+  #tonSplash.ckhit .tsRing.r2{border-color:#d9e8ff;}
   /* losing a life is not a celebration — same motion, the Miss button's reds */
   #tonSplash.bad .tsNum{font-size:min(19vw,190px);letter-spacing:3px;
     text-shadow:0 6px 0 #000,0 0 40px rgba(232,96,79,.95),0 0 110px rgba(190,40,30,.6);}
@@ -3040,7 +3049,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.93';
+var DK_VER='2.94';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4098,11 +4107,15 @@ function applyCricket(value,mult){
   if(was0 && mult===3 && num!==25) t.tripleClose[num]=true;  // closed in one triple on first hit
   else if(was0===false){} // (no-op) keep flag once set
   const overflow=hits-used;
+  let counted=used;                    // marks the caller announces: closing marks…
   if(overflow>0){
     // score points only if an opponent has NOT closed this number
     const open=G.teams.some((o,i)=>i!==G.cur && o.marks[num]<3);
-    if(open){ t.pts+=overflow*num; }
+    if(open){ t.pts+=overflow*num; counted+=overflow; }   // …plus scoring overflow
   }
+  // On the dart record, so undo/redo carries it like everything else. The turn
+  // total drives the 5-to-9 HIT splash at commit.
+  if(G.darts.length) G.darts[G.darts.length-1].ckm=counted;
   checkCricketWin();
 }
 
@@ -4123,7 +4136,7 @@ var _tsTimer=null;
 function tonSplash(n){
   var el=document.getElementById('tonSplash'); if(!el) return;
   var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
-  el.classList.remove('bad');
+  el.classList.remove('bad','ckhit');
   num.textContent = (n===100) ? 'TON' : String(n);
   sub.textContent = (n===180) ? 'Maximum!' : (n===100 ? '' : 'Ton ' + (n-100) + '!');
   el.classList.remove('show'); void el.offsetWidth;          // replay it back-to-back
@@ -4139,7 +4152,20 @@ function tonSplash(n){
 function splashHide(){
   var el=document.getElementById('tonSplash'); if(!el) return;
   clearTimeout(_tsTimer);
-  el.classList.remove('show','bad');
+  el.classList.remove('show','bad','ckhit');
+}
+// (2026-09-01, Nathan) Cricket's tons: a turn worth 5 to 9 marks gets called
+// out the way a ton is. Marks that count = closing marks + scoring overflow —
+// the exact per-dart arithmetic applyCricket already does, read off the darts.
+function ckHitSplash(n){
+  var el=document.getElementById('tonSplash'); if(!el) return;
+  document.getElementById('tsNum').textContent=n+'-HIT';
+  document.getElementById('tsSub').textContent=(n===9)?'Perfect Round':'';
+  el.classList.remove('bad'); el.classList.add('ckhit');
+  el.classList.remove('show'); void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_tsTimer);
+  _tsTimer=setTimeout(function(){ el.classList.remove('show','ckhit'); }, 3000);
 }
 function lifeSplash(name, left){
   var el=document.getElementById('tonSplash'); if(!el) return;
@@ -4159,6 +4185,7 @@ function commitTurn(){
   const _xPrevRound=G.round;
   // what this turn was worth, before the turn is handed on (0 on a bust)
   const _tsPts=(!G.isCricket&&!G.isX&&!G.isFat6)?(G.turnStartScore-t.score):0;
+  const _ckM=G.isCricket?G.darts.reduce(function(a,d){return a+(d.ckm||0);},0):0;
   if(G.isX) xTurnSettle();
   // record this turn's points scored (0 on a bust) for 01 games
   if(!G.isCricket && !G.isX){ t.history.push(G.turnStartScore - t.score); }
@@ -4182,6 +4209,7 @@ function commitTurn(){
   G.turnStartOpened=curTeam().opened;
   renderGame();
   if(_tsPts>=100) tonSplash(_tsPts);
+  else if(G.isCricket && _ckM>=5) ckHitSplash(_ckM);
 }
 
 function endTurnManual(){            // the "✓ Score It" button
