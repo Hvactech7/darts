@@ -2362,6 +2362,15 @@ function mergePlayers(from,into){
 function renamePlayer(oldName,newName){
   newName=String(newName||'').trim();
   if(!newName || newName===oldName) return false;
+  // (2026-08-31, Nathan) A claimed name belongs to the person who claimed it —
+  // on EVERY device. Only its owner (or the league keeper, who can fix
+  // mistakes) may change it. The relay already refuses a non-owner's e-mail
+  // for a claimed name; this closes the rename door on the client, and the
+  // guard lives here so every editor funnels through it.
+  if(!lgMayEditPlayer(league,oldName)){
+    flashToast(shortName(oldName)+' is claimed — only they can change their name');
+    return false;
+  }
   if(roster.some(n=>n!==oldName && n.trim().toLowerCase()===newName.toLowerCase())){ flashToast('That name is already in the library'); return false; }
   const i=roster.indexOf(oldName); if(i<0) return false;
   roster[i]=newName;
@@ -2411,6 +2420,11 @@ function renderLibrary(){
     row.querySelector('.lname').onclick=()=>openPlayerCard(name);
     row._rename=()=>{
       const span=row.querySelector('.lname'); if(!span) return;
+      if(!lgMayEditPlayer(league,name)){
+        flashToast(shortName(name)+' is claimed — only they can change their name');
+        row.classList.add('reject'); setTimeout(()=>row.classList.remove('reject'),900);
+        return;
+      }
       const inp=document.createElement('input');
       inp.type='text'; inp.value=name; inp.className='lnameEdit'; inp.setAttribute('autocomplete','off');
       span.replaceWith(inp); inp.focus(); inp.select();
@@ -2431,6 +2445,10 @@ function renderLibrary(){
       setPlayerTeam(name,e.target.value);
     };
     if(league&&league.id&&lgPlayerPending(league,name)){ const tag=document.createElement('span'); tag.className='pendtag'; tag.textContent='⏳ pending'; tag.title='Waiting for a team member to approve'; row.querySelector('.lname').appendChild(tag); }
+    // flashToast is deliberately silent, so the lock has to be VISIBLE: a
+    // claimed name someone else owns wears a padlock — tapping rename on it
+    // just flashes the row, and the padlock is the why.
+    if(league&&league.id&&!lgMayEditPlayer(league,name)){ const lk=document.createElement('span'); lk.className='pendtag'; lk.textContent='🔒'; lk.title='Claimed — only they can change their name or e-mail.'; row.querySelector('.lname').appendChild(lk); }
     row.querySelector('button').onclick=()=>{ if(confirm(`Delete "${name}"?`)) removePlayer(name); };
     el.appendChild(row);
   });
@@ -2924,6 +2942,8 @@ function openPlayerCard(name){
   // A claimed name's e-mail belongs to whoever claimed it (2026-08-25).
   const _own=lgMayEditPlayer(league,name), _by=lgClaimOwner(league,name);
   mi.disabled=!_own; document.getElementById('pcEmailSave').disabled=!_own;
+  const _rn=document.getElementById('pcRename');
+  if(_rn){ _rn.disabled=!_own; _rn.title=_own?'':'This name is claimed — only they can change it.'; }
   const _note=document.querySelector('.pcMailNote');
   if(_note) _note.textContent=_own
       ? (_by===lgEmail() ? 'This name is yours. League reports are e-mailed here.' : 'League reports are e-mailed to this address.')
@@ -3012,7 +3032,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.89';
+var DK_VER='2.90';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
