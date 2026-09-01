@@ -2875,7 +2875,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.80';
+var DK_VER='2.81';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4690,9 +4690,99 @@ function sizeCricketHeads(){
 // fills the height the buttons do not use, bounded by width so the mark columns
 // never push off the sides. Iterative because line-height and cell padding do
 // not respond perfectly linearly.
+// (2026-08-31, Nathan) The Miss / Score It button 20% wider with 20% bigger
+// type. The width has to be taken off something: #scoreActions already spans
+// the row at every size. The four siblings are CONTENT-sized on a phone
+// (flex:0 0 auto) and FLEX-sized on a tablet (flex:1), so no single CSS tweak
+// lands 20% on both — this measures instead. Gaps go first (they cost nothing
+// to read), then each sibling gives up width in proportion to what it has, and
+// none of them is allowed below what its own label needs.
+var CK_BTN_GROW=1.2, CK_GAP_MIN=4, CK_PAD_MIN=3;
+function ckBtnFit(){
+  var row=document.getElementById('scoreActions');
+  var btn=document.getElementById('cricketConfirmBtn');
+  if(!row||!btn) return;
+  var all=[].slice.call(row.querySelectorAll('button'));
+  var i=all.indexOf(btn);
+  if(i<0||all.length<2) return;
+  // always start from the stylesheet — this re-runs on every resize and refit
+  all.forEach(function(b){ b.style.flex=''; b.style.fontSize='';
+                           b.style.paddingLeft=''; b.style.paddingRight=''; });
+  row.style.gap='';
+  var rowW=row.clientWidth;
+  if(!rowW) return;
+  var gap0=parseFloat(getComputedStyle(row).gap)||0;
+  var w0=all.map(function(b){ return b.offsetWidth; });
+  if(!w0[i]) return;
+
+  // NOTE units: everything here is LAYOUT px (offsetWidth / clientWidth), never
+  // getBoundingClientRect. #scoreActions sits inside cricket's --ckS transform,
+  // so a rect is VISUAL px while flex-basis is written in layout px — mixing the
+  // two set every basis ~14% short and clipped the Rules label on a 320 phone.
+  // What each button actually NEEDS for its own label. scrollWidth is no use
+  // here: on a stretched flex item it just reports the width it already has,
+  // which is how the first cut of this made the siblings GROW and the button
+  // shrink. Content-sizing them for one measurement is the honest way to ask.
+  function measure(){
+    all.forEach(function(b){ b.style.flex='0 0 auto'; });
+    var n=all.map(function(b){ return b.offsetWidth; });
+    all.forEach(function(b){ b.style.flex=''; });
+    return n;
+  }
+  var need=measure();
+  var gaps=all.length-1;
+  var want=w0[i]*CK_BTN_GROW;
+  var sib=function(){ return need.reduce(function(a,x,k){ return k===i?a:a+x; },0); };
+
+  // Fund the 20% in the order that costs the reader least: gaps first, then the
+  // siblings' side padding. On a tablet the gaps alone cover it; on a phone the
+  // four siblings are ALREADY at their label width, so without this step the
+  // button gains 5% and not 20%. No label is ever shortened — only the air
+  // around it, down to CK_PAD_MIN.
+  var gap=gap0;
+  if(rowW-gap*gaps-want < sib() && gap0>CK_GAP_MIN) gap=CK_GAP_MIN;
+  var shortfall=want+sib()-(rowW-gap*gaps);
+  if(shortfall>0.5){
+    var pads=all.map(function(b,k){
+      if(k===i) return 0;
+      var c=getComputedStyle(b);
+      return Math.max(0,(parseFloat(c.paddingLeft)||0)+(parseFloat(c.paddingRight)||0)-CK_PAD_MIN*2);
+    });
+    var room=pads.reduce(function(a,x){ return a+x; },0);
+    if(room>0){
+      var take=Math.min(shortfall,room);
+      all.forEach(function(b,k){
+        if(k===i||!pads[k]) return;
+        var c=getComputedStyle(b);
+        var cut=take*(pads[k]/room)/2;
+        b.style.paddingLeft=Math.max(CK_PAD_MIN,(parseFloat(c.paddingLeft)||0)-cut).toFixed(1)+'px';
+        b.style.paddingRight=Math.max(CK_PAD_MIN,(parseFloat(c.paddingRight)||0)-cut).toFixed(1)+'px';
+      });
+      need=measure();
+    }
+  }
+  var sibNeed=sib();
+  var budget=rowW-gap*gaps;
+  if(budget<=0) return;
+  if(want+sibNeed>budget) want=Math.max(w0[i], budget-sibNeed);   // never shrink it
+  var spare=budget-want-sibNeed;
+  if(spare<0) spare=0;
+
+  row.style.gap=gap.toFixed(2)+'px';
+  all.forEach(function(b,k){
+    var px=(k===i) ? want : need[k]+(sibNeed>0?spare*(need[k]/sibNeed):0);
+    b.style.flex='0 0 '+px.toFixed(1)+'px';
+  });
+  var fs=parseFloat(getComputedStyle(btn).fontSize)||17;
+  btn.style.fontSize=(fs*CK_BTN_GROW).toFixed(1)+'px';
+}
+
 function ckFit(){
   var g=document.getElementById('game');
   if(!g||!g.classList.contains('cricket')||g.classList.contains('board-open')) return;
+  // before anything is measured: bigger type changes the row height that the
+  // board scale below is computed against
+  try{ ckBtnFit(); }catch(e){}
   var bd=document.getElementById('cricketBoard');
   var tbl=bd&&bd.querySelector('.cricket');
   if(!bd||!tbl) return;
