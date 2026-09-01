@@ -996,8 +996,7 @@
   .lgSeasonLine{font-size:15px;color:#e9ddc0;line-height:1.35;margin-bottom:8px;}
   .lgSeasonBtns{flex-wrap:nowrap;gap:8px;}
   .lgSeasonBtns button{font-size:16px;padding:11px 8px;white-space:nowrap;min-width:0;}
-  .lgSeasonBtns #lgEndSeason{flex:0 0 auto;}
-  .lgSeasonBtns #lgEndTourn{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}  /* short button: no rivets */
+  .lgSeasonBtns{flex-wrap:wrap;}  /* "End Fall Season" must wrap, not spill off the card */
   .lgSeasonBtns button:disabled{opacity:.45;}
   .stSeason{font-family:var(--display);font-weight:700;font-size:20px;color:#e8c876;margin:2px 0 4px;}
   .stSeason span{font-family:var(--body);font-weight:600;font-size:14px;color:#a3906a;margin-left:6px;}
@@ -1012,7 +1011,7 @@
   #leagueCard .row > button{flex:0 0 auto;font-size:17px;padding:11px 14px;white-space:nowrap;}
   /* short action buttons: the rivets sat under the letters */
   #lgCreate,#lgVerifyResend,#lgInvite{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
-  #lgJoin,#lgInviteGo,#lgEndSeason.accent{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
+  #lgJoin,#lgInviteGo{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
   #lgList{margin-top:10px;}
   .lgListHead{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;margin:0 0 4px 2px;}
   .lgRow{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1.5px solid #4a3d28;border-radius:8px;background:linear-gradient(180deg,#221a10,#181107);margin-bottom:6px;cursor:pointer;}
@@ -1025,7 +1024,7 @@
   .lgMeLbl{font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a3906a;white-space:nowrap;}
   .lgMeNote{font-size:13.5px;line-height:1.4;margin:4px 0 0 2px;color:var(--muted);}
   .lgMeNote.ok{color:#8fd0a0;} .lgMeNote.wait{color:#e8c876;} .lgMeNote.taken{color:#ff9b8a;}
-  #lgMe{flex:1 1 auto;min-width:0;padding:8px 10px;border-radius:7px;border:1.5px solid #57451c;background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);font-size:16px;font-weight:600;}
+  #lgMe,#lgSeasonPick{flex:1 1 auto;min-width:0;padding:8px 10px;border-radius:7px;border:1.5px solid #57451c;background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);font-size:16px;font-weight:600;}
   .lgReq{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px 10px;border:1.5px solid #7fb8ef;border-radius:8px;background:linear-gradient(180deg,#14293f,#0d1b2c);margin-bottom:6px;}
   .lgReq .who{flex:1 1 100%;min-width:0;font-size:14px;color:#e9ddc0;line-height:1.25;}
   .lgReq button{flex:1 1 0;min-width:0;overflow:hidden;font-size:14px;padding:9px 8px;white-space:nowrap;background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
@@ -1198,9 +1197,13 @@
     background:rgba(0,0,0,.25); }
   .th-names .thTeamBtn .car{ font-size:.72em; opacity:.85; }
   .th-names .thTeamBtn:active{ transform:scale(.96); }
-  #teamPickSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
-  #teamPickSplash.hidden{display:none;}
-  #teamPickSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #teamPickSplash,#seasonSplash,#seasonAskSplash,#nightEndSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
+  #teamPickSplash.hidden,#seasonSplash.hidden,#seasonAskSplash.hidden,#nightEndSplash.hidden{display:none;}
+  #teamPickSplash .card,#seasonSplash .card,#seasonAskSplash .card,#nightEndSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  /* these three open OVER the league card, which is itself fixed z300 —
+     same z + later DOM had the card winning and the splash invisible */
+  #seasonSplash,#seasonAskSplash,#nightEndSplash{z-index:400;}
+  .ssDateRow input[type=date]{min-height:44px;color-scheme:dark;}
   #teamPickGrid{display:grid;grid-template-columns:1fr;gap:9px;}
   #teamPickGrid button{padding:13px 14px;font-size:19px;width:100%;}
   /* pair-name input replaces the label line, so the box height never changes */
@@ -1460,7 +1463,7 @@
     #rematchBtn{ background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844); background-position:0 0; background-size:auto; }  /* rivets sat under the letters */
     /* League card: the two season buttons stack — side by side they clip */
     .lgSeasonBtns{ flex-wrap:wrap; }
-    .lgSeasonBtns button,.lgSeasonBtns #lgEndSeason{ flex:1 0 100%; }
+    .lgSeasonBtns button{ flex:1 0 100%; }
     /* Stats: mail button compact so Done has room; Done loses its rivets for the same reason */
     #statsBtns #statsMailBtn{ font-size:14px; padding:12px 8px; flex:1 1 auto; }
     #statsBtns #statsDoneBtn{ flex:0 0 auto; min-width:112px; padding:12px 16px; }
@@ -1686,7 +1689,7 @@
     <!-- League Mode | Add/Manage Players | Stats (Nathan, 2026-08-18): one row,
          Add/Manage narrower to make room. League lights up (.on) while active. -->
     <div class="row" id="menuRow">
-      <button class="ghost" id="leagueBtn"><span class="mi">🏆 </span>League Mode</button>
+      <button class="ghost" id="leagueBtn"><span class="mi">🏆 </span>League Off</button>
       <button class="accent" id="manageBtn"><span class="mi">⚙ </span>Add/Manage Players</button>
       <button class="ghost" id="statsBtn"><span class="mi">📊 </span>Stats</button>
     </div>
@@ -1834,6 +1837,44 @@
       <button class="ghost" id="teamPickCancel" style="width:100%;margin-top:10px;">Cancel</button>
     </div>
   </div>
+  <!-- (2026-08-31, Nathan) Set Season: name it, give it a start and an end on
+       the calendar. Saving syncs it to the league; everyone can then pick it. -->
+  <div id="seasonSplash" class="hidden">
+    <div class="card">
+      <h2 id="ssTitle">📅 Set Season</h2>
+      <div class="row" style="margin-top:8px;"><input type="text" id="ssName" class="grow" placeholder="Season name (Fall 2026…)" autocomplete="off" maxlength="30"></div>
+      <!-- (2026-08-31, Nathan) Divisions: D1 and D2 run their seasons side by
+           side; one device may serve both boards. The rule "only one season
+           going at a time" is enforced PER DIVISION at save. -->
+      <div class="seg-toggle" id="ssDiv" style="margin-top:8px;">
+        <button data-dv="1">Division 1</button>
+        <button data-dv="2">Division 2</button>
+      </div>
+      <div class="row ssDateRow" style="margin-top:8px;"><span class="lgMeLbl">Starts</span><input type="date" id="ssStart" class="grow"></div>
+      <div class="row ssDateRow" style="margin-top:8px;"><span class="lgMeLbl">Ends</span><input type="date" id="ssEnd" class="grow"></div>
+      <p class="small" id="ssHint" style="margin:8px 0 0;"></p>
+      <div class="row" style="margin-top:10px;"><button class="ghost" id="ssCancel">Cancel</button><button class="primary grow" id="ssSave">Save Season</button></div>
+    </div>
+  </div>
+  <!-- Tournament wanted after the season's end date: extend it, or start fresh. -->
+  <div id="seasonAskSplash" class="hidden">
+    <div class="card">
+      <h2>Season over</h2>
+      <p class="small" id="saLine" style="margin:4px 0 10px;"></p>
+      <button class="primary" id="saExtend" style="width:100%;">Extend it</button>
+      <button class="accent" id="saNew" style="width:100%;margin-top:8px;">Start a new season</button>
+      <button class="ghost" id="saCancel" style="width:100%;margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+  <!-- Turning League Mode off on a night with matches = end + mail. Confirm it. -->
+  <div id="nightEndSplash" class="hidden">
+    <div class="card">
+      <h2>🏁 End the night?</h2>
+      <p class="small" id="neLine" style="margin:4px 0 10px;"></p>
+      <button class="primary" id="neGo" style="width:100%;">End tournament &amp; e-mail the league</button>
+      <button class="ghost" id="neStay" style="width:100%;margin-top:8px;">Keep playing</button>
+    </div>
+  </div>
   <div id="playerCard" class="hidden">
     <div class="card">
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
@@ -1848,32 +1889,49 @@
   <div id="leagueCard" class="hidden">
     <div class="card">
       <h2>🏆 League Mode</h2>
-      <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Mode: OFF</button>
+      <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Off</button>
       <!-- Leagues live on the Pi. You can belong to several; one is ACTIVE
            (matches, reports and Stats use it). Your e-mail is your identity. -->
       <div id="lgList"></div>
+      <!-- (2026-08-31, Nathan: "streamline it — it's intimidating!") The card
+           opens showing only what league night needs: the league line, who you
+           are, Invite, and — only while a tournament is open — the button that
+           ends it and mails the reports. Sync, seasons, Leave and create/join
+           live behind ⚙ League tools, collapsed on every open. Nothing was
+           removed; the rare stuff just stopped standing in the room. -->
       <div id="lgHasLeague">
         <div class="lgSeason">
           <div class="lgSeasonLine" id="lgLeagueLine"></div>
           <div class="row lgMeRow"><span class="lgMeLbl">I am</span><select id="lgMe" class="grow"></select></div>
           <div id="lgMeNote" class="lgMeNote"></div>
           <div id="lgRequests"></div>
-          <div class="row lgSeasonBtns"><button class="primary grow" id="lgInvite">👤 Invite a member</button><button class="ghost" id="lgSync">↻ Sync</button></div>
+          <!-- the division/season switch lives on the FRONT of the card, not in
+               Options: one device can serve the D1 board and the D2 board in
+               the same night, so back-and-forth has to be one tap away. It only
+               appears once there is more than one season to pick. -->
+          <div class="row lgMeRow" id="lgSeasonPickRow" style="display:none;margin-top:6px;"><span class="lgMeLbl">Season</span><select id="lgSeasonPick" class="grow"></select></div>
+          <div class="row lgSeasonBtns"><button class="primary grow" id="lgInvite">👤 Invite a member</button></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
         </div>
-      <!-- Season → tournaments (one per league night) → matches. Ending the
-           night is what sends the league its report (to every member). -->
-      <div class="lgSeason">
-        <div class="lgSeasonLine" id="lgSeasonLine"></div>
-        <div class="row lgSeasonBtns">
-          <button class="primary grow" id="lgEndTourn">🏁 End Tournament</button>
-          <button class="warn" id="lgEndSeason">End Season</button>
+        <!-- (2026-08-31, Nathan) Seasons are CALENDARS now, not switches. Set
+             Season names one and gives it a start and an end date; it syncs to
+             the whole league, and each member picks which season is current for
+             them. Tournaments have no buttons at all: League Mode ON is the
+             start of tonight's tournament, OFF ends it and mails the reports.
+             A season is never extended — after its end date the only offers are
+             a make-up night (counts toward that season) or a new season. -->
+        <button class="ghost" id="lgToolsToggle" style="width:100%;margin-top:10px;font-size:15px;padding:9px;">⚙ League Options ▾</button>
+        <div id="lgTools" style="display:none;">
+          <div class="lgSeason">
+            <div class="lgSeasonLine" id="lgSeasonLine"></div>
+            <button class="accent" id="lgSetSeason" style="width:100%;">📅 Set Season</button>
+            <button class="ghost" id="lgSync" style="width:100%;margin-top:8px;">↻ Sync now</button>
+            <button class="ghost" id="lgLeave" style="width:100%;margin-top:8px;font-size:14px;padding:8px;opacity:.8;">Leave this league</button>
+            <button class="ghost" id="lgAddToggle" style="width:100%;margin-top:8px;font-size:14px;padding:8px;">+ Create or join another league</button>
+          </div>
         </div>
       </div>
-        <button class="ghost" id="lgLeave" style="width:100%;margin-top:8px;font-size:14px;padding:8px;opacity:.8;">Leave this league</button>
-      </div>
-      <button class="ghost" id="lgAddToggle" style="width:100%;margin-top:10px;font-size:15px;padding:9px;">+ Create or join another league</button>
       <div id="lgNoLeague">
         <div class="row" style="margin-top:10px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
         <div class="row" style="margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="New league name" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
@@ -2949,7 +3007,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.84';
+var DK_VER='2.85';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6001,8 +6059,11 @@ function lgMergeSeasons(have, incoming){
   incoming.forEach(function(si){
     if(!si||!si.id) return;
     var so=by[si.id];
-    if(!so){ so={id:si.id,name:si.name||'Season',startTs:si.startTs||0,endTs:si.endTs||null,tournaments:[]}; have.push(so); by[so.id]=so; }
-    if(si.endTs&&!so.endTs) so.endTs=si.endTs;
+    if(!so){ so={id:si.id,name:si.name||'Season',dv:si.dv||0,startTs:si.startTs||0,endTs:si.endTs||null,ed:si.ed||0,tournaments:[]}; have.push(so); by[so.id]=so; }
+    if((si.ed||0)>(so.ed||0)){                       // newest edit wins: name/date/division fixes must travel
+      so.name=si.name||so.name; so.dv=si.dv||so.dv||0; so.startTs=si.startTs||so.startTs;
+      so.endTs=('endTs' in si)?si.endTs:so.endTs; so.ed=si.ed;
+    } else if(si.endTs&&!so.endTs&&!so.ed){ so.endTs=si.endTs; }   // legacy latch, pre-`ed` records
     var tby={}; (so.tournaments=so.tournaments||[]).forEach(function(x){ if(x&&x.id) tby[x.id]=x; });
     (si.tournaments||[]).forEach(function(ti){
       if(!ti||!ti.id) return;
@@ -6178,15 +6239,33 @@ function lgPeopleCount(x){
   return n || mem.length;
 }
 function lgId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function lgSeason(){ var s=league.seasons[league.seasons.length-1]; return (s&&!s.endTs)?s:null; }
+// (2026-08-31, Nathan) A season is a CALENDAR: name + start date + end date,
+// created in Set Season, synced to the whole league. endTs stopped meaning
+// "when somebody pressed End Season" and now means the planned last day.
+// Each member picks which season is current for them (league.mySeason —
+// per-device on purpose: lgAdopt never touches it, so a sync can't change
+// your pick). Matches, stats and reports all file under the picked season.
+function lgDayEnd(ts){ var d=new Date(ts); d.setHours(23,59,59,999); return d.getTime(); }
+function lgSeason(){
+  var ss=league.seasons||[];
+  if(!ss.length) return null;
+  if(league.mySeason){ var pick=ss.find(function(x){return x.id===league.mySeason;}); if(pick) return pick; }
+  var now=Date.now();
+  var cover=ss.filter(function(x){ return (x.startTs||0)<=now && (!x.endTs||now<=lgDayEnd(x.endTs)); });
+  return cover.length?cover[cover.length-1]:ss[ss.length-1];
+}
+function lgSeasonOver(s){ return !!(s&&s.endTs&&Date.now()>lgDayEnd(s.endTs)); }
 function lgTourn(){ var s=lgSeason(); if(!s) return null; var t=s.tournaments[s.tournaments.length-1]; return (t&&!t.endTs)?t:null; }
 function lgSeasonMatches(s){ var out=[]; (s.tournaments||[]).forEach(function(t){ out=out.concat(t.matches||[]); }); return out; }
 function lgDay(ts){ var d=new Date(ts); return (d.getMonth()+1)+'/'+d.getDate(); }
 function lgLongDay(ts){ return new Date(ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
 function lgStartSeason(name){
   var n=league.seasons.length+1;
-  var s={id:lgId('s'),name:(name||'').trim()||('Season '+n),startTs:Date.now(),endTs:null,tournaments:[]};
-  league.seasons.push(s); saveLeague(); return s;
+  // ed = when these dates/name were last edited; the merge lets the newest
+  // edit win (the old rule latched endTs forever, which made extending
+  // a season impossible to propagate)
+  var s={id:lgId('s'),name:(name||'').trim()||('Season '+n),startTs:Date.now(),endTs:null,ed:Date.now(),tournaments:[]};
+  league.seasons.push(s); league.mySeason=s.id; saveLeague(); return s;
 }
 // A season and a tournament come into being the moment a match needs one.
 function lgEnsureTourn(){
@@ -6197,9 +6276,9 @@ function lgEnsureTourn(){
 }
 function renderLeagueUI(){
   var b=document.getElementById('leagueBtn');
-  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League: ON':'League Mode'); }
+  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League On':'League Off'); }
   var t=document.getElementById('lgToggle');
-  if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League Mode: '+(leagueOn()?'ON':'OFF'); }
+  if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League '+(leagueOn()?'On':'Off'); }
   var inL=!!league.id, noL=document.getElementById('lgNoLeague'), hasL=document.getElementById('lgHasLeague');
   var addOpen=!LG.list.length||_lgAddOpen;
   if(noL) noL.style.display=addOpen?'':'none';
@@ -6207,13 +6286,15 @@ function renderLeagueUI(){
   var at=document.getElementById('lgAddToggle'); if(at){ at.style.display=LG.list.length?'':'none'; at.textContent=addOpen?'− Hide':'+ Create or join another league'; }
   var list=document.getElementById('lgList');
   if(list){
-    list.innerHTML=LG.list.length?('<div class="lgListHead">Your leagues'+(lgMatchOpen()?' · finish the match in progress to switch':'')+'</div>'+LG.list.map(function(x){
+    // one league is not a list — the league line already names it
+    list.innerHTML=LG.list.length>=2?('<div class="lgListHead">Your leagues'+(lgMatchOpen()?' · finish the match in progress to switch':'')+'</div>'+LG.list.map(function(x){
       return '<div class="lgRow'+(x.id===LG.active?' on':'')+'" data-id="'+x.id+'"><span class="nm">'+esc(x.name)+'</span><span class="mt">'+lgPeopleCount(x)+' member'+(lgPeopleCount(x)===1?'':'s')+'</span><span class="ck">'+(x.id===LG.active?'✓ active':'')+'</span></div>'; }).join('')):'';
   }
   var ll=document.getElementById('lgLeagueLine');
-  if(ll&&inL){ var _lc=lgPeopleCount(league);
-    ll.innerHTML='<b>'+esc(league.name)+'</b> · '+_lc+' member'+(_lc===1?'':'s')+' · synced '+esc(lgAgo(league.lastSync))
-    +(league.creator===lgEmail()?' · you created it':''); }
+  if(ll&&inL){ var _lc=lgPeopleCount(league), _ls=lgSeason();
+    ll.innerHTML='<b>'+esc(league.name)+'</b> · '+_lc+' member'+(_lc===1?'':'s')
+    +(_ls?' · '+esc(_ls.name)+(_ls.dv?' D'+_ls.dv:''):'')
+    +' · synced '+esc(lgAgo(league.lastSync)); }
   var me=document.getElementById('lgMe');
   if(me&&inL&&document.activeElement!==me){
     me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ var _o=lgClaimOwner(league,n); var _tag=(_o&&_o!==lgEmail())?' — taken':''; return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+esc(_tag)+'</option>'; }).join('');
@@ -6222,11 +6303,13 @@ function renderLeagueUI(){
   if(mn){
     var cs=inL?lgClaimState(LG.me):'';
     mn.className='lgMeNote'+(cs==='ok'?' ok':cs==='pending'?' wait':cs==='taken'?' taken':'');
+    // Only WARNINGS get a line. "That name is yours" and "matches are filed
+    // under this name" were true every single day — reassurance that read as
+    // two more things to understand (Nathan: intimidating).
     mn.textContent = !inL||!LG.me ? ''
-      : cs==='ok' ? '✓ That name is yours — only you can change its e-mail.'
       : cs==='pending' ? '⏳ Someone already plays as '+shortName(LG.me)+'. They have been asked to hand it over.'
       : cs==='taken' ? '⚠ '+shortName(LG.me)+' belongs to another device. Pick your own name, or ask them to approve.'
-      : 'Your matches and e-mails are filed under this name.';
+      : '';
   }
   var rq=document.getElementById('lgRequests');
   if(rq&&inL){
@@ -6250,17 +6333,29 @@ function renderLeagueUI(){
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
   var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
   if(line){
-    if(!s) line.textContent='No season running — one starts with the first league match, or start one now.';
-    else line.textContent=s.name+' · since '+lgDay(s.startTs)+' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')
-      +(tn?(' · tonight: '+tn.matches.length+' match'+(tn.matches.length===1?'':'es')+' so far'):'');
+    if(!s) line.textContent='No season yet — Set Season names one and gives it dates.';
+    else line.textContent=s.name+(s.dv?' · Division '+s.dv:'')+' · '+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'open')
+      +' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')
+      +(lgSeasonOver(s)?' · over':'');
   }
-  var et=document.getElementById('lgEndTourn'); if(et){ et.disabled=!tn; et.textContent='🏁 End Tournament'; }
-  var es=document.getElementById('lgEndSeason'); if(es){ es.textContent=s?'End '+s.name:'Start Season'; es.classList.toggle('warn',!!s); es.classList.toggle('accent',!s); }
+  // every season anyone in the league created is here to pick as YOUR current one
+  var sp=document.getElementById('lgSeasonPick'), spr=document.getElementById('lgSeasonPickRow');
+  if(sp&&spr){
+    var ss=(league.seasons||[]);
+    spr.style.display=ss.length>1?'':'none';
+    if(ss.length>1&&document.activeElement!==sp){
+      sp.innerHTML=ss.slice().sort(function(a,b){return (a.dv||0)-(b.dv||0)||(b.startTs||0)-(a.startTs||0);}).map(function(x){
+        return '<option value="'+x.id+'"'+(s&&x.id===s.id?' selected':'')+'>'+esc(x.name)+(x.dv?' · Division '+x.dv:'')+' · '+lgDay(x.startTs)+' – '+(x.endTs?lgDay(x.endTs):'open')+'</option>'; }).join('');
+    }
+  }
+  var tt=document.getElementById('lgToolsToggle'), tw=document.getElementById('lgTools');
+  if(tt&&tw){ tt.style.display=inL?'':'none'; tw.style.display=(inL&&_lgToolsOpen)?'':'none';
+    tt.textContent='⚙ League Options '+(_lgToolsOpen?'▴':'▾'); }
 }
 function lgHint(m){ var h=document.getElementById('lgHint'); if(h) h.textContent=m||''; }
 var _lgAddOpen=false;
 function openLeagueCard(){
-  _lgAddOpen=false;
+  _lgAddOpen=false; _lgToolsOpen=false;          // the drawer never opens itself
   document.getElementById('lgName').value='';
   lgHint(''); document.getElementById('lgInviteCode').style.display='none'; document.getElementById('lgInviteRow').style.display='none';
   document.getElementById('lgVerifyRow').style.display='none';
@@ -6274,10 +6369,120 @@ function lgReadEmail(){
   return v;
 }
 document.getElementById('leagueBtn').onclick=openLeagueCard;
-document.getElementById('lgToggle').onclick=function(){ LG.on=!LG.on; saveLeague(); renderLeagueUI(); };
+// (2026-08-31, Nathan) The toggle IS the tournament. ON starts league night
+// (after checking the picked season still covers today); OFF ends it — with a
+// confirm when matches were played, since ending is what e-mails the league.
+// An armed night with zero matches is simply discarded: no empty tournaments,
+// no reports about nothing.
+document.getElementById('lgToggle').onclick=function(){
+  if(!LG.on){
+    var s=lgSeason();
+    if(league.id&&lgSeasonOver(s)){ seasonAskOpen(s); return; }   // decide first, then it turns on
+    LG.on=true; saveLeague(); renderLeagueUI();
+    return;
+  }
+  var tn=lgTourn();
+  if(tn&&lgMatchOpen()){ lgHint('Finish or quit the match in progress first.'); return; }
+  if(tn&&tn.matches.length){ nightEndOpen(tn); return; }          // confirm before mailing
+  if(tn){ var s2=lgSeason(); if(s2){ var ix=s2.tournaments.indexOf(tn); if(ix>=0) s2.tournaments.splice(ix,1); } }
+  LG.on=false; saveLeague(); renderLeagueUI();
+};
+
+// ---- Set Season: a calendar, not a switch ----
+var _ssThenOn=false, _ssDv=1;
+function _ssDateVal(ts){ var d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _ssParse(v){ if(!/^\d{4}-\d{2}-\d{2}$/.test(v||'')) return null; var a=v.split('-'); return new Date(+a[0],+a[1]-1,+a[2]).getTime(); }
+function lgDivName(dv){ return dv?('Division '+dv):''; }
+function _ssDivPaint(){ [].forEach.call(document.querySelectorAll('#ssDiv button'),function(b){ b.classList.toggle('on',+b.dataset.dv===_ssDv); }); }
+function seasonSplashOpen(thenOn){
+  _ssThenOn=!!thenOn;
+  document.getElementById('ssHint').textContent='';
+  document.getElementById('ssTitle').textContent='📅 Set Season';
+  document.getElementById('ssName').value='';
+  document.getElementById('ssStart').value=_ssDateVal(Date.now());
+  document.getElementById('ssEnd').value='';
+  var cur=lgSeason(); _ssDv=(cur&&cur.dv)||_ssDv||1;   // stay on the division you were on
+  _ssDivPaint();
+  document.getElementById('seasonSplash').classList.remove('hidden');
+}
+document.getElementById('ssDiv').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-dv]'); if(!b) return;
+  _ssDv=+b.dataset.dv; _ssDivPaint();
+});
+document.getElementById('ssCancel').onclick=function(){ _ssThenOn=false; document.getElementById('seasonSplash').classList.add('hidden'); };
+document.getElementById('seasonSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('ssCancel').click(); });
+document.getElementById('ssSave').onclick=function(){
+  var hint=document.getElementById('ssHint');
+  var nm=document.getElementById('ssName').value.trim();
+  var st=_ssParse(document.getElementById('ssStart').value);
+  var en=_ssParse(document.getElementById('ssEnd').value);
+  if(!nm){ hint.textContent='Give the season a name.'; return; }
+  if(!st){ hint.textContent='Pick a start date.'; return; }
+  if(!en){ hint.textContent='Pick an end date.'; return; }
+  if(en<st){ hint.textContent='The season can\u2019t end before it starts.'; return; }
+  // ONE season per division at any one time (Nathan). Two divisions run side
+  // by side; two Division 2 seasons may not. Legacy untagged seasons (no dv)
+  // stay out of the check — they predate divisions.
+  var clash=(league.seasons||[]).find(function(x){
+    return x.dv===_ssDv && (x.startTs||0)<=lgDayEnd(en) && st<=lgDayEnd(x.endTs||en);
+  });
+  if(clash){ hint.textContent='\u201c'+clash.name+'\u201d already runs '+lgDay(clash.startTs)+' \u2013 '+lgDay(clash.endTs)+' for '+lgDivName(_ssDv)+' \u2014 one season per division at a time.'; return; }
+  var sx={id:lgId('s'),name:nm,dv:_ssDv,startTs:st,endTs:en,ed:Date.now(),tournaments:[]};
+  league.seasons.push(sx);
+  league.seasons.sort(function(a,b){return (a.startTs||0)-(b.startTs||0);});
+  league.mySeason=sx.id;                       // you made it, you are on it
+  saveLeague();
+  document.getElementById('seasonSplash').classList.add('hidden');
+  if(_ssThenOn){ _ssThenOn=false; LG.on=true; saveLeague(); }
+  renderLeagueUI();
+  lgHint(sx.name+' ('+lgDivName(sx.dv)+') · '+lgDay(sx.startTs)+' – '+lgDay(sx.endTs)+'. The league sees it on the next sync.');
+  lgSync(function(){ renderLeagueUI(); });
+};
+document.getElementById('lgSetSeason').onclick=function(){ seasonSplashOpen(false); };
+document.getElementById('lgSeasonPick').onchange=function(){
+  league.mySeason=this.value||null; saveLeague(); renderLeagueUI();
+  var sx=lgSeason(); if(sx) lgHint(sx.name+(sx.dv?' ('+lgDivName(sx.dv)+')':'')+' is your current season — matches, stats and reports file there.');
+};
+
+// ---- the season ran out: a make-up night, or start fresh ----
+// (2026-08-31, Nathan) A season is never "extended" — its dates are what they
+// were. But two teams that had to reschedule can still play their make-up
+// night after the end date, and it counts toward that season. The tournament's
+// own date tells the story: a 12/15 night inside a season that ended 11/30 is
+// self-evidently a make-up.
+function seasonAskOpen(sx){
+  document.getElementById('saLine').textContent=sx.name+' ended '+lgLongDay(lgDayEnd(sx.endTs))+'.';
+  var ex=document.getElementById('saExtend'); ex.textContent='🎯 Make-up night for '+sx.name;
+  ex.onclick=function(){
+    document.getElementById('seasonAskSplash').classList.add('hidden');
+    league.mySeason=sx.id;                 // tonight files into THAT season
+    LG.on=true; saveLeague(); renderLeagueUI();
+    lgHint('Tonight counts toward '+sx.name+' — a make-up night after its end date.');
+  };
+  document.getElementById('saNew').onclick=function(){ document.getElementById('seasonAskSplash').classList.add('hidden'); seasonSplashOpen(true); };
+  document.getElementById('seasonAskSplash').classList.remove('hidden');
+}
+document.getElementById('saCancel').onclick=function(){ document.getElementById('seasonAskSplash').classList.add('hidden'); };
+document.getElementById('seasonAskSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('saCancel').click(); });
+
+// ---- turning the night off = end + mail, once you say so ----
+function nightEndOpen(tn){
+  document.getElementById('neLine').textContent=tn.matches.length+' match'+(tn.matches.length===1?'':'es')+' tonight. Ending the tournament e-mails every member their report.';
+  document.getElementById('nightEndSplash').classList.remove('hidden');
+}
+document.getElementById('neStay').onclick=function(){ document.getElementById('nightEndSplash').classList.add('hidden'); };
+document.getElementById('nightEndSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('neStay').click(); });
+document.getElementById('neGo').onclick=function(){
+  document.getElementById('nightEndSplash').classList.add('hidden');
+  lgEndTournament(function(msg,final){ lgHint(msg);
+    if(final){ LG.on=false; saveLeague(); renderLeagueUI(); } });
+};
 document.getElementById('lgDone').onclick=function(){
   lgWaitStop(); document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); };
+var _lgToolsOpen=false;
+document.getElementById('lgToolsToggle').onclick=function(){ _lgToolsOpen=!_lgToolsOpen; renderLeagueUI(); };
+
 document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
 document.getElementById('lgRequests').addEventListener('click',function(e){
   var c=e.target.closest('button[data-cok]');
@@ -6343,22 +6548,6 @@ document.getElementById('lgLeave').onclick=function(){
     if(r&&r.ok){ var nm=league.name; lgDrop(league.id); lgHint('You left '+nm+'.'); }
     else if(r&&!r.pending){ if(lgDetachIf(r,league)) lgHint('That league no longer exists — it’s been removed from your list.'); else lgHint((r&&r.error)||'Could not leave.'); }
   }).catch(function(){ lgHint('Could not connect — try again.'); });
-};
-document.getElementById('lgEndTourn').onclick=function(){
-  var h=document.getElementById('lgHint');
-  lgEndTournament(function(msg){ h.textContent=msg; renderLeagueUI(); });
-};
-document.getElementById('lgEndSeason').onclick=function(){
-  var h=document.getElementById('lgHint');
-  if(lgSeason()){
-    var s=lgSeason();
-    if(!confirm('End '+s.name+'? Any open tournament is closed and reported first. Stats stay on the Stats page under this season.')) return;
-    lgEndSeason(function(msg){ h.textContent=msg; renderLeagueUI(); });
-  }else{
-    var nm=prompt('Season name', 'Season '+(league.seasons.length+1));
-    if(nm===null) return;
-    lgStartSeason(nm); h.textContent=lgSeason().name+' started.'; renderLeagueUI();
-  }
 };
 
 //---------------------------- legs ----------------------------
@@ -6657,20 +6846,6 @@ function lgEndTournament(done){
       .catch(function(){ done('Tournament closed, but the report could not be sent — use "Send Last Report" on the Stats page when you have signal.',true); });
   });
 }
-function lgEndSeason(done){
-  var s=lgSeason(); if(!s){ done('No season is running.',true); return; }
-  var finish=function(prefix){
-    var s2=league.seasons.find(function(x){return x.id===s.id;})||s;   // re-find: a sync may have replaced the objects
-    s2.endTs=Date.now(); saveLeague(); renderLeagueUI(); lgSync();
-    done((prefix||'')+s2.name+' ended. Start a new season when you’re ready — the first league match will start one too.',true); };
-  if(lgTourn()) lgEndTournament(function(msg,final){ if(!final){ done(msg,false); return; } if(/quit the match/.test(msg)) done(msg,true); else finish(msg+' '); });
-  else finish('');
-}
-
-//---------------------------- report ----------------------------
-// The app sends STRUCTURED data; the Pi writes the e-mail. That way the relay
-// never forwards free text to arbitrary addresses — it can only ever send a
-// Dart Keeper league report. One send per address.
 function lgStandingsData(st){
   return { teams:st.teams.map(function(e){return {name:e.name,mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll};}),
            players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.dts?+(e.pts*3/e.dts).toFixed(1):(e.turns?+(e.pts/e.turns).toFixed(1):null),best:e.best||null,t180:e.t180||0};}) };
