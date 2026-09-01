@@ -3032,7 +3032,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.90';
+var DK_VER='2.91';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7207,15 +7207,21 @@ document.addEventListener('visibilitychange', function(){
   if(document.visibilityState==='visible') dkKeepAwake();
   else { try{ if(dkKeepVid) dkKeepVid.pause(); }catch(e){} }   // let the phone sleep once we're away
 });
-// iOS will not start playback without a user gesture: keep trying on taps until
-// something holds, then stop listening.
-function dkWakeOnGesture(){
-  dkKeepAwake();
-  if(dkLock || (dkKeepVid && !dkKeepVid.paused))
-    document.removeEventListener('pointerdown', dkWakeOnGesture, true);
-}
+// iOS will not start playback without a user gesture: retry on every tap —
+// FOREVER. This used to disarm itself once a lock held, but the OS releases
+// locks whenever it likes (backgrounding, the lock button, an update reload),
+// and a disarmed listener meant the next release was permanent until relaunch.
+function dkWakeOnGesture(){ dkKeepAwake(); }
 document.addEventListener('pointerdown', dkWakeOnGesture, true);
 dkKeepAwake();
+// (2026-08-31, Nathan: "stay awake needs to be active even in setup/menus.")
+// Both askers were ONE-SHOT: request at launch — which the comment above
+// admits can be too early — then wait for a touch. Mid-game there is always a
+// touch; a scoreboard sitting on the setup screen gets none, and every app
+// update deliberately reloads on the menu, exactly where nothing would re-ask.
+// A quiet heartbeat re-asks while the page is visible and unlocked; both
+// functions already no-op when a lock is held, so the steady state is free.
+setInterval(function(){ try{ wakeRequest(); }catch(e){} try{ dkKeepAwake(); }catch(e){} }, 25000);
 
 // ---- update hand-off (used by the service-worker registration below) --------
 // iOS never re-navigates a PWA that was only backgrounded, so waiting for the
