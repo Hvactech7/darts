@@ -1003,6 +1003,8 @@
   .lgOpt input{width:22px;height:22px;accent-color:#2b5f96;}
   .lgSeason{margin-top:12px;padding:10px 12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);}
   .lgSeasonLine{font-size:15px;color:#e9ddc0;line-height:1.35;margin-bottom:8px;}
+  .lgHeadLine{font-size:13.5px;color:#a3906a;margin:-4px 0 8px;line-height:1.35;}
+  .lgHeadLine a{color:#e8c876;text-decoration:none;border-bottom:1px dotted rgba(232,200,118,.5);}
   .lgSeasonBtns{flex-wrap:nowrap;gap:8px;}
   .lgSeasonBtns button{font-size:16px;padding:11px 8px;white-space:nowrap;min-width:0;}
   .lgSeasonBtns{flex-wrap:wrap;}  /* "End Fall Season" must wrap, not spill off the card */
@@ -1913,6 +1915,10 @@
       <div id="lgHasLeague">
         <div class="lgSeason">
           <div class="lgSeasonLine" id="lgLeagueLine"></div>
+          <!-- (2026-09-01, Nathan) every member can see WHO runs this league and
+               reach them: the head (today the creator; succession comes with the
+               subscription work) with a mailto for league-related help. -->
+          <div class="lgHeadLine" id="lgHeadLine" style="display:none;"></div>
           <div class="row lgMeRow"><span class="lgMeLbl">I am</span><select id="lgMe" class="grow"></select></div>
           <div id="lgMeNote" class="lgMeNote"></div>
           <div id="lgRequests"></div>
@@ -3049,7 +3055,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.96';
+var DK_VER='2.97';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6450,6 +6456,20 @@ function renderLeagueUI(){
     ll.innerHTML='<b>'+esc(league.name)+'</b> · '+_lc+' member'+(_lc===1?'':'s')
     +(_ls?' · '+esc(_ls.name)+(_ls.dv?' D'+_ls.dv:''):'')
     +' · synced '+esc(lgAgo(league.lastSync)); }
+  // who runs this league, and how to reach them for league trouble
+  var hl=document.getElementById('lgHeadLine');
+  if(hl){
+    var _hd=league.head||league.creator||'';
+    if(inL&&_hd){
+      var _hn=''; var _cl=lgClaims(league);
+      Object.keys(_cl).forEach(function(pn){ var c=_cl[pn]; if(c&&c.st==='ok'&&c.email===_hd&&!_hn) _hn=pn; });
+      var _isMe=(_hd===lgEmail());
+      hl.style.display='';
+      hl.innerHTML='👑 League head: <b>'+esc(_hn||_hd)+'</b>'
+        +(_isMe?' — you'
+               :' · <a href="mailto:'+esc(_hd)+'?subject='+encodeURIComponent('['+league.name+'] league help')+'">✉ e-mail for help</a>');
+    } else hl.style.display='none';
+  }
   var me=document.getElementById('lgMe');
   if(me&&inL&&document.activeElement!==me){
     me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ var _o=lgClaimOwner(league,n); var _tag=(_o&&_o!==lgEmail())?' — taken':''; return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+esc(_tag)+'</option>'; }).join('');
