@@ -3007,7 +3007,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.85';
+var DK_VER='2.86';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6479,9 +6479,21 @@ document.getElementById('neGo').onclick=function(){
 };
 document.getElementById('lgDone').onclick=function(){
   lgWaitStop(); document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
-document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); };
+// (2026-08-31, Nathan: "collapsing League Options makes the dropdowns above
+// become active.") The card is vertically centered, so a drawer toggle shrinks
+// or grows it and everything re-centers — the Season and I-am selects slide
+// straight into the spot the finger just tapped, and the iPad's late ghost
+// click (or a quick second tap) lands on them and opens the picker. After any
+// toggle that reflows the card, a short transparent shield eats stray taps.
+function lgTapShield(ms){
+  var sh=document.createElement('div');
+  sh.style.cssText='position:fixed;inset:0;z-index:500;background:transparent;';
+  document.body.appendChild(sh);
+  setTimeout(function(){ try{ sh.remove(); }catch(e){} }, ms||450);
+}
+document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); lgTapShield(); };
 var _lgToolsOpen=false;
-document.getElementById('lgToolsToggle').onclick=function(){ _lgToolsOpen=!_lgToolsOpen; renderLeagueUI(); };
+document.getElementById('lgToolsToggle').onclick=function(){ _lgToolsOpen=!_lgToolsOpen; renderLeagueUI(); lgTapShield(); };
 
 document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
 document.getElementById('lgRequests').addEventListener('click',function(e){
