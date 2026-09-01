@@ -2949,7 +2949,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.83';
+var DK_VER='2.84';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6150,6 +6150,33 @@ function lgDrop(id){
 }
 function lgAgo(ts){ if(!ts) return 'never'; var s=Math.round((Date.now()-ts)/1000); return s<60?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':Math.round(s/86400)+' d ago'; }
 function lgMatchOpen(){ return !!(LG.cur && !LG.cur.done); }
+// (2026-08-31, Nathan) Membership is EARNED. You are officially on the league
+// once you have (1) put in your e-mail and (2) claimed a name that sits on one
+// of the league's teams. Roster names alone are the teams' property, not
+// members — 27 people on rosters with one connected account IS "1 member".
+// (A first cut counted the roster names instead; Nathan overruled it.)
+function lgPeopleCount(x){
+  if(!x) return 0;
+  var mem=x.members||[], cl=x.claims||{}, tms=x.teams||{};
+  var onTeam={};
+  Object.keys(tms).forEach(function(t){
+    Object.keys(tms[t]||{}).forEach(function(p){
+      if(((tms[t][p]||{}).st)==='ok') onTeam[p]=1;
+    });
+  });
+  var seen={}, n=0;
+  Object.keys(cl).forEach(function(p){
+    var c=cl[p]||{};
+    if(c.st!=='ok'||!c.email) return;            // claim not settled
+    if(!onTeam[p]) return;                       // claimed a name that is on no team
+    if(mem.indexOf(c.email)<0) return;           // e-mail never joined this league
+    if(!seen[c.email]){ seen[c.email]=1; n++; }  // one person, however many claims
+  });
+  // A league whose claims have not caught up yet (day one, or synced before the
+  // claim system existed) falls back to the account count — never 0 members in
+  // a league that plainly has its creator in it.
+  return n || mem.length;
+}
 function lgId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function lgSeason(){ var s=league.seasons[league.seasons.length-1]; return (s&&!s.endTs)?s:null; }
 function lgTourn(){ var s=lgSeason(); if(!s) return null; var t=s.tournaments[s.tournaments.length-1]; return (t&&!t.endTs)?t:null; }
@@ -6181,11 +6208,12 @@ function renderLeagueUI(){
   var list=document.getElementById('lgList');
   if(list){
     list.innerHTML=LG.list.length?('<div class="lgListHead">Your leagues'+(lgMatchOpen()?' · finish the match in progress to switch':'')+'</div>'+LG.list.map(function(x){
-      return '<div class="lgRow'+(x.id===LG.active?' on':'')+'" data-id="'+x.id+'"><span class="nm">'+esc(x.name)+'</span><span class="mt">'+x.members.length+' member'+(x.members.length===1?'':'s')+'</span><span class="ck">'+(x.id===LG.active?'✓ active':'')+'</span></div>'; }).join('')):'';
+      return '<div class="lgRow'+(x.id===LG.active?' on':'')+'" data-id="'+x.id+'"><span class="nm">'+esc(x.name)+'</span><span class="mt">'+lgPeopleCount(x)+' member'+(lgPeopleCount(x)===1?'':'s')+'</span><span class="ck">'+(x.id===LG.active?'✓ active':'')+'</span></div>'; }).join('')):'';
   }
   var ll=document.getElementById('lgLeagueLine');
-  if(ll&&inL) ll.innerHTML='<b>'+esc(league.name)+'</b> · '+league.members.length+' member'+(league.members.length===1?'':'s')+' · synced '+esc(lgAgo(league.lastSync))
-    +(league.creator===lgEmail()?' · you created it':'');
+  if(ll&&inL){ var _lc=lgPeopleCount(league);
+    ll.innerHTML='<b>'+esc(league.name)+'</b> · '+_lc+' member'+(_lc===1?'':'s')+' · synced '+esc(lgAgo(league.lastSync))
+    +(league.creator===lgEmail()?' · you created it':''); }
   var me=document.getElementById('lgMe');
   if(me&&inL&&document.activeElement!==me){
     me.innerHTML='<option value="">— pick your name —</option>'+roster.slice().sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});}).map(function(n){ var _o=lgClaimOwner(league,n); var _tag=(_o&&_o!==lgEmail())?' — taken':''; return '<option value="'+esc(n)+'"'+(n===LG.me?' selected':'')+'>'+esc(n)+esc(_tag)+'</option>'; }).join('');
