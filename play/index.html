@@ -3055,7 +3055,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.97';
+var DK_VER='2.98';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7536,6 +7536,17 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function (reg) {
       var pending = false;
 
+      // (2026-09-01, Nathan: "I wonder if it's because it updated and then
+      // nothing was touched...?" — exactly right.) A reload lands a BRAND-NEW
+      // document with no user activation, and iOS then refuses the muted-video
+      // wake belt until a finger arrives — so every auto-update quietly
+      // disarmed the wall iPad's stay-awake. An auto-reload is now allowed
+      // only when the app is HIDDEN (screen off/backgrounded — nothing to
+      // disarm) or a touch happened seconds ago (the human re-arms it).
+      var lastTouch = 0;
+      document.addEventListener('pointerdown', function () { lastTouch = Date.now(); },
+                                { capture: true, passive: true });
+
       // A new version is installed and waiting. Reload as soon as it is safe —
       // iOS won't re-navigate a merely-backgrounded PWA, so "next launch" can
       // otherwise be days away. Guarded so it can never loop or interrupt play.
@@ -7549,6 +7560,9 @@ if ('serviceWorker' in navigator) {
         } catch (e) {}
         var safe = (typeof window.dkSafeToReload === 'function') ? window.dkSafeToReload() : true;
         if (!safe) return;                      // retry on the next signal
+        var hidden = document.visibilityState === 'hidden';
+        var touchedJustNow = (Date.now() - lastTouch) < 10000;
+        if (!hidden && !touchedJustNow) return; // never yank an idle visible scoreboard
         pending = false;
         try {
           sessionStorage.setItem('dkLastAutoReload', String(Date.now()));
@@ -7580,7 +7594,7 @@ if ('serviceWorker' in navigator) {
       // A PWA can sit backgrounded for days; check again whenever it comes back,
       // and retry a deferred reload once the user is back on the menu.
       document.addEventListener('visibilitychange', function () {
-        if (document.hidden) return;
+        if (document.hidden) { applyUpdate(); return; }   // hidden = the SAFE moment to swap
         applyUpdate();
         reg.update();
       });
