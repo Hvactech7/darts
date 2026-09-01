@@ -3049,7 +3049,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.94';
+var DK_VER='2.95';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4107,6 +4107,12 @@ function applyCricket(value,mult){
   if(was0 && mult===3 && num!==25) t.tripleClose[num]=true;  // closed in one triple on first hit
   else if(was0===false){} // (no-op) keep flag once set
   const overflow=hits-used;
+  // (2026-09-01, Nathan) Lightning ONLY when the number is closed OUT — dead
+  // for the whole game, every side on 3 — not when one player merely closes
+  // their own. The killing dart is the one that finishes the last side.
+  if(need>0 && used>=need && G.teams.every(function(o){ return o.marks[num]>=3; })){
+    try{ ckBoltFX(num, G.cur); }catch(e){}
+  }
   let counted=used;                    // marks the caller announces: closing marks…
   if(overflow>0){
     // score points only if an opponent has NOT closed this number
@@ -4153,6 +4159,59 @@ function splashHide(){
   var el=document.getElementById('tonSplash'); if(!el) return;
   clearTimeout(_tsTimer);
   el.classList.remove('show','bad','ckhit');
+}
+// (2026-09-01, Nathan) HOUSE RULE: whenever this app shows lightning, it is
+// THE BANNER'S lightning — the dk-side-blue.jpg art, screen-blended so the
+// black sky vanishes and only the bolts glow — the same way the Fat 6
+// elimination does it. Never hand-drawn SVG bolts.
+// Fired only when a cricket number is closed OUT (dead for the game): a strip
+// of the banner storm tears from the killing player's card down to the number,
+// flickers, and a blue flash swallows the row. Overlay on document.body so the
+// re-render that greys the dead row cannot tear it down mid-strike. Board-open
+// mode has no table on screen, so there is nothing to strike: skipped there.
+var _ckBoltImg=new Image(); _ckBoltImg.src='dk-side-blue.jpg';   // warm before the first strike
+var _ckBoltImgR=new Image(); _ckBoltImgR.src='dk-side-red.jpg';
+function ckBoltFX(num, teamIdx){
+  var g=document.getElementById('game');
+  if(!g||!g.classList.contains('cricket')||g.classList.contains('board-open')) return;
+  var card=document.querySelector('.cricket th.head'+(teamIdx+1));
+  var lbl=document.querySelector('.cricket .dt-v[data-v="'+num+'"]');
+  if(!card||!lbl) return;
+  var cr=card.getBoundingClientRect(), tr=lbl.getBoundingClientRect();
+  if(!cr.width||!tr.width) return;
+  var sx=cr.left+cr.width/2, sy=cr.top+cr.height*0.55;   // out of the card's heart
+  var ex=tr.left+tr.width/2, ey=tr.top+tr.height/2;
+  // (2026-09-01, Nathan) blue strikes from the LEFT player, RED from the RIGHT
+  // — both are the banner's own side art (the red side is red lightning).
+  var art=teamIdx===0?'dk-side-blue.jpg':'dk-side-red.jpg';
+  var dx=ex-sx, dy=Math.max(24, ey-sy);
+  var dist=Math.sqrt(dx*dx+dy*dy);
+  var rot=Math.atan2(dx,dy)*180/Math.PI;           // art runs top->down
+  var w=Math.max(130, Math.min(200, dist*0.55));
+  var d=document.createElement('div');
+  d.className='ckboltfx';
+  d.style.cssText='position:fixed;pointer-events:none;z-index:205;'
+    +'left:'+(sx-w/2).toFixed(1)+'px;top:'+sy.toFixed(1)+'px;'
+    +'width:'+w.toFixed(1)+'px;height:'+(dist+tr.height*0.6).toFixed(1)+'px;'
+    +'transform-origin:50% 0;transform:rotate('+(-rot).toFixed(2)+'deg);'
+    +'background-image:url("'+art+'");background-size:cover;background-position:center top;background-repeat:no-repeat;'
+    +'mix-blend-mode:screen;opacity:0;'
+    +'-webkit-mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent),linear-gradient(to bottom,#000 72%,transparent 97%);'
+    +'-webkit-mask-composite:source-in;'
+    +'mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent),linear-gradient(to bottom,#000 72%,transparent 97%);'
+    +'mask-composite:intersect;';
+  d.animate([{opacity:0},{opacity:1},{opacity:.45},{opacity:1},{opacity:1},{opacity:.5},{opacity:.9},{opacity:0}],
+    {duration:820,easing:'linear',fill:'forwards'});
+  document.body.appendChild(d);
+  // the flash that swallows the number as it dies
+  var fl=document.createElement('div');
+  fl.style.cssText='position:fixed;pointer-events:none;z-index:206;mix-blend-mode:screen;'
+    +'left:'+(ex-70)+'px;top:'+(ey-70)+'px;width:140px;height:140px;border-radius:50%;'
+    +'background:radial-gradient(circle,#ffffff 0%,'+(teamIdx===0?'#bfe4ff 22%,rgba(90,160,255,.75)':'#ffd9a8 22%,rgba(255,140,50,.8)')+' 45%,transparent 70%);opacity:0;';
+  fl.animate([{opacity:0,transform:'scale(.2)'},{opacity:1,transform:'scale(.85)'},{opacity:0,transform:'scale(1.7)'}],
+    {duration:560,delay:110,easing:'ease-out',fill:'forwards'});
+  document.body.appendChild(fl);
+  setTimeout(function(){ try{ d.remove(); fl.remove(); }catch(e){} }, 1000);
 }
 // (2026-09-01, Nathan) Cricket's tons: a turn worth 5 to 9 marks gets called
 // out the way a ton is. Marks that count = closing marks + scoring overflow —
