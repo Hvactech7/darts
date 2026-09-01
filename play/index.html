@@ -2643,7 +2643,7 @@ function syncGamePill(){
   document.getElementById('setup').classList.toggle('fat6',isFFA(config.game));
   // (2026-08-31, Nathan) "Around The World" blew the pill wide open — the one
   // long name gets a short form ON THE PILL ONLY; everywhere else stays full.
-  var _xpShort={atw:'A. T. World'};
+  var _xpShort={atw:'AT World'};
   var _xp=document.getElementById('extrasPill'); if(_xp) _xp.textContent=(isFFA(config.game)?(_xpShort[config.game]||XGAMES[config.game]):'Extras')+' ▾';
 }
 function setGame(g){
@@ -3012,7 +3012,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.87';
+var DK_VER='2.88';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
