@@ -2938,7 +2938,15 @@ function openPlayerCard(name){
   const d=playerCardData(name), s=d.s;
   document.getElementById('pcName').textContent=name;
   document.getElementById('pcSub').textContent=(d.team?d.team+' · ':'')+(s.g||0)+' game'+(s.g===1?'':'s')+(s.last?' · last played '+lgDay(s.last):'');
-  const mi=document.getElementById('pcEmail'); mi.value=emailOfPlayer(name); mi.classList.remove('bad');
+  // (2026-08-31, Nathan: "when I tap my own name it doesn't show my email?")
+  // Three stores know an address: the typed player e-mail, the claim, and the
+  // backup slot. The card only read the first — blank for Nathan even though
+  // his claim carried nathan@dartkeeper.net. A claimed name's e-mail IS its
+  // claim's e-mail unless a player e-mail was typed over it; claims sync to
+  // every league device, so every device shows it.
+  const mi=document.getElementById('pcEmail');
+  mi.value=emailOfPlayer(name)||lgClaimOwner(league,name)||'';
+  mi.classList.remove('bad');
   // A claimed name's e-mail belongs to whoever claimed it (2026-08-25).
   const _own=lgMayEditPlayer(league,name), _by=lgClaimOwner(league,name);
   mi.disabled=!_own; document.getElementById('pcEmailSave').disabled=!_own;
@@ -3032,7 +3040,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.91';
+var DK_VER='2.92';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
