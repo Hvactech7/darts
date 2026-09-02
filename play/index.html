@@ -1924,7 +1924,7 @@
       <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Off</button>
       <!-- (2026-09-02, Nathan) ending tonight's tournament belongs HERE, not on
            the Stats page. Same confirm as switching League Off. -->
-      <button class="warn" id="lgEndNight" style="display:none;width:100%;margin-top:8px;font-size:17px;padding:11px;">🏁 End tonight’s tournament &amp; e-mail reports</button>
+      <button class="warn" id="lgEndNight" style="display:none;width:100%;margin-top:8px;font-size:22px;padding:13px;">End Tournament</button>
       <!-- Leagues live on the Pi. You can belong to several; one is ACTIVE
            (matches, reports and Stats use it). Your e-mail is your identity. -->
       <div id="lgList"></div>
@@ -1962,7 +1962,7 @@
             <div class="row lgMeRow"><span class="lgMeLbl">Team</span><select id="lgPickTeam" class="grow"><option value="">— pick your team —</option></select></div>
             <div class="row" style="margin-top:6px;"><input type="text" id="lgTeamCode" class="grow" placeholder="6-digit code from a team member" inputmode="numeric" maxlength="7"><button class="accent" id="lgTeamJoin">Join team</button></div>
           </div>
-          <div class="row lgSeasonBtns" id="lgInviteRowMain"><button class="primary grow" id="lgInvite">👤 Invite a member</button><button class="accent grow" id="lgTeamCodeBtn" style="display:none;">🔑 Team code</button></div>
+          <div id="lgInviteRowMain"><button class="primary" id="lgInvite" style="width:100%;font-size:22px;padding:13px;">League Code</button><button class="accent" id="lgTeamCodeBtn" style="display:none;width:100%;margin-top:8px;font-size:22px;padding:13px;">Team Code</button></div>
           <div id="lgTeamCodeBox" style="display:none;"></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
@@ -3168,7 +3168,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.06';
+var DK_VER='3.07';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6593,7 +6593,7 @@ function renderLeagueUI(){
   if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League '+(leagueOn()?'On':'Off'); }
   var en=document.getElementById('lgEndNight');
   if(en){ var _tn=leagueOn()&&league&&league.id?lgTourn():null; en.style.display=(_tn&&_tn.matches.length)?'':'none';
-    if(_tn) en.innerHTML='🏁 End tonight’s tournament &amp; e-mail reports <span class="small">('+_tn.matches.length+' match'+(_tn.matches.length===1?'':'es')+')</span>'; }
+    if(_tn) en.textContent='End Tournament ('+_tn.matches.length+')'; }
   var inL=!!league.id, noL=document.getElementById('lgNoLeague'), hasL=document.getElementById('lgHasLeague');
   var addOpen=(!LG.list.length||_lgAddOpen);
   if(noL) noL.style.display=addOpen?'':'none';
