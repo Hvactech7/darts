@@ -1927,7 +1927,13 @@
                the same night, so back-and-forth has to be one tap away. It only
                appears once there is more than one season to pick. -->
           <div class="row lgMeRow" id="lgSeasonPickRow" style="display:none;margin-top:6px;"><span class="lgMeLbl">Season</span><select id="lgSeasonPick" class="grow"></select></div>
-          <div class="row lgSeasonBtns"><button class="primary grow" id="lgInvite">👤 Invite a member</button></div>
+          <!-- (2026-09-01) A device recognised by roster name but not yet
+               official: one e-mail field makes it a member, no code. -->
+          <div id="lgAttachRow" style="display:none;margin-top:8px;">
+            <div class="lgSeasonLine" id="lgAttachLine"></div>
+            <div class="row"><input type="text" id="lgAttachEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"><button class="primary" id="lgAttachGo">Make it official</button></div>
+          </div>
+          <div class="row lgSeasonBtns" id="lgInviteRowMain"><button class="primary grow" id="lgInvite">👤 Invite a member</button></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
         </div>
@@ -3055,7 +3061,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.98';
+var DK_VER='2.99';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6441,7 +6447,7 @@ function renderLeagueUI(){
   var t=document.getElementById('lgToggle');
   if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League '+(leagueOn()?'On':'Off'); }
   var inL=!!league.id, noL=document.getElementById('lgNoLeague'), hasL=document.getElementById('lgHasLeague');
-  var addOpen=!LG.list.length||_lgAddOpen;
+  var addOpen=(!LG.list.length||_lgAddOpen);
   if(noL) noL.style.display=addOpen?'':'none';
   if(hasL) hasL.style.display=inL?'':'none';
   var at=document.getElementById('lgAddToggle'); if(at){ at.style.display=LG.list.length?'':'none'; at.textContent=addOpen?'− Hide':'+ Create or join another league'; }
@@ -6526,11 +6532,88 @@ function renderLeagueUI(){
   var tt=document.getElementById('lgToolsToggle'), tw=document.getElementById('lgTools');
   if(tt&&tw){ tt.style.display=inL?'':'none'; tw.style.display=(inL&&_lgToolsOpen)?'':'none';
     tt.textContent='⚙ League Options '+(_lgToolsOpen?'▴':'▾'); }
+  // recognised by name, not yet official: e-mail once, done
+  var ar=document.getElementById('lgAttachRow'), ir=document.getElementById('lgInviteRowMain');
+  if(ar&&ir){
+    var att=inL&&lgIsAttachedOnly();
+    ar.style.display=att?'':'none'; ir.style.display=att?'none':'';
+    if(att){
+      var tm=league.myTeam||teamOfPlayer(LG.me||'')||'';
+      document.getElementById('lgAttachLine').innerHTML='You\u2019re on <b>'+esc(tm||'a team')+'</b> in <b>'+esc(league.name)+'</b>. Your games count here \u2014 enter your e-mail once to make it official.';
+      var ae=document.getElementById('lgAttachEmail'); if(ae&&document.activeElement!==ae&&!ae.value) ae.value=lgEmail();
+    }
+  }
 }
 function lgHint(m){ var h=document.getElementById('lgHint'); if(h) h.textContent=m||''; }
 var _lgAddOpen=false;
+// (2026-09-01, Nathan: "everyone on a team should already be in Delta —
+// Carrie's phone asked her what league to CREATE.") A roster name is the
+// membership. A fresh device that knows its player's name asks the relay
+// which league has that name on a team, and attaches to it on the spot: the
+// league, the team, the seasons all appear, no create-or-join question.
+// Scoring works immediately (matches file into the league's own season and
+// tournament on this device); they push the moment an e-mail is verified,
+// which also makes the membership official (relay op `attach`, no code).
+function lgFindMine(name){
+  name=String(name||'').trim(); if(!name) return Promise.resolve(null);
+  return relayLeague({op:'find',name:name}).then(function(r){
+    return (r&&r.ok&&r.leagues&&r.leagues[0])||null;
+  }).catch(function(){ return null; });
+}
+function lgAttachFound(Lg){
+  if(!Lg||!Lg.id) return null;
+  var rec=lgAdopt(Lg,true);
+  if(!rec) return null;
+  rec.myTeam=Lg.yourTeam||rec.myTeam||'';
+  if(Lg.yourName){ LG.me=Lg.yourName; setMyName(Lg.yourName); }
+  lgRehomeLocal(rec);
+  saveLeague(); renderLeagueUI();
+  return rec;
+}
+// Games played BEFORE the device attached live in LG.local under an
+// auto-made season. Move them into the league's real season/tournament for
+// the day they were played, so they count once this device is official.
+function lgRehomeLocal(rec){
+  try{
+    var moved=0;
+    (LG.local.seasons||[]).forEach(function(ls){
+      (ls.tournaments||[]).forEach(function(lt){
+        (lt.matches||[]).forEach(function(m){
+          if(!m||!m.done) return;
+          var when=m.ts||lt.ts||Date.now();
+          var ss=(rec.seasons||[]).filter(function(x){ return (x.startTs||0)<=when && (!x.endTs||when<=lgDayEnd(x.endTs)); });
+          var season=ss.length?ss[ss.length-1]:null;
+          if(!season){ season={id:lgId('s'),name:'Season '+((rec.seasons||[]).length+1),startTs:when,endTs:null,ed:Date.now(),tournaments:[]}; rec.seasons.push(season); }
+          var day=lgDay(when);
+          var tourn=(season.tournaments||[]).find(function(t){ return lgDay(t.ts||0)===day; });
+          if(!tourn){ tourn={id:lgId('t'),ts:when,endTs:null,mailed:false,matches:[]}; season.tournaments.push(tourn); }
+          if(!tourn.matches.some(function(x){ return x.id===m.id; })){ tourn.matches.push(m); moved++; }
+        });
+      });
+    });
+    if(moved){ LG.local.seasons=[]; saveLeague(); }
+    return moved;
+  }catch(e){ return 0; }
+}
+function lgIsAttachedOnly(){ return !!(league&&league.id&&(league.members||[]).indexOf(lgEmail())<0); }
+function lgAttach(){
+  var em=lgReadEmail(); if(!em) return;
+  if(!LG.me){ lgHint('Pick your name first.'); return; }
+  lgHint('Making it official…');
+  lgCall({op:'attach',league:league.id,me:LG.me,data:{seasons:lgSeasonsForPush(league)}},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){
+      lgAdopt(r.league,true); renderLeagueUI();
+      lgHint('✓ You\u2019re an official member of '+r.league.name+' as '+LG.me+'.'+(r.claim==='pending'?' Someone else holds that name for now \u2014 they\u2019ve been asked to hand it over.':''));
+      lgSync(function(){ renderLeagueUI(); });
+    } else if(r&&!r.pending) lgHint((r&&r.error)||'Could not attach.');
+  }).catch(function(){ lgHint('Could not connect \u2014 check your signal and try again.'); });
+}
 function openLeagueCard(){
   _lgAddOpen=false; _lgToolsOpen=false;          // the drawer never opens itself
+  if(!league.id && LG.me){                       // does my name already belong to a league?
+    lgHint('Looking for your league\u2026');
+    lgFindMine(LG.me).then(function(Lg){ if(Lg){ lgAttachFound(Lg); lgHint(''); } else lgHint(''); });
+  }
   document.getElementById('lgName').value='';
   lgHint(''); document.getElementById('lgInviteCode').style.display='none'; document.getElementById('lgInviteRow').style.display='none';
   document.getElementById('lgVerifyRow').style.display='none';
@@ -6544,6 +6627,12 @@ function lgReadEmail(){
   return v;
 }
 document.getElementById('leagueBtn').onclick=openLeagueCard;
+document.getElementById('lgAttachGo').onclick=function(){
+  // the attach strip has its own field; feed it through the same e-mail setter
+  document.getElementById('lgEmail').value=document.getElementById('lgAttachEmail').value;
+  lgAttach();
+};
+document.getElementById('lgAttachEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('lgAttachGo').click(); } });
 // (2026-08-31, Nathan) The toggle IS the tournament. ON starts league night
 // (after checking the picked season still covers today); OFF ends it — with a
 // confirm when matches were played, since ending is what e-mails the league.
@@ -7113,6 +7202,8 @@ document.getElementById('wcGo').onclick=function(){
   setMyName(real); LG.me=real; try{ saveLeague(); }catch(e){}
   document.getElementById('wcStep1').classList.add('hidden');
   document.getElementById('wcStep2').classList.remove('hidden');
+  // a roster name is a membership: attach quietly in the background
+  try{ lgFindMine(real).then(function(Lg){ if(Lg&&!league.id) lgAttachFound(Lg); }); }catch(e){}
 };
 document.getElementById('wcName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcGo').click(); } });
 document.getElementById('wcSkip').onclick=welcomeDone;
@@ -7213,6 +7304,10 @@ window.addEventListener('online', function(){ try{ bkQueue(); }catch(e){} });
 refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
+// A name on a league roster IS the membership (9/1): a device that picked its
+// name but never joined a league asks the relay, once online, whether that
+// name sits on a team somewhere — and attaches in the background if so.
+setTimeout(function(){ try{ if(LG.me && !(league&&league.id) && navigator.onLine!==false) lgFindMine(LG.me).then(function(Lg){ if(Lg&&!(league&&league.id)) lgAttachFound(Lg); }); }catch(e){} }, 4000);
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
 // Shown the first time the app is opened IN A BROWSER. Android/Chrome can do
