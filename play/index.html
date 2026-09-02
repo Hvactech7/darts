@@ -968,8 +968,9 @@
   #menuRow #leagueBtn.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
   /* the two league modals borrow #confirmQuit's dress exactly */
-  #leagueCard,#legsSplash,#fillSplash,#playerCard{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
-  #leagueCard.hidden,#legsSplash.hidden,#fillSplash.hidden,#playerCard.hidden{display:none;}
+  #leagueCard,#legsSplash,#fillSplash,#nearSplash,#playerCard{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
+  #leagueCard.hidden,#legsSplash.hidden,#fillSplash.hidden,#nearSplash.hidden,#playerCard.hidden{display:none;}
+  #nearSplash{z-index:320;}
   #fillSplash{z-index:310;}
   /* header and buttons stay put; only the stats scroll (the card is taller than an iPad in landscape) */
   #playerCard .card{max-width:520px;width:100%;margin:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;}
@@ -1006,8 +1007,10 @@
   .librow .lname::after{content:'  ›';opacity:.45;font-size:.9em;}
   @media (max-width:600px){ .pcGrid{grid-template-columns:repeat(3,1fr);gap:4px 4px;} .pcStat .v{font-size:20px;} .pcName{font-size:26px;} }
   #leagueCard .card{max-width:470px;margin:20px;width:100%;}
-  #legsSplash .card,#fillSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
-  #legsSplash h2,#fillSplash h2{justify-content:center;}
+  #legsSplash .card,#fillSplash .card,#nearSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
+  #legsSplash h2,#fillSplash h2,#nearSplash h2{justify-content:center;}
+  #nearPick button{display:block;width:100%;font-size:21px;padding:13px;margin-top:10px;}
+  #nearPick small{display:block;font-size:13px;opacity:.75;margin-top:2px;}
   #fillPick button{display:block;width:100%;font-size:22px;padding:14px;margin-top:10px;}
   #fillWho{margin:2px 0 6px;line-height:1.5;}
   #legsPick button{font-family:var(--num);font-size:34px;font-weight:700;padding:12px 0;}
@@ -1919,6 +1922,9 @@
     <div class="card">
       <h2>🏆 League Mode</h2>
       <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Off</button>
+      <!-- (2026-09-02, Nathan) ending tonight's tournament belongs HERE, not on
+           the Stats page. Same confirm as switching League Off. -->
+      <button class="warn" id="lgEndNight" style="display:none;width:100%;margin-top:8px;font-size:17px;padding:11px;">🏁 End tonight’s tournament &amp; e-mail reports</button>
       <!-- Leagues live on the Pi. You can belong to several; one is ACTIVE
            (matches, reports and Stats use it). Your e-mail is your identity. -->
       <div id="lgList"></div>
@@ -2023,6 +2029,16 @@
     </div>
   </div>
 
+  <!-- (2026-09-02, Nathan) "Are you Mike B?" — a typed name that is the obvious
+       near-miss of a roster name is offered before the create/join door. -->
+  <div id="nearSplash" class="hidden">
+    <div class="card">
+      <h2 id="nearTitle">Are you…?</h2>
+      <p class="small" id="nearWho"></p>
+      <div id="nearPick"></div>
+      <button class="ghost" id="nearNo" style="width:100%;margin-top:12px;">No — I’m new here</button>
+    </div>
+  </div>
   <div id="fillSplash" class="hidden">
     <div class="card">
       <h2>Who are they playing for?</h2>
@@ -3152,7 +3168,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.05';
+var DK_VER='3.06';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6575,6 +6591,9 @@ function renderLeagueUI(){
   if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League On':'League Off'); }
   var t=document.getElementById('lgToggle');
   if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League '+(leagueOn()?'On':'Off'); }
+  var en=document.getElementById('lgEndNight');
+  if(en){ var _tn=leagueOn()&&league&&league.id?lgTourn():null; en.style.display=(_tn&&_tn.matches.length)?'':'none';
+    if(_tn) en.innerHTML='🏁 End tonight’s tournament &amp; e-mail reports <span class="small">('+_tn.matches.length+' match'+(_tn.matches.length===1?'':'es')+')</span>'; }
   var inL=!!league.id, noL=document.getElementById('lgNoLeague'), hasL=document.getElementById('lgHasLeague');
   var addOpen=(!LG.list.length||_lgAddOpen);
   if(noL) noL.style.display=addOpen?'':'none';
@@ -6704,9 +6723,36 @@ var _lgAddOpen=false;
 function lgFindMine(name){
   name=String(name||'').trim(); if(!name) return Promise.resolve(null);
   return relayLeague({op:'find',name:name}).then(function(r){
-    return (r&&r.ok&&r.leagues&&r.leagues[0])||null;
+    if(r&&r.ok&&r.leagues&&r.leagues[0]) return r.leagues[0];
+    // no exact hit: the obvious near-miss(es) get offered — once per typed name
+    var near=(r&&r.ok&&r.near)||[];
+    if(near.length && !(LG.nearNo||{})[name.toLowerCase()] && !(league&&league.id)) nearAskOpen(name, near);
+    return null;
   }).catch(function(){ return null; });
 }
+function nearAskOpen(typed, cands){
+  var el=document.getElementById('nearSplash'); if(!el||!el.classList.contains('hidden')) return;
+  document.getElementById('nearTitle').textContent=cands.length===1?('Are you '+cands[0].yourName+'?'):'Are you one of these?';
+  document.getElementById('nearWho').textContent='“'+typed+'” isn’t on a roster, but this is:';
+  var pick=document.getElementById('nearPick'); pick.innerHTML='';
+  cands.forEach(function(c){
+    var b=document.createElement('button'); b.className='primary';
+    b.innerHTML='<b>'+esc(c.yourName)+'</b><small>'+esc(c.yourTeam||'')+(c.name?' · '+esc(c.name):'')+'</small>';
+    b.onclick=function(){
+      el.classList.add('hidden');
+      try{ if(typed&&typed!==c.yourName&&roster.indexOf(typed)>=0&&roster.indexOf(c.yourName)<0) renamePlayer(typed,c.yourName); }catch(e){}
+      LG.me=c.yourName; try{ setMyName(c.yourName); }catch(e){}
+      var rec=lgAttachFound(c); saveLeague(); renderLeagueUI();
+      try{ openLeagueCard(); lgHint('✓ You’re '+shortName(c.yourName)+' on '+(c.yourTeam||c.name)+'. One e-mail makes it official.'); }catch(e){}
+    };
+    pick.appendChild(b);
+  });
+  el.classList.remove('hidden');
+}
+document.getElementById('nearNo').onclick=function(){
+  document.getElementById('nearSplash').classList.add('hidden');
+  LG.nearNo=LG.nearNo||{}; LG.nearNo[String(LG.me||'').toLowerCase()]=1; saveLeague();
+};
 function lgAttachFound(Lg){
   if(!Lg||!Lg.id) return null;
   var rec=lgAdopt(Lg,true);
@@ -6971,6 +7017,7 @@ document.getElementById('neGo').onclick=function(){
   lgEndTournament(function(msg,final){ lgHint(msg);
     if(final){ LG.on=false; saveLeague(); renderLeagueUI(); } });
 };
+document.getElementById('lgEndNight').onclick=function(){ var tn=lgTourn(); if(tn) nightEndOpen(tn); };
 document.getElementById('lgDone').onclick=function(){
   lgWaitStop(); document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 // (2026-08-31, Nathan: "collapsing League Options makes the dropdowns above
@@ -7403,7 +7450,8 @@ function renderStats(tab){
       }
       html+='<div class="stSeason">'+esc(s.name)+' <span>'+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'now')+' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')+'</span></div>';
       var open=lgTourn();
-      if(live&&open){ mail.style.display=''; mail.innerHTML='🏁 End Tournament<span class="mi"> &amp; E-mail</span>'; mail.dataset.act='end'; }
+      // (2026-09-02, Nathan) ending the night lives on the League card, not here
+      if(live&&open){ mail.style.display='none'; }
       else if(live){ var lastT=s.tournaments[s.tournaments.length-1]; if(lastT&&league.id){ mail.style.display=''; mail.innerHTML=lastT.mailed?'📧 Re-send<span class="mi"> Last</span> Report':'📧 Send<span class="mi"> Last</span> Report'; mail.dataset.act='resend'; } }
       html+=lgTablesHTML(lgStandings(lgSeasonMatches(s)), 'Season');
       html+='<div class="stH">Tournaments</div>';
