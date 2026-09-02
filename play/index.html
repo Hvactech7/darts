@@ -2921,15 +2921,15 @@ async function shareGo(){
       // it (the share code was the vouch) — adopt it here so the reports and the
       // team list follow (Nathan, 2026-08-26).
       if(r.league && r.league.id && !(league&&league.id)){
-        lgAdopt(r.league, true);
-        LG.on=true; saveLeague(); renderLeagueUI();
-        shareMsg('Added — and you are now in '+(r.league.name||'their league')+'.');
+        var _rec=lgAdopt(r.league, true);
+        lgAutoOn(_rec); saveLeague(); renderLeagueUI();       // League On only if a night is open (3.0 rule)
+        shareMsg('Added — and you are now in '+(r.league.name||'their league')+'.'+(LG.on?' League is On for tonight.':''));
+        if(r.verified===false) relayBackup({op:'maglink',email:lgEmail()}).catch(function(){});
       }else if(r.data.league && r.data.league.name && !(league&&league.id)){
-        // The library came from a league but we could not be put in it — the
-        // only way in is an address the Pi has confirmed. Say so plainly
-        // instead of quietly handing over just the players.
+        // The library came from a league but this phone has no e-mail yet —
+        // the share code is the vouch, the e-mail is the identity it vouches for.
         shareMsg('Added. This library belongs to '+r.data.league.name
-                 +' — put your e-mail in the box above and tap Back up to join it.');
+                 +' — put your e-mail in the box above, then enter the code once more to join it.');
       }
       // Only ask when the library actually brought someone. Re-taking the same
       // code adds nothing, and asking "are you already in here?" again — after
@@ -2947,7 +2947,10 @@ document.getElementById('qrBig').onclick=function(){ this.classList.remove('show
 document.getElementById('shareOfferBtn').onclick=shareOffer;
 document.getElementById('shareTakeBtn').onclick=shareTakeToggle;
 document.getElementById('shareGoBtn').onclick=shareGo;
-(function(){ const em=localStorage.getItem(LS_BKEMAIL); if(em) document.getElementById('bkEmail').value=em; })();
+// (2026-09-02) LS_BKEMAIL is declared further down (a hoisted var, still
+// undefined here) — this read used the key name `undefined`, so the box never
+// pre-filled and everyone retyped their address for Back up and Restore.
+(function(){ var em=''; try{ em=localStorage.getItem('darts_backup_email_v1')||''; }catch(e){} if(em) document.getElementById('bkEmail').value=em; })();
 
 //============================ STATS LEDGER ============================
 var LS_STATS='darts_stats_v1';
@@ -3168,7 +3171,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.07';
+var DK_VER='3.08';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6304,7 +6307,11 @@ function lgCall(msg, hint){
       // adopted it, and pressing Create again said the name was already taken —
       // by her (2026-08-26).
       return new Promise(function(resolve){
-        _lgPendingAction=function(){ lgCall(msg,hint).then(resolve, function(){ resolve({ok:false,pending:true}); }); };
+        // (2026-09-02) remembered on disk too: if this app instance is gone by
+        // the time the link is tapped (auto-update reload, iPad killed it), the
+        // next open finishes the job instead of leaving a dead form
+        try{ LG.pending={msg:msg, at:Date.now()}; saveLeague(); }catch(e){}
+        _lgPendingAction=function(){ try{ LG.pending=null; saveLeague(); }catch(e){} lgCall(msg,hint).then(resolve, function(){ resolve({ok:false,pending:true}); }); };
         relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
           if(v&&v.ok){
             document.getElementById('lgVerifyRow').style.display='flex';
@@ -6317,8 +6324,26 @@ function lgCall(msg, hint){
       });
     }
     if(r&&r.testMuted) hint('Preview build — the relay refuses league changes from here.');
+    if(r&&r.ok&&LG.pending&&LG.pending.msg&&LG.pending.msg.op===msg.op){ try{ LG.pending=null; saveLeague(); }catch(e){} }
     return r;
   });
+}
+// Finish what a confirmation link was holding up, on whatever open comes next.
+function lgResumePending(){
+  var pnd=LG.pending; if(!pnd||!pnd.msg||!pnd.msg.op) return;
+  if(Date.now()-(pnd.at||0)>86400000){ LG.pending=null; saveLeague(); return; }
+  if(!lgEmail()||navigator.onLine===false) return;
+  relayBackup({op:'verified',email:lgEmail()}).then(function(v){
+    if(!(v&&v.ok&&v.verified)) return;
+    LG.pending=null; saveLeague();
+    relayLeague(pnd.msg).then(function(r){
+      if(r&&r.ok&&r.league){
+        var rec=lgAdopt(r.league,true); _lgAddOpen=false; lgAutoOn(rec); saveLeague(); renderLeagueUI();
+        try{ if(document.getElementById('leagueCard').classList.contains('hidden')) openLeagueCard(); }catch(e){}
+        lgHint('✓ E-mail confirmed — '+(pnd.msg.op==='create'?'your league '+r.league.name+' is created.':'you’re in '+r.league.name+'.'));
+      } else if(r&&r.error&&!r.needVerify){ lgHint(r.error); }
+    }).catch(function(){});
+  }).catch(function(){});
 }
 // Union merge, same rule as the Pi: by id at every level, end/mailed flags
 // only ever turn on, matches never removed. Merging INTO the local objects
@@ -6886,6 +6911,7 @@ function lgMyOkTeam(){
 function openLeagueCard(){
   _lgAddOpen=false; _lgToolsOpen=false;          // the drawer never opens itself
   if(!league.id) lgLoadLeagues();
+  try{ lgResumePending(); }catch(e){}
   if(!league.id && LG.me){                       // does my name already belong to a league?
     lgHint('Looking for your league\u2026');
     lgFindMine(LG.me).then(function(Lg){ if(Lg){ lgAttachFound(Lg); lgHint(''); } else lgHint(''); });
@@ -7727,6 +7753,7 @@ try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
 // name but never joined a league asks the relay, once online, whether that
 // name sits on a team somewhere — and attaches in the background if so.
 setTimeout(function(){ try{ if(LG.me && !(league&&league.id) && navigator.onLine!==false) lgFindMine(LG.me).then(function(Lg){ if(Lg&&!(league&&league.id)) lgAttachFound(Lg); }); }catch(e){} }, 4000);
+setTimeout(function(){ try{ lgResumePending(); }catch(e){} }, 2500);
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
 // Shown the first time the app is opened IN A BROWSER. Android/Chrome can do
