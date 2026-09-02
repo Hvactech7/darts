@@ -652,6 +652,17 @@
   #tonSplash.bad .tsRing{border-color:#e8604f;}
   #tonSplash.bad .tsRing.r2{border-color:#ffb3a6;}
   #tonSplash.bad .tsRays{opacity:0 !important;}
+  /* (2026-09-01, Nathan) EVERY 01 turn flashes what it was — the score, MISS, or
+     BUST — for 2.2 s. No burst, no rays: just the word, big, then gone. Tons keep
+     their own celebration. */
+  #tonSplash.plain .tsBurst,#tonSplash.plain .tsRays,#tonSplash.plain .tsRing{display:none;}
+  #tonSplash.plain .tsNum{font-size:min(30vw,260px);letter-spacing:4px;white-space:nowrap;
+    transform:scale(.6);animation:tsFlash 2.2s ease-out forwards;
+    text-shadow:0 6px 0 #000,0 0 30px rgba(255,255,255,.55),0 0 90px rgba(255,205,90,.35);}
+  #tonSplash.plain .tsSub{display:none;}
+  #tonSplash.plain.miss .tsNum{color:#ff9d8f;text-shadow:0 6px 0 #000,0 0 40px rgba(232,96,79,.9),0 0 110px rgba(190,40,30,.55);}
+  @keyframes tsFlash{0%{opacity:0;transform:scale(.6)}10%{opacity:1;transform:scale(1.08)}18%{transform:scale(1)}
+    80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.04)}}
   @keyframes tsBurst{0%{transform:translate(-50%,-50%) scale(.1);opacity:0}
     12%{opacity:1}35%{opacity:.55}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
   @keyframes tsRays{0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)}
@@ -3073,7 +3084,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.0';
+var DK_VER='3.1';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4163,10 +4174,23 @@ function checkCricketWin(){
 // 100 flashes TON, 101+ flashes the number itself. Three seconds, then gone.
 // It never blocks a tap (pointer-events:none) so play carries straight on.
 var _tsTimer=null;
+// Every 01 turn shows what it was worth — the score, MISS or BUST — for 2.2 s
+// (Nathan, 9/1). Same element as the ton splash, none of its fireworks.
+function scoreFlash(text, miss){
+  var el=document.getElementById('tonSplash'); if(!el) return;
+  var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
+  el.classList.remove('bad','ckhit','miss');
+  el.classList.add('plain'); if(miss) el.classList.add('miss');
+  num.textContent=String(text); sub.textContent='';
+  el.classList.remove('show'); void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_tsTimer);
+  _tsTimer=setTimeout(function(){ el.classList.remove('show','plain','miss'); }, 2200);
+}
 function tonSplash(n){
   var el=document.getElementById('tonSplash'); if(!el) return;
   var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
-  el.classList.remove('bad','ckhit');
+  el.classList.remove('bad','ckhit','plain','miss');
   num.textContent = (n===100) ? 'TON' : String(n);
   sub.textContent = (n===180) ? 'Maximum!' : (n===100 ? '' : 'Ton ' + (n-100) + '!');
   el.classList.remove('show'); void el.offsetWidth;          // replay it back-to-back
@@ -4244,7 +4268,7 @@ function ckHitSplash(n){
   var el=document.getElementById('tonSplash'); if(!el) return;
   document.getElementById('tsNum').textContent=n+'-HIT';
   document.getElementById('tsSub').textContent=(n===9)?'Perfect Round':'';
-  el.classList.remove('bad'); el.classList.add('ckhit');
+  el.classList.remove('bad','plain','miss'); el.classList.add('ckhit');
   el.classList.remove('show'); void el.offsetWidth;
   el.classList.add('show');
   clearTimeout(_tsTimer);
@@ -4253,6 +4277,7 @@ function ckHitSplash(n){
 function lifeSplash(name, left){
   var el=document.getElementById('tonSplash'); if(!el) return;
   var num=document.getElementById('tsNum'), sub=document.getElementById('tsSub');
+  el.classList.remove('ckhit','plain','miss');
   num.textContent='LOST A LIFE';
   sub.textContent=shortName(name)+' — '+(left===1?'1 life left':left+' lives left');
   el.classList.add('bad');
@@ -4269,6 +4294,7 @@ function commitTurn(){
   // what this turn was worth, before the turn is handed on (0 on a bust)
   const _tsPts=(!G.isCricket&&!G.isX&&!G.isFat6)?(G.turnStartScore-t.score):0;
   const _ckM=G.isCricket?G.darts.reduce(function(a,d){return a+(d.ckm||0);},0):0;
+  const _x01=(!G.isCricket&&!G.isX&&!G.isFat6), _bust=_x01&&G.darts.some(function(d){return d&&d.bust;});
   if(G.isX) xTurnSettle();
   // record this turn's points scored (0 on a bust) for 01 games
   if(!G.isCricket && !G.isX){ t.history.push(G.turnStartScore - t.score); }
@@ -4292,6 +4318,7 @@ function commitTurn(){
   G.turnStartOpened=curTeam().opened;
   renderGame();
   if(_tsPts>=100) tonSplash(_tsPts);
+  else if(_x01) scoreFlash(_bust?'BUST':(_tsPts>0?_tsPts:'MISS'), _bust||_tsPts<=0);
   else if(G.isCricket && _ckM>=5) ckHitSplash(_ckM);
 }
 
