@@ -1057,9 +1057,9 @@
   .lgReq button.primary{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}   /* no rivets — they sit under the letters on a phone (outranks the riveted rule below) */
   .lgWait{font-size:13px;color:#a3906a;margin:6px 2px 4px;line-height:1.4;}
   .librow .pendtag{font-size:12px;font-weight:400;color:#e8c876;white-space:nowrap;margin-left:8px;vertical-align:middle;}
-  #lgInviteCode{margin-top:10px;text-align:center;padding:12px;border:1px solid #c9a75a;border-radius:10px;background:rgba(0,0,0,.3);}
-  #lgInviteCode b{display:block;font-family:var(--num);font-size:44px;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);}
-  #lgInviteCode small{display:block;color:#a3906a;font-size:13px;margin-top:4px;line-height:1.4;}
+  #lgInviteCode,#lgTeamCodeBox{margin-top:10px;text-align:center;padding:12px;border:1px solid #c9a75a;border-radius:10px;background:rgba(0,0,0,.3);}
+  #lgInviteCode b,#lgTeamCodeBox b{display:block;font-family:var(--num);font-size:44px;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);}
+  #lgInviteCode small,#lgTeamCodeBox small{display:block;color:#a3906a;font-size:13px;margin-top:4px;line-height:1.4;}
   #lgBtns{display:flex;gap:10px;margin-top:14px;}
   #lgBtns button{flex:1;font-size:20px;padding:12px;}
   /* between legs: "Austin 2 – 1 Ben" under the leg winner */
@@ -1947,7 +1947,15 @@
             <div class="lgSeasonLine" id="lgAttachLine"></div>
             <div class="row"><input type="text" id="lgAttachEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"><button class="primary" id="lgAttachGo">Make it official</button></div>
           </div>
-          <div class="row lgSeasonBtns" id="lgInviteRowMain"><button class="primary grow" id="lgInvite">👤 Invite a member</button></div>
+          <!-- (2026-09-01, Nathan) In the league but on no team yet: pick the
+               team, prove it with a code from one of its members — accepted on
+               the spot. Members of a team (and the head) hand out its code. -->
+          <div id="lgTeamRow" style="display:none;margin-top:8px;">
+            <div class="row lgMeRow"><span class="lgMeLbl">Team</span><select id="lgPickTeam" class="grow"><option value="">— pick your team —</option></select></div>
+            <div class="row" style="margin-top:6px;"><input type="text" id="lgTeamCode" class="grow" placeholder="6-digit code from a team member" inputmode="numeric" maxlength="7"><button class="accent" id="lgTeamJoin">Join team</button></div>
+          </div>
+          <div class="row lgSeasonBtns" id="lgInviteRowMain"><button class="primary grow" id="lgInvite">👤 Invite a member</button><button class="accent grow" id="lgTeamCodeBtn" style="display:none;">🔑 Team code</button></div>
+          <div id="lgTeamCodeBox" style="display:none;"></div>
           <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
         </div>
@@ -1970,9 +1978,14 @@
         </div>
       </div>
       <div id="lgNoLeague">
-        <div class="row" style="margin-top:10px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
-        <div class="row" style="margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="New league name" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
-        <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit join code" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
+        <!-- (2026-09-01, Nathan) A new player picks their league from EVERY
+             league in Dart Keeper, then proves it with a code from a member.
+             The code is accepted on the spot — the e-mail must be typed, not
+             yet confirmed. -->
+        <div class="row lgMeRow" style="margin-top:10px;"><span class="lgMeLbl">League</span><select id="lgPickLeague" class="grow"><option value="">— pick your league —</option></select></div>
+        <div class="row" style="margin-top:8px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
+        <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit code from a member" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
+        <div class="row" id="lgCreateRow" style="margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="…or start a new league" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
         <div class="row" id="lgVerifyRow" style="display:none;margin-top:8px;align-items:center;gap:10px;">
           <span class="grow small" id="lgVerifyWait">📧 Waiting for you to tap the link…</span>
           <button class="ghost" id="lgVerifyResend">Send it again</button>
@@ -3084,7 +3097,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.1';
+var DK_VER='3.2';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6566,6 +6579,15 @@ function renderLeagueUI(){
     rq.innerHTML=(rows.length?'<div class="lgListHead">Requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
   }
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
+  // in the league but on no team: pick one and prove it with a team code
+  var tr=document.getElementById('lgTeamRow'), tp=document.getElementById('lgPickTeam'), tcb=document.getElementById('lgTeamCodeBtn');
+  if(tr&&tp&&tcb){
+    var _myTeam=lgMyOkTeam(), _isMember=inL&&!lgIsAttachedOnly(), _tnames=Object.keys(league.teams||{}).sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
+    tr.style.display=(_isMember&&!_myTeam&&_tnames.length)?'':'none';
+    if(document.activeElement!==tp){ var _keep=tp.value; tp.innerHTML='<option value="">— pick your team —</option>'+_tnames.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join(''); if(_keep) tp.value=_keep; }
+    tcb.style.display=(_isMember&&_myTeam)?'':'none';
+    if(!inL) document.getElementById('lgTeamCodeBox').style.display='none';
+  }
   var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
   if(line){
     if(!s) line.textContent='No season yet — Set Season names one and gives it dates.';
@@ -6677,8 +6699,29 @@ function lgAttach(){
     } else if(r&&!r.pending) lgHint((r&&r.error)||'Could not attach.');
   }).catch(function(){ lgHint('Could not connect \u2014 check your signal and try again.'); });
 }
+// Every league in Dart Keeper, for the pick-a-league dropdown (9/1, Nathan).
+var _lgAllLeagues=[];
+function lgLoadLeagues(){
+  var sel=document.getElementById('lgPickLeague'); if(!sel) return;
+  relayLeague({op:'list'}).then(function(r){
+    _lgAllLeagues=(r&&r.ok&&r.leagues)||[];
+    var keep=sel.value;
+    sel.innerHTML='<option value="">'+(_lgAllLeagues.length?'— pick your league —':'— no leagues yet —')+'</option>'
+      +_lgAllLeagues.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+' · '+x.teams.length+' team'+(x.teams.length===1?'':'s')+'</option>'; }).join('');
+    if(keep) sel.value=keep;
+  }).catch(function(){});
+}
+function lgPickedLeague(){ var sel=document.getElementById('lgPickLeague'); var id=sel?sel.value:''; return _lgAllLeagues.find(function(x){ return x.id===id; })||null; }
+// My approved team in the active league, if any.
+function lgMyOkTeam(){
+  if(!league||!league.id||!LG.me) return '';
+  var teams=league.teams||{}, hit='';
+  Object.keys(teams).forEach(function(tm){ var e=(teams[tm]||{})[LG.me]; if(e&&e.st==='ok') hit=tm; });
+  return hit;
+}
 function openLeagueCard(){
   _lgAddOpen=false; _lgToolsOpen=false;          // the drawer never opens itself
+  if(!league.id) lgLoadLeagues();
   if(!league.id && LG.me){                       // does my name already belong to a league?
     lgHint('Looking for your league\u2026');
     lgFindMine(LG.me).then(function(Lg){ if(Lg){ lgAttachFound(Lg); lgHint(''); } else lgHint(''); });
@@ -6854,13 +6897,54 @@ document.getElementById('lgCreate').onclick=function(){
 };
 document.getElementById('lgJoin').onclick=function(){
   if(!lgReadEmail()) return;
+  var pick=lgPickedLeague();                     // the dropdown is a guide — a bare code still names its league
   var code=(document.getElementById('lgJoinCode').value||'').replace(/\D/g,'');
-  if(code.length!==6){ lgHint('A join code is 6 digits.'); return; }
+  if(code.length!==6){ lgHint('A join code is 6 digits — ask a member of '+(pick?pick.name:'the league')+'.'); return; }
   lgHint('Joining…');
-  lgCall({op:'join',code:code},lgHint).then(function(r){
-    if(r&&r.ok&&r.league){ var rec=lgAdopt(r.league,true); _lgAddOpen=false; lgAutoOn(rec); renderLeagueUI(); document.getElementById('lgJoinCode').value=''; lgHint('✓ You’re in '+r.league.name+' — it’s now the active league.'+(LG.on?' League is On for tonight.':'')); }
-    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not join.');
+  // straight to the relay: the code is the validation, the e-mail's
+  // confirmation link goes out afterwards and never holds this up
+  relayLeague({op:'join',code:code,league:pick?pick.id:undefined}).then(function(r){
+    if(r&&r.ok&&r.league){
+      var rec=lgAdopt(r.league,true); _lgAddOpen=false; lgAutoOn(rec); renderLeagueUI(); document.getElementById('lgJoinCode').value='';
+      lgHint('✓ You’re in '+r.league.name+'.'+(lgMyOkTeam()?'':' Now pick your team.')+(LG.on?' League is On for tonight.':''));
+      if(r.verified===false) relayBackup({op:'maglink',email:lgEmail()}).catch(function(){});   // ownership of the e-mail, for later
+    }
+    else if(r&&r.testMuted) lgHint('Preview build — the relay refuses league changes from here.');
+    else lgHint((r&&r.error)||'Could not join.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
+};
+document.getElementById('lgTeamJoin').onclick=function(){
+  var team=document.getElementById('lgPickTeam').value;
+  if(!team){ lgHint('Pick your team first.'); return; }
+  if(!LG.me){ lgHint('Pick your name first.'); return; }
+  var code=(document.getElementById('lgTeamCode').value||'').replace(/\D/g,'');
+  if(code.length!==6){ lgHint('A team code is 6 digits — ask someone on '+team+'.'); return; }
+  lgHint('Joining '+team+'…');
+  relayLeague({op:'teamjoin',league:league.id,code:code,team:team,me:LG.me}).then(function(r){
+    if(r&&r.ok&&r.league){
+      lgAdopt(r.league,true); league.myTeam=r.team||team;
+      try{ setPlayerTeam(LG.me,r.team||team); }catch(e){}
+      document.getElementById('lgTeamCode').value=''; renderLeagueUI();
+      lgHint('✓ You’re on '+(r.team||team)+' as '+shortName(LG.me)+'.');
+      lgSync(function(){ renderLeagueUI(); });
+    }
+    else if(r&&r.testMuted) lgHint('Preview build — the relay refuses league changes from here.');
+    else lgHint((r&&r.error)||'Could not join the team.');
+  }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
+};
+document.getElementById('lgTeamCodeBtn').onclick=function(){
+  var team=lgMyOkTeam();                        // only a member of the team hands out its code (Nathan, 9/1)
+  if(!team){ lgHint('You’re not on a team yet.'); return; }
+  var box=document.getElementById('lgTeamCodeBox');
+  if(box.style.display!=='none'){ box.style.display='none'; return; }
+  lgHint('Making a '+team+' code…');
+  lgCall({op:'teamcode',league:league.id,team:team,me:LG.me},lgHint).then(function(r){
+    if(r&&r.ok&&r.code){
+      box.style.display='';
+      box.innerHTML='<b>'+r.code.slice(0,3)+' '+r.code.slice(3)+'</b><small>'+esc(r.team)+' — give this to the new teammate. It works once, for 48 hours.</small>';
+      lgHint('');
+    } else if(r&&!r.pending) lgHint((r&&r.error)||'Could not make a code.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
 document.getElementById('lgVerifyResend').onclick=function(){
   lgHint('Sending another link…');
