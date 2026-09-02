@@ -2233,6 +2233,14 @@
 const LS_PLAYERS='darts_players_v1';
 const LS_TEAMS='darts_teams_v1';
 const LS_PTEAMS='darts_player_teams_v1';
+// (2026-09-02, Nathan) Deleting a player is THIS device's choice: the league
+// keeps them, every other device keeps them, but here they stay gone — through
+// league syncs and through backup/restore. A tombstone per name does it; adding
+// the name back lifts it. Their local stats are kept, hidden, not destroyed.
+const LS_HIDDEN='darts_hidden_players_v1';
+let hiddenPlayers=(function(){ try{ const v=JSON.parse(localStorage.getItem(LS_HIDDEN)); return (v&&typeof v==='object'&&!Array.isArray(v))?v:{}; }catch(e){ return {}; } })();
+function saveHidden(){ try{ localStorage.setItem(LS_HIDDEN,JSON.stringify(hiddenPlayers)); }catch(e){} bkQueue(); }
+function isHidden(n){ return !!hiddenPlayers[String(n||'').trim()]; }
 let roster=loadRoster();            // array of names
 let teamLib=loadTeams();             // array of team names
 let playerTeams=loadPlayerTeams();   // { playerName: teamName }
@@ -2566,11 +2574,13 @@ function setPlayerTeam(name,team){
 function addPlayer(name){
   name=name.trim();
   if(!name)return;
+  Object.keys(hiddenPlayers).forEach(function(h){ if(h.toLowerCase()===name.toLowerCase()){ delete hiddenPlayers[h]; saveHidden(); } });
   if(roster.some(p=>p.toLowerCase()===name.toLowerCase()))return;
   roster.push(name);saveRoster();renderColumns();renderLibrary();
 }
 function removePlayer(name){
   roster=roster.filter(p=>p!==name);
+  hiddenPlayers[name]=Date.now(); saveHidden();   // stays gone on this device, whatever syncs or restores
   delete playerTeams[name]; savePlayerTeams();
   if(playerEmails[name]!==undefined){ delete playerEmails[name]; savePlayerEmails(); }
   teamSel=teamSel.map(arr=>arr.filter(n=>n!==name));
@@ -2836,7 +2846,7 @@ function shareMergeIn(d){
   const have=new Set(roster.map(n=>n.toLowerCase()));
   (d.players||[]).forEach(n=>{
     n=String(n||'').trim().slice(0,40);
-    if(n && !have.has(n.toLowerCase())){ roster.push(n); have.add(n.toLowerCase()); added++; }
+    if(n && !isHidden(n) && !have.has(n.toLowerCase())){ roster.push(n); have.add(n.toLowerCase()); added++; }
   });
   (d.teams||[]).forEach(t=>{ t=String(t||'').trim().slice(0,40);
     if(t && !teamLib.some(x=>x.toLowerCase()===t.toLowerCase())) teamLib.push(t); });
@@ -3097,7 +3107,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.2';
+var DK_VER='3.3';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3176,7 +3186,7 @@ var LS_BKEMAIL='darts_backup_email_v1';
 var LS_BKFP='darts_backup_fp_v1';
 var bkTimer=null;
 function bkPayload(){
-  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, groups:groupLib, stats:statsLib,
+  return {players:roster, teams:teamLib, pteams:playerTeams, duoTeams:duoTeams, pemails:playerEmails, groups:groupLib, stats:statsLib, hidden:hiddenPlayers,
           league:{on:!!LG.on, active:LG.active||null, list:LG.list.map(function(x){return {id:x.id,name:x.name};})}, fat6:f6log, v:1};
 }
 function bkFingerprint(){ return JSON.stringify(bkPayload()); }
@@ -3261,7 +3271,9 @@ async function bkRestore(){
     if(!(r&&r.ok&&r.data)){ bkMsg((r&&r.error)||'Restore failed.'); return; }
     const d=r.data;
     let added=0;
-    (d.players||[]).forEach(n=>{ if(n&&!roster.includes(n)){ roster.push(n); added++; } });
+    Object.keys(d.hidden||{}).forEach(n=>{ if(n&&!hiddenPlayers[n]) hiddenPlayers[n]=+d.hidden[n]||Date.now(); });
+    (d.players||[]).forEach(n=>{ if(n&&!isHidden(n)&&!roster.includes(n)){ roster.push(n); added++; } });
+    roster=roster.filter(n=>!isHidden(n)); saveHidden();
     (d.teams||[]).forEach(t=>{ if(t&&!teamLib.includes(t)) teamLib.push(t); });
     Object.assign(playerTeams, d.pteams||{});
     Object.assign(playerEmails, d.pemails||{}); savePlayerEmails();
@@ -6310,6 +6322,7 @@ function lgPlayersIntoLibrary(rec){
       Object.keys(tms[t]||{}).forEach(function(p){
         if(((tms[t][p]||{}).st)!=='ok') return;
         p=String(p||'').trim().slice(0,40); if(!p) return;
+        if(isHidden(p)) return;                       // deleted here on purpose — the league keeps them, this device doesn't
         if(!roster.some(function(x){ return x.toLowerCase()===p.toLowerCase(); })){ roster.push(p); ch=true; }
         if(!teamOfPlayer(p)){ playerTeams[p]=t; chT=true; }
       });
@@ -6871,7 +6884,13 @@ document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpe
 var _lgToolsOpen=false;
 document.getElementById('lgToolsToggle').onclick=function(){ _lgToolsOpen=!_lgToolsOpen; renderLeagueUI(); lgTapShield(); };
 
-document.getElementById('lgMe').onchange=function(){ LG.me=this.value||''; saveLeague(); renderLeagueUI(); lgSync(function(){ renderLeagueUI(); }); };
+document.getElementById('lgMe').onchange=function(){
+  var was=LG.me; LG.me=this.value||''; saveLeague(); renderLeagueUI();
+  // one device, one name (Nathan, 9/2): taking a new name lets the old one go
+  lgSync(function(){ renderLeagueUI();
+    if(was&&LG.me&&was!==LG.me&&league.id&&lgClaimState(LG.me)==='ok'&&lgClaimOwner(league,was)!==lgEmail())
+      lgHint('✓ You’re '+shortName(LG.me)+' now — '+shortName(was)+' is free again.'); });
+};
 document.getElementById('lgRequests').addEventListener('click',function(e){
   var c=e.target.closest('button[data-cok]');
   if(c){ lgClaimDecision(c.dataset.player,c.dataset.who,c.dataset.cok==='1'); return; }
