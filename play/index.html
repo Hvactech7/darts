@@ -3107,7 +3107,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.3';
+var DK_VER='3.4';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6588,6 +6588,14 @@ function renderLeagueUI(){
     Object.keys(teams).forEach(function(tm){ Object.keys(teams[tm]||{}).forEach(function(pl){ var e=teams[tm][pl]; if(!e||e.st!=='pending') return;
       if(lgCanApprove(league,tm)) rows.push('<div class="lgReq"><span class="who"><b>'+esc(shortName(pl))+'</b> wants to join <b>'+esc(tm)+'</b></span><button class="primary" data-ok="1" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Approve</button><button class="warn" data-ok="0" data-team="'+esc(tm)+'" data-player="'+esc(pl)+'">Decline</button></div>');
       else if(roster.indexOf(pl)>=0) waiting.push('⏳ '+shortName(pl)+' is waiting for a '+tm+' member to approve'); }); });
+    // (9/2) a phone that typed its way in under one of OUR names: provisional
+    // for 48 h — a teammate or the head boots it with one tap
+    var _cl2=lgClaims(league), _isHead=(league.creator===lgEmail()||league.head===lgEmail());
+    Object.keys(_cl2).forEach(function(pl){ var c=_cl2[pl]; if(!c||!c.prov||c.email===lgEmail()) return;
+      var tm=lgTeamOfRoster(league,pl);
+      if(_isHead||(tm&&lgIsOkMember(league,tm,LG.me)))
+        rows.push('<div class="lgReq"><span class="who">📱 A new phone joined as <b>'+esc(shortName(pl))+'</b>'+(tm?' ('+esc(tm)+')':'')+'<br><small>'+esc(c.email)+' · permanent in '+Math.max(1,Math.round((c.prov-Date.now()/1000)/3600))+' h unless booted</small></span>'
+          +'<button class="warn" data-boot="'+esc(c.email)+'" data-player="'+esc(pl)+'">Boot</button></div>'); });
     var held=lgHeldCount(league);
     rq.innerHTML=(rows.length?'<div class="lgListHead">Requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
   }
@@ -6698,6 +6706,14 @@ function lgRehomeLocal(rec){
     if(moved){ LG.local.seasons=[]; saveLeague(); }
     return moved;
   }catch(e){ return 0; }
+}
+function lgTeamOfRoster(rec,player){ var t=(rec&&rec.teams)||{}, hit=''; Object.keys(t).forEach(function(tm){ if((t[tm]||{})[player]) hit=tm; }); return hit; }
+function lgBoot(who,player){
+  lgHint('Booting…');
+  lgCall({op:'boot',league:league.id,who:who,me:LG.me},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ That phone is out — '+shortName(player)+' is free again.'); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not boot that device.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
 }
 function lgIsAttachedOnly(){ return !!(league&&league.id&&(league.members||[]).indexOf(lgEmail())<0); }
 function lgAttach(){
@@ -6892,6 +6908,8 @@ document.getElementById('lgMe').onchange=function(){
       lgHint('✓ You’re '+shortName(LG.me)+' now — '+shortName(was)+' is free again.'); });
 };
 document.getElementById('lgRequests').addEventListener('click',function(e){
+  var bt=e.target.closest('button[data-boot]');
+  if(bt){ lgBoot(bt.dataset.boot,bt.dataset.player); return; }
   var c=e.target.closest('button[data-cok]');
   if(c){ lgClaimDecision(c.dataset.player,c.dataset.who,c.dataset.cok==='1'); return; }
   var b=e.target.closest('button[data-team]'); if(!b) return;
