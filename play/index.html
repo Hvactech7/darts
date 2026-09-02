@@ -1057,6 +1057,8 @@
   .lgReq button.primary{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}   /* no rivets — they sit under the letters on a phone (outranks the riveted rule below) */
   .lgWait{font-size:13px;color:#a3906a;margin:6px 2px 4px;line-height:1.4;}
   .librow .pendtag{font-size:12px;font-weight:400;color:#e8c876;white-space:nowrap;margin-left:8px;vertical-align:middle;}
+  .pcLive{font-size:.7em;color:#9fd0ff;letter-spacing:.06em;text-transform:uppercase;margin-left:4px;}
+  tr.pcAll td{border-top:1px solid #6b5f45;font-weight:700;}
   #lgInviteCode,#lgTeamCodeBox{margin-top:10px;text-align:center;padding:12px;border:1px solid #c9a75a;border-radius:10px;background:rgba(0,0,0,.3);}
   #lgInviteCode b,#lgTeamCodeBox b{display:block;font-family:var(--num);font-size:44px;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);}
   #lgInviteCode small,#lgTeamCodeBox small{display:block;color:#a3906a;font-size:13px;margin-top:4px;line-height:1.4;}
@@ -1973,6 +1975,14 @@
             <button class="accent" id="lgSetSeason" style="width:100%;">📅 Set Season</button>
             <button class="ghost" id="lgSync" style="width:100%;margin-top:8px;">↻ Sync now</button>
             <button class="ghost" id="lgLeave" style="width:100%;margin-top:8px;font-size:14px;padding:8px;opacity:.8;">Leave this league</button>
+            <!-- (2026-09-02, Nathan) the head's broom: remove a device, fold two
+                 names into one, hand the league on. Head only. -->
+            <div id="lgHeadTools" style="display:none;margin-top:12px;">
+              <div class="lgListHead">👑 Head tools</div>
+              <div id="lgHtMembers"></div>
+              <div class="row" style="margin-top:8px;align-items:center;gap:6px;"><select id="lgHtFrom" class="grow"></select><span class="small">into</span><select id="lgHtInto" class="grow"></select><button class="accent" id="lgHtMerge">Merge</button></div>
+              <div class="row" style="margin-top:8px;align-items:center;gap:6px;"><span class="small">Hand the league to</span><select id="lgHtHead" class="grow"></select><button class="warn" id="lgHtHandoff">Hand off</button></div>
+            </div>
             <button class="ghost" id="lgAddToggle" style="width:100%;margin-top:8px;font-size:14px;padding:8px;">+ Create or join another league</button>
           </div>
         </div>
@@ -2960,6 +2970,36 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
 //============================ PLAYER CARD (2026-08-22) ============================
 function pcPct(a,b){ return b?Math.round(100*a/b)+'%':'—'; }
 function pcAvg(a,b,d){ return b?(a/b).toFixed(d==null?1:d):'—'; }
+// (2026-09-02, Nathan) A claimed name sees its LEAGUE stats — this season, every
+// season — on its own device, from the league record that every device syncs
+// into, so matches scored on other phones count. All-time blocks are this
+// device's own history (casual games never leave a phone).
+function pcLeagueRows(name){
+  var rows=[];
+  function rowFor(label, matches, live){
+    var e=lgStandings(matches).players.find(function(x){ return x.name===name; });
+    if(!e||!e.m) return null;
+    return {label:label, live:!!live, m:e.m, mw:e.mw, lw:e.lw, ll:e.ll, avg:(e.dts?(e.pts*3/e.dts).toFixed(1):(e.turns?(e.pts/e.turns).toFixed(1):'—')), best:e.best||'—', t180:e.t180||0};
+  }
+  var recs=(typeof LG!=='undefined')?LG.list.concat([LG.local]):[];
+  var all=[];
+  recs.forEach(function(rec){
+    (rec.seasons||[]).slice().reverse().forEach(function(se){
+      var ms=lgSeasonMatches(se); all=all.concat(ms);
+      var r=rowFor((recs.length>2&&rec.name?rec.name+' · ':'')+(se.name||'Season')+(se.dv?' D'+se.dv:''), ms, rec===league&&se===lgSeason());
+      if(r) rows.push(r);
+    });
+  });
+  var tot=rowFor('All seasons', all);
+  if(tot&&rows.length>1) rows.push(tot);
+  return rows;
+}
+function pcLeagueTable(rows){
+  if(!rows.length) return '';
+  var t='<table class="st pcTab"><tr><th>League</th><th>Matches</th><th>Legs</th><th title="3-dart average, 301/501">Avg</th><th>High</th><th>180s</th></tr>';
+  rows.forEach(function(r){ t+='<tr'+(r.label==='All seasons'?' class="pcAll"':'')+'><td>'+esc(r.label)+(r.live?' <span class="pcLive">live</span>':'')+'</td><td><span class="w">'+r.mw+'</span>–<span class="l">'+(r.m-r.mw)+'</span></td><td>'+r.lw+'–'+r.ll+'</td><td>'+r.avg+'</td><td>'+r.best+'</td><td>'+r.t180+'</td></tr>'; });
+  return t+'</table>';
+}
 function playerCardData(name){
   const s=statsLib[name]||{}; const bg=s.byGame||{};
   const gt=k=>bg[k]||{g:0,w:0};
@@ -3025,7 +3065,12 @@ function openPlayerCard(name){
       : '🔒 '+shortName(name)+' is claimed by '+_by+' — only they (or the league keeper) can change this.';
   document.getElementById('pcEmailSave').textContent='Save';
   let h='';
-  h+=pcSec('Overall', s.g?pcWL({g:s.g,w:s.w||0}):'no games yet',
+  var _lgRows=pcLeagueRows(name);
+  if(_lgRows.length){
+    h+=pcSec('League · every device', '<span style="color:#9fd0ff">'+_lgRows[_lgRows.length-1].mw+'</span>–<span style="color:#ff90a6">'+(_lgRows[_lgRows.length-1].m-_lgRows[_lgRows.length-1].mw)+'</span> matches',
+      pcLeagueTable(_lgRows)+'<div class="pcNote">Every league match '+esc(shortName(name))+' played, whichever phone scored it. Doubles legs credit both partners with the side’s throws.</div>');
+  }
+  h+=pcSec('All time · this device', s.g?pcWL({g:s.g,w:s.w||0}):'no games yet',
     '<div class="pcGrid">'+pcStat(s.g||0,'Games')+pcStat(s.w||0,'Wins')+pcStat(pcPct(s.w||0,s.g||0),'Win rate',null,true)+'</div>');
   h+=pcSec('301 / 501', pcWL(d.x01),
     '<div class="pcGrid">'
@@ -3048,7 +3093,7 @@ function openPlayerCard(name){
   const recTable=(rows,who)=>{ if(!rows.length) return ''; let t='<table class="st pcTab"><tr><th>'+who+'</th><th>Matches</th><th>Legs</th></tr>';
     rows.forEach(e=>{ t+='<tr><td>'+esc(shortName(e.name))+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span> <span class="pcPct">'+pcPct(e.mw,e.m)+'</span></td><td>'+e.lw+'–'+e.ll+'</td></tr>'; });
     return t+'</table>'; };
-  h+=pcSec('League', d.lg.m?('<span style="color:#9fd0ff">'+d.lg.mw+'</span>–<span style="color:#ff90a6">'+(d.lg.m-d.lg.mw)+'</span> matches'):'no league matches',
+  h+=pcSec('League · partners and head to head', d.lg.m?('<span style="color:#9fd0ff">'+d.lg.mw+'</span>–<span style="color:#ff90a6">'+(d.lg.m-d.lg.mw)+'</span> matches'):'no league matches',
     '<div class="pcGrid">'+pcStat(d.lg.m,'Matches')+pcStat(d.lg.m?pcPct(d.lg.mw,d.lg.m):'—','Match win rate',null,true)+pcStat(d.lg.lw+'–'+d.lg.ll,'Legs W–L')+'</div>'
     +(d.partners.length?'<div class="pcSub2">With partners</div>'+recTable(d.partners,'Partner'):'')
     +(d.h2h.length?'<div class="pcSub2">Head to head · singles</div>'+recTable(d.h2h,'Opponent'):'')
@@ -3107,7 +3152,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.4';
+var DK_VER='3.05';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6337,6 +6382,8 @@ function lgAdopt(Lg, makeActive){
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
+  if(Lg.head) rec.head=Lg.head;
+  try{ lgApplyRenames(rec, Lg.renames); }catch(e){}
   if(Array.isArray(Lg.dead)) rec.dead=Lg.dead.slice(0,50);
   lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
   lgPlayersIntoLibrary(rec);        // ...and so do the people ON them (else their e-mails have nowhere to land)
@@ -6378,7 +6425,9 @@ function lgSync(cb){ lgSyncOne(league&&league.id?league:null, cb); }          //
 function lgTeamEntry(rec,name){ var t=(rec&&rec.teams)||{}; for(var k in t){ if(t[k]&&t[k][name]) return {team:k,st:t[k][name].st}; } return null; }
 function lgPlayerPending(rec,name){ var e=lgTeamEntry(rec,name); return !!(e&&e.st==='pending'); }
 function lgIsOkMember(rec,team,name){ var t=(rec&&rec.teams)||{}; return !!(name&&t[team]&&t[team][name]&&t[team][name].st==='ok'); }
-function lgCanApprove(rec,team){ return !!rec&&((rec.creator&&rec.creator===lgEmail())||lgIsOkMember(rec,team,LG.me)); }
+function lgHeadEmail(rec){ return (rec&&(rec.head||rec.creator))||''; }
+function lgIsHead(rec){ return !!rec&&!!lgHeadEmail(rec)&&lgHeadEmail(rec)===lgEmail(); }
+function lgCanApprove(rec,team){ return !!rec&&(lgIsHead(rec)||lgIsOkMember(rec,team,LG.me)); }
 function lgAssignments(){ var a={}; roster.forEach(function(n){ var t=teamOfPlayer(n); if(t) a[n]=t; }); return a; }
 // Player-Card e-mails for the push: every stamped entry, blanks included (a
 // cleared address has to reach the other devices too).
@@ -6578,7 +6627,7 @@ function renderLeagueUI(){
     var cl=lgClaims(league);                       // someone wants a name you hold
     Object.keys(cl).forEach(function(pl){ var c=cl[pl]; if(!c||!c.req) return;
       Object.keys(c.req).forEach(function(who){
-        if(c.email===lgEmail()||lgEmail()===league.creator)
+        if(c.email===lgEmail()||lgIsHead(league))
           rows.push('<div class="lgReq"><span class="who"><b>'+esc(who)+'</b> says they are <b>'+esc(shortName(pl))+'</b></span>'
             +'<button class="primary" data-cok="1" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Approve</button>'
             +'<button class="warn" data-cok="0" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Decline</button></div>');
@@ -6590,7 +6639,7 @@ function renderLeagueUI(){
       else if(roster.indexOf(pl)>=0) waiting.push('⏳ '+shortName(pl)+' is waiting for a '+tm+' member to approve'); }); });
     // (9/2) a phone that typed its way in under one of OUR names: provisional
     // for 48 h — a teammate or the head boots it with one tap
-    var _cl2=lgClaims(league), _isHead=(league.creator===lgEmail()||league.head===lgEmail());
+    var _cl2=lgClaims(league), _isHead=lgIsHead(league);
     Object.keys(_cl2).forEach(function(pl){ var c=_cl2[pl]; if(!c||!c.prov||c.email===lgEmail()) return;
       var tm=lgTeamOfRoster(league,pl);
       if(_isHead||(tm&&lgIsOkMember(league,tm,LG.me)))
@@ -6600,6 +6649,7 @@ function renderLeagueUI(){
     rq.innerHTML=(rows.length?'<div class="lgListHead">Requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
   }
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
+  try{ lgHeadTools(); }catch(e){}
   // in the league but on no team: pick one and prove it with a team code
   var tr=document.getElementById('lgTeamRow'), tp=document.getElementById('lgPickTeam'), tcb=document.getElementById('lgTeamCodeBtn');
   if(tr&&tp&&tcb){
@@ -6706,6 +6756,45 @@ function lgRehomeLocal(rec){
     if(moved){ LG.local.seasons=[]; saveLeague(); }
     return moved;
   }catch(e){ return 0; }
+}
+// (2026-09-02) The head folded one roster name into another on the relay: every
+// device rewrites its own copy — library, stats, and the matches it holds.
+function lgApplyRenames(rec, renames){
+  if(!Array.isArray(renames)||!renames.length) return 0;
+  var done=rec.renApplied||0, n=0;
+  renames.forEach(function(r){
+    if(!r||!r.from||!r.into||(+r.at||0)<=done) return;
+    var from=r.from, into=r.into;
+    (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ (m.sides||[]).forEach(function(sd){
+      if(sd&&sd.members&&sd.members.indexOf(from)>=0){ sd.members=sd.members.map(function(x){ return x===from?into:x; }); if(sd.name===from) sd.name=into; }
+    }); }); }); });
+    var hasFrom=roster.indexOf(from)>=0, hasInto=roster.indexOf(into)>=0;
+    if(hasFrom&&hasInto) mergePlayers(from,into);
+    else if(hasFrom){                              // a plain rename, no claim guard: the head decided this on the relay
+      roster=roster.map(function(x){ return x===from?into:x; });
+      if(playerTeams[from]!==undefined){ playerTeams[into]=playerTeams[from]; delete playerTeams[from]; }
+      if(statsLib[from]){ statsLib[into]=statsLib[from]; delete statsLib[from]; }
+      if(playerEmails[from]){ playerEmails[into]=playerEmails[from]; delete playerEmails[from]; }
+      saveRoster(); savePlayerTeams(); saveStats(); savePlayerEmails();
+    }
+    if(LG.me===from) LG.me=into;
+    done=Math.max(done,+r.at||0); n++;
+  });
+  if(n){ rec.renApplied=done; saveLeague(); try{ renderColumns(); renderLibrary(); }catch(e){} }
+  return n;
+}
+function lgHeadTools(){
+  var box=document.getElementById('lgHeadTools'); if(!box) return;
+  var isHead=!!(league&&league.id&&lgIsHead(league));
+  box.style.display=isHead?'':'none'; if(!isHead) return;
+  var who=function(em){ var n=''; var cl=lgClaims(league); Object.keys(cl).forEach(function(pn){ if(cl[pn]&&cl[pn].email===em&&cl[pn].st==='ok') n=pn; }); return n?shortName(n)+' · '+em:em; };
+  var members=(league.members||[]).filter(function(em){ return em!==lgEmail(); });
+  document.getElementById('lgHtMembers').innerHTML=members.length?members.map(function(em){ return '<div class="lgReq"><span class="who">'+esc(who(em))+'</span><button class="warn" data-remove="'+esc(em)+'">Remove</button></div>'; }).join(''):'<div class="lgWait">No other devices in the league yet.</div>';
+  var names=[]; Object.keys(league.teams||{}).forEach(function(t){ Object.keys(league.teams[t]||{}).forEach(function(p){ names.push(p); }); });
+  names.sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
+  var opts='<option value="">— name —</option>'+names.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
+  ['lgHtFrom','lgHtInto'].forEach(function(id){ var el=document.getElementById(id); if(document.activeElement!==el){ var k=el.value; el.innerHTML=opts; el.value=k; } });
+  var hs=document.getElementById('lgHtHead'); if(document.activeElement!==hs){ var kk=hs.value; hs.innerHTML='<option value="">— member —</option>'+members.map(function(em){ return '<option value="'+esc(em)+'">'+esc(who(em))+'</option>'; }).join(''); hs.value=kk; }
 }
 function lgTeamOfRoster(rec,player){ var t=(rec&&rec.teams)||{}, hit=''; Object.keys(t).forEach(function(tm){ if((t[tm]||{})[player]) hit=tm; }); return hit; }
 function lgBoot(who,player){
@@ -6968,6 +7057,34 @@ document.getElementById('lgTeamJoin').onclick=function(){
     else if(r&&r.testMuted) lgHint('Preview build — the relay refuses league changes from here.');
     else lgHint((r&&r.error)||'Could not join the team.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
+};
+document.getElementById('lgHtMembers').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-remove]'); if(!b) return;
+  var em=b.dataset.remove; if(!confirm('Remove '+em+' from '+league.name+'? Their games stay; their device drops the league on its next sync.')) return;
+  lgHint('Removing…');
+  lgCall({op:'remove',league:league.id,who:em},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+em+' is out.'); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not remove them.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
+});
+document.getElementById('lgHtMerge').onclick=function(){
+  var from=document.getElementById('lgHtFrom').value, into=document.getElementById('lgHtInto').value;
+  if(!from||!into||from===into){ lgHint('Pick the name to fold, then the name to keep.'); return; }
+  if(!confirm('Fold '+from+' into '+into+'? Every match and stat under '+from+' becomes '+into+', on every device. This cannot be undone.')) return;
+  lgHint('Merging…');
+  lgCall({op:'merge',league:league.id,'from':from,into:into},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+from+' is now '+into+' ('+(r.sides||0)+' match sides updated).'); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not merge.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
+};
+document.getElementById('lgHtHandoff').onclick=function(){
+  var em=document.getElementById('lgHtHead').value; if(!em){ lgHint('Pick who takes over.'); return; }
+  if(!confirm('Hand '+league.name+' to '+em+'? They become the head; you stay a member.')) return;
+  lgHint('Handing off…');
+  lgCall({op:'handoff',league:league.id,who:em},lgHint).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+em+' runs '+league.name+' now.'); }
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not hand off.');
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
 document.getElementById('lgTeamCodeBtn').onclick=function(){
   var team=lgMyOkTeam();                        // only a member of the team hands out its code (Nathan, 9/1)
