@@ -957,8 +957,9 @@
   #menuRow #leagueBtn.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
   /* the two league modals borrow #confirmQuit's dress exactly */
-  #leagueCard,#legsSplash,#playerCard{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
-  #leagueCard.hidden,#legsSplash.hidden,#playerCard.hidden{display:none;}
+  #leagueCard,#legsSplash,#fillSplash,#playerCard{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,3,2,.74);}
+  #leagueCard.hidden,#legsSplash.hidden,#fillSplash.hidden,#playerCard.hidden{display:none;}
+  #fillSplash{z-index:310;}
   /* header and buttons stay put; only the stats scroll (the card is taller than an iPad in landscape) */
   #playerCard .card{max-width:520px;width:100%;margin:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;}
   .pcHead,#pcBtns{flex:0 0 auto;}
@@ -994,8 +995,10 @@
   .librow .lname::after{content:'  ›';opacity:.45;font-size:.9em;}
   @media (max-width:600px){ .pcGrid{grid-template-columns:repeat(3,1fr);gap:4px 4px;} .pcStat .v{font-size:20px;} .pcName{font-size:26px;} }
   #leagueCard .card{max-width:470px;margin:20px;width:100%;}
-  #legsSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
-  #legsSplash h2{justify-content:center;}
+  #legsSplash .card,#fillSplash .card{max-width:430px;margin:20px;width:100%;text-align:center;}
+  #legsSplash h2,#fillSplash h2{justify-content:center;}
+  #fillPick button{display:block;width:100%;font-size:22px;padding:14px;margin-top:10px;}
+  #fillWho{margin:2px 0 6px;line-height:1.5;}
   #legsPick button{font-family:var(--num);font-size:34px;font-weight:700;padding:12px 0;}
   #lgToggle.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
@@ -1983,6 +1986,15 @@
       </div>
       <button class="primary" id="legsGo" style="width:100%;font-size:23px;padding:15px;margin-top:12px;">Play ▶</button>
       <button class="ghost" id="legsBack" style="width:100%;margin-top:8px;">← Back</button>
+    </div>
+  </div>
+
+  <div id="fillSplash" class="hidden">
+    <div class="card">
+      <h2>Who are they playing for?</h2>
+      <p class="small" id="fillWho"></p>
+      <div id="fillPick"></div>
+      <button class="ghost" id="fillBack" style="width:100%;margin-top:12px;">← Back</button>
     </div>
   </div>
 
@@ -3061,7 +3073,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='2.99';
+var DK_VER='3.0';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6091,6 +6103,20 @@ function lgSelect(id){
   league=rec||LG.local; LG.active=rec?rec.id:null;
 }
 lgSelect(LG.active);
+// Matches recorded before 9/1 carry 'Team 1'/'Team 2' and no team: give every
+// side whose members are all registered to one roster team that team, once.
+function lgFixSides(rec){
+  var ch=0;
+  ((rec&&rec.seasons)||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){
+    (m.sides||[]).forEach(function(sd){
+      if(!sd||sd.team||!sd.members||!sd.members.length) return;
+      var team=lgSideTeam(sd.members,null); if(!team) return;
+      sd.team=team; if(/^Team [12]$/.test(sd.name||'')) sd.name=team; ch++;
+    });
+  }); }); });
+  return ch;
+}
+try{ if(LG.list.reduce(function(a,r){ return a+lgFixSides(r); },0)) saveLeague(); }catch(e){}
 var f6log=(function(){ try{ var v=JSON.parse(localStorage.getItem(LS_F6LOG)); if(Array.isArray(v)) return v; }catch(e){} return []; })();
 // League settings + finished matches ride the backup. `cur`, the match in
 // progress, stays on this device — half a match is not a record.
@@ -6264,6 +6290,7 @@ function lgAdopt(Lg, makeActive){
   if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
+  try{ lgFixSides(rec); }catch(e){}
   // a deleted season stays deleted: drop local copies of anything on the dead
   // list (the relay refuses them anyway — this clears them off THIS device)
   if(rec.dead&&rec.dead.length){
@@ -6567,8 +6594,23 @@ function lgAttachFound(Lg){
   rec.myTeam=Lg.yourTeam||rec.myTeam||'';
   if(Lg.yourName){ LG.me=Lg.yourName; setMyName(Lg.yourName); }
   lgRehomeLocal(rec);
+  lgAutoOn(rec);
   saveLeague(); renderLeagueUI();
   return rec;
+}
+// A device that ARRIVES in a league while that league has a tournament open
+// tonight is at league night: its League switch turns on by itself (Nathan,
+// 9/1 — Carrie's iPad scored 8 games with the switch off). Only on arrival
+// (attach by name, join by code) — never on a routine sync.
+function lgAutoOn(rec){
+  try{
+    if(LG.on||!rec) return false;
+    var today=lgDay(Date.now()), open=null;
+    (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ if(t&&!t.endTs&&lgDay(t.ts||0)===today) open=t; }); });
+    if(!open) return false;
+    LG.on=true; saveLeague(); renderLeagueUI();
+    return true;
+  }catch(e){ return false; }
 }
 // Games played BEFORE the device attached live in LG.local under an
 // auto-made season. Move them into the league's real season/tournament for
@@ -6789,7 +6831,7 @@ document.getElementById('lgJoin').onclick=function(){
   if(code.length!==6){ lgHint('A join code is 6 digits.'); return; }
   lgHint('Joining…');
   lgCall({op:'join',code:code},lgHint).then(function(r){
-    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); _lgAddOpen=false; renderLeagueUI(); document.getElementById('lgJoinCode').value=''; lgHint('✓ You’re in '+r.league.name+' — it’s now the active league.'); }
+    if(r&&r.ok&&r.league){ var rec=lgAdopt(r.league,true); _lgAddOpen=false; lgAutoOn(rec); renderLeagueUI(); document.getElementById('lgJoinCode').value=''; lgHint('✓ You’re in '+r.league.name+' — it’s now the active league.'+(LG.on?' League is On for tonight.':'')); }
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not join.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
 };
@@ -6846,9 +6888,65 @@ function lgStarterFor(m,k){
   if(m.spec.kind==='iron'){ var o=lgRot(m.spec.ironOrder,k); return o[0].t; }
   return (m.spec.first+k)%2;
 }
-function lgSidesFor(spec){
-  return buildTeams().map(function(t){ return {name:(config.mode==='2p'||t.members.length===1)?t.members[0]:t.name, members:t.members.slice()}; });
+// A league side belongs to a TEAM (Nathan, 9/1): the name shown is always the
+// roster team when everyone on the side is registered to one. A fill-in from
+// another team makes the side ambiguous — the keeper is asked once which team
+// they're playing for tonight, and that answer sticks for the rest of the
+// tournament (LG.fill[tournament][player] = team), then falls away.
+function lgTeamFor(name, tid){
+  var f=(LG.fill&&tid&&LG.fill[tid])||{};
+  return f[name] || teamOfPlayer(name) || '';
 }
+function lgSideTeam(members, tid){
+  var ts={}; (members||[]).forEach(function(n){ var t=lgTeamFor(n,tid); if(t) ts[t]=1; });
+  var k=Object.keys(ts); return k.length===1 ? k[0] : '';
+}
+function lgSideTeams(members, tid){
+  var ts={}; (members||[]).forEach(function(n){ var t=lgTeamFor(n,tid); if(t) ts[t]=1; });
+  return Object.keys(ts);
+}
+function lgSidesFor(spec){
+  var tid=(lgTourn()||{}).id||null;
+  return buildTeams().map(function(t){
+    var team=lgSideTeam(t.members,tid);
+    var single=(config.mode==='2p'||t.members.length===1);
+    return {name: single ? t.members[0] : (team||t.name), members:t.members.slice(), team:team};
+  });
+}
+// The side that spans two teams, or null when every side is clean.
+function lgFillConflict(){
+  var tid=(lgTourn()||{}).id||null;
+  var sides=buildTeams();
+  for(var i=0;i<sides.length;i++){
+    var ts=lgSideTeams(sides[i].members,tid);
+    if(ts.length>1) return {members:sides[i].members.slice(), teams:ts, tid:tid};
+  }
+  return null;
+}
+var _fillNext=null;
+function fillAskOpen(c, next){
+  _fillNext=next||null;
+  var tid=c.tid;
+  document.getElementById('fillWho').innerHTML=c.members.map(function(n){ return '<b>'+esc(shortName(n))+'</b> ('+esc(lgTeamFor(n,tid)||'no team')+')'; }).join(' and ')+' are on the same side.';
+  var pick=document.getElementById('fillPick'); pick.innerHTML='';
+  c.teams.forEach(function(t){
+    var b=document.createElement('button'); b.className='primary'; b.textContent=t;
+    b.onclick=function(){
+      var tt=lgEnsureTourn().id;
+      LG.fill=LG.fill||{}; LG.fill[tt]=LG.fill[tt]||{};
+      c.members.forEach(function(n){ if(teamOfPlayer(n)!==t) LG.fill[tt][n]=t; else delete LG.fill[tt][n]; });
+      saveLeague();
+      document.getElementById('fillSplash').classList.add('hidden');
+      var f=_fillNext; _fillNext=null; if(f) f();
+    };
+    pick.appendChild(b);
+  });
+  document.getElementById('fillSplash').classList.remove('hidden');
+}
+document.getElementById('fillBack').onclick=function(){
+  document.getElementById('fillSplash').classList.add('hidden'); _fillNext=null;
+  document.getElementById('legsSplash').classList.remove('hidden');
+};
 var _lgPendingSpec=null;
 function lgAskLegs(spec){ _lgPendingSpec=spec; document.getElementById('legsSplash').classList.remove('hidden'); }
 document.getElementById('legsPick').addEventListener('click',function(e){
@@ -6863,7 +6961,10 @@ document.getElementById('legsGo').onclick=function(){
   var spec=_lgPendingSpec; if(!spec) return;
   var on=document.getElementById('legsPick').querySelector('button.on');
   var legs=parseInt(on&&on.dataset.legs||'3',10)||3;
-  document.getElementById('legsSplash').classList.add('hidden'); _lgPendingSpec=null;
+  document.getElementById('legsSplash').classList.add('hidden');
+  var c=lgFillConflict();
+  if(c){ fillAskOpen(c, function(){ _lgPendingSpec=spec; document.getElementById('legsGo').onclick(); }); return; }
+  _lgPendingSpec=null;
   var sides=lgSidesFor(spec);
   LG.cur={ id:lgId('m'), ts:Date.now(), game:config.game, mode:config.mode, legs:legs, spec:spec, sides:sides,
     score:sides.map(function(){return 0;}), results:[], winner:null, done:false };
@@ -6886,7 +6987,12 @@ function lgDecided(m){
   if(m.results.length>=m.legs && sc.filter(function(x){return x===top;}).length===1) return sc.indexOf(top);
   return -1;
 }
-function lgSideLabel(m,i){ var s=m.sides[i]; if(!s) return '?'; return s.members.length>1 ? s.name : shortName(s.name); }
+function lgSideLabel(m,i){
+  var s=m.sides[i]; if(!s) return '?';
+  var who=s.members.map(shortName).join(' & ');
+  if(s.team) return s.team+' ('+who+')';
+  return s.members.length>1 ? s.name : shortName(s.name);
+}
 function lgScoreHTML(m){ return esc(lgSideLabel(m,0))+' <b>'+m.score[0]+' – '+m.score[1]+'</b> '+esc(lgSideLabel(m,1)); }
 function lgScoreText(m){ return lgSideLabel(m,0)+' '+m.score[0]+'–'+m.score[1]+' '+lgSideLabel(m,1); }
 // Per-side detail for the leg that just ended — what the Stats page adds up.
@@ -6981,7 +7087,7 @@ function lgStandings(matches){
       m.results.forEach(function(r){ var st=r.st&&r.st[i]; if(!st||st.pts==null) return;
         agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; agg.dts+=(st.dts!=null?st.dts:(st.turns||0)*3); });
       var targets=s.members.map(function(n){ return ent(players,n); });
-      if(s.members.length>1) targets.push(ent(teams,s.name));
+      if(s.team) targets.push(ent(teams,s.team)); else if(s.members.length>1) targets.push(ent(teams,s.name));
       targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
         e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; e.dts=(e.dts||0)+agg.dts; });
     });
