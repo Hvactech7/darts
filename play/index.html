@@ -3183,7 +3183,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.10';
+var DK_VER='3.11';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3257,7 +3257,20 @@ function dkMatchPing(winners,losers,gameType){
 }
 
 //============================ BACKUP (Pi relay, Battle Tees pattern) ============================
-var DK_RELAY='wss://raspi5.tail734d97.ts.net/dartkeeper';   // its own relay since 8/22 (split from Battle Tees)
+var DK_RELAY='wss://relay.dartkeeper.net/dartkeeper';   // (9/6) off the Pi: Cloudflare Workers. The Pi relay (wss://raspi5.tail734d97.ts.net/dartkeeper) stays up as the rollback.
+// relay.json beside the app names the relay every phone should dial, so a cutover or a rollback is one
+// file edit and a deploy — no app build. The constant above is the answer when the file can't be read;
+// the last answer that was read is remembered for offline launches; a manual override in localStorage wins.
+(function(){
+  try{ var o=localStorage.getItem('darts_relay_override_v1'); if(o&&/^wss?:\/\//.test(o)){ DK_RELAY=o; return; } }catch(e){}
+  try{ var last=localStorage.getItem('darts_relay_last_v1'); if(last&&/^wss?:\/\/[^\s]+\/dartkeeper$/.test(last)) DK_RELAY=last; }catch(e){}
+  try{
+    fetch('relay.json?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+      var u=j&&typeof j.url==='string'?j.url.trim():'';
+      if(/^wss?:\/\/[^\s]+\/dartkeeper$/.test(u)){ DK_RELAY=u; try{ localStorage.setItem('darts_relay_last_v1',u); }catch(e){} }
+    }).catch(function(){});
+  }catch(e){}
+})();
 var LS_BKEMAIL='darts_backup_email_v1';
 var LS_BKFP='darts_backup_fp_v1';
 var bkTimer=null;

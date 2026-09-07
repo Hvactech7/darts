@@ -8,7 +8,7 @@
 // refresh, which is what keeps startup instant.
 //
 // Bump CACHE when the file list below changes.
-const CACHE = 'darts-v3.10';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
+const CACHE = 'darts-v3.11';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
 const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
   './dk-bg.jpg'
 ,  './dk-side-blue.jpg',
@@ -46,6 +46,9 @@ function putInCache(req, resp) {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  // relay.json says which relay to dial (9/6): always straight from the network, never from this
+  // cache — a cached answer would pin a phone to a relay that was switched off
+  if (new URL(req.url).pathname.endsWith('/relay.json')) return;
 
   if (isAppShell(req)) {
     // NETWORK-FIRST — the whole point: a launch with signal gets today's build.
