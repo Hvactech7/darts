@@ -1930,6 +1930,9 @@
       <!-- (2026-09-02, Nathan) ending tonight's tournament belongs HERE, not on
            the Stats page. Same confirm as switching League Off. -->
       <button class="warn" id="lgEndNight" style="display:none;width:100%;margin-top:8px;font-size:22px;padding:13px;">End Tournament</button>
+      <!-- (2026-09-08, Nathan) Games are always kept now, switch or no switch. If
+           any were played with League off, this is how they join the league. -->
+      <button class="primary" id="lgAddUnmarked" style="display:none;width:100%;margin-top:8px;font-size:20px;padding:13px;">Add Games To League</button>
       <!-- Leagues live on the Pi. You can belong to several; one is ACTIVE
            (matches, reports and Stats use it). Your e-mail is your identity. -->
       <div id="lgList"></div>
@@ -3183,7 +3186,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.11';
+var DK_VER='3.12';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -5867,7 +5870,11 @@ document.getElementById('pidStartBtn').onclick=function(){
   // as before, just through one door.
   var spec=pidStartSpec();
   document.getElementById('piddle').classList.add('hidden');
-  if(leagueOn() && spec.kind!=='ffa' && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (free-for-all games are not league games)
+  // (2026-09-08, Nathan) EVERY match is recorded, league or not. The League switch
+  // no longer decides whether the night is kept — it only decides whether these
+  // matches are league matches (counted, synced, e-mailed) or stay on this device.
+  // Twice now a night was scored with the switch off and the games were gone.
+  if(spec.kind!=='ffa' && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (free-for-all games are never matches)
   lgAbandon();                                       // a plain game supersedes any half-played match
   lgRunStart(spec,0);
 };
@@ -6642,6 +6649,34 @@ function lgEnsureTourn(){
   if(!t){ t={id:lgId('t'),ts:Date.now(),endTs:null,mailed:false,matches:[]}; s.tournaments.push(t); saveLeague(); }
   return t;
 }
+// The same thing inside ANY record, so a match played with the League switch off
+// can be filed into LG.local in exactly the shape a league match has. That is what
+// makes "add tonight's games to the league" a move rather than a re-entry.
+function lgEnsureTournIn(rec){
+  if(rec===league) return lgEnsureTourn();
+  var ss=rec.seasons||(rec.seasons=[]), now=Date.now(), s=null;
+  if(rec.mySeason) s=ss.filter(function(x){return x.id===rec.mySeason;})[0]||null;
+  if(!s){
+    var cover=ss.filter(function(x){ return (x.startTs||0)<=now && (!x.endTs||now<=lgDayEnd(x.endTs)); });
+    s=cover.length?cover[cover.length-1]:(ss.length?ss[ss.length-1]:null);
+  }
+  if(!s){ s={id:lgId('s'),name:'Season '+(ss.length+1),startTs:now,endTs:null,ed:now,tournaments:[]}; ss.push(s); rec.mySeason=s.id; }
+  var ts=s.tournaments||(s.tournaments=[]), t=ts[ts.length-1];
+  if(!t||t.endTs){ t={id:lgId('t'),ts:now,endTs:null,mailed:false,matches:[]}; ts.push(t); }
+  return t;
+}
+// Where a match started right now would be filed: the league when the switch is on
+// and there is one, otherwise this device. Used before the match exists (the fill-in
+// prompt needs a tournament id), so it reads the switch, not a match.
+function lgTargetRec(){ return (leagueOn() && league.id)?league:LG.local; }
+// Every finished match that is NOT in the league, newest first. This is what the
+// League card offers to add, and what the Stats page counts as "unmarked".
+function lgUnmarked(){
+  var out=[];
+  (LG.local.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){
+    (t.matches||[]).forEach(function(m){ if(m&&m.done) out.push(m); }); }); });
+  return out.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+}
 function renderLeagueUI(){
   var b=document.getElementById('leagueBtn');
   if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League On':'League Off'); }
@@ -6650,6 +6685,10 @@ function renderLeagueUI(){
   var en=document.getElementById('lgEndNight');
   if(en){ var _tn=leagueOn()&&league&&league.id?lgTourn():null; en.style.display=(_tn&&_tn.matches.length)?'':'none';
     if(_tn) en.textContent='End Tournament ('+_tn.matches.length+')'; }
+  // matches played with the switch off are kept — offer to move them in
+  var au=document.getElementById('lgAddUnmarked');
+  if(au){ var _un=(league&&league.id)?lgUnmarked():[]; au.style.display=_un.length?'':'none';
+    if(_un.length) au.textContent='Add '+_un.length+' Game'+(_un.length===1?'':'s')+' To League'; }
   var inL=!!league.id, noL=document.getElementById('lgNoLeague'), hasL=document.getElementById('lgHasLeague');
   var addOpen=(!LG.list.length||_lgAddOpen);
   if(noL) noL.style.display=addOpen?'':'none';
@@ -7075,6 +7114,25 @@ document.getElementById('neGo').onclick=function(){
     if(final){ LG.on=false; saveLeague(); renderLeagueUI(); } });
 };
 document.getElementById('lgEndNight').onclick=function(){ var tn=lgTourn(); if(tn) nightEndOpen(tn); };
+// (2026-09-08, Nathan) Move every match that was played with the switch off into
+// the league. lgRehomeLocal already files them by the day they were played, so a
+// forgotten switch costs a tap instead of a night.
+document.getElementById('lgAddUnmarked').onclick=function(){
+  if(!league||!league.id) return;
+  var un=lgUnmarked(); if(!un.length) return;
+  un.forEach(function(m){ m.lg=true; });                 // they are league matches from here on
+  var moved=lgRehomeLocal(league);
+  if(!moved){ lgHint('Nothing to add.'); return; }
+  if(!leagueOn()){ LG.on=true; }                         // they are league games; the switch follows
+  saveLeague(); renderLeagueUI();
+  lgHint('Adding '+moved+' game'+(moved===1?'':'s')+'…');
+  lgSync(function(r){
+    renderLeagueUI();
+    lgHint((r&&r.ok)?('✓ '+moved+' game'+(moved===1?'':'s')+' added to '+(league.name||'the league')+'.')
+                    :'Added here — they’ll reach the league when you’re online.');
+    try{ if(!document.getElementById('statsPage').classList.contains('hidden')) renderStats(_statsTab); }catch(e){}
+  });
+};
 document.getElementById('lgDone').onclick=function(){
   lgWaitStop(); document.getElementById('leagueCard').classList.add('hidden'); renderLeagueUI(); };
 // (2026-08-31, Nathan: "collapsing League Options makes the dropdowns above
@@ -7301,7 +7359,7 @@ function fillAskOpen(c, next){
   c.teams.forEach(function(t){
     var b=document.createElement('button'); b.className='primary'; b.textContent=t;
     b.onclick=function(){
-      var tt=lgEnsureTourn().id;
+      var tt=lgEnsureTournIn(lgTargetRec()).id;   // the tournament this match will actually land in
       LG.fill=LG.fill||{}; LG.fill[tt]=LG.fill[tt]||{};
       c.members.forEach(function(n){ if(teamOfPlayer(n)!==t) LG.fill[tt][n]=t; else delete LG.fill[tt][n]; });
       saveLeague();
@@ -7317,7 +7375,15 @@ document.getElementById('fillBack').onclick=function(){
   document.getElementById('legsSplash').classList.remove('hidden');
 };
 var _lgPendingSpec=null;
-function lgAskLegs(spec){ _lgPendingSpec=spec; document.getElementById('legsSplash').classList.remove('hidden'); }
+function lgAskLegs(spec){
+  _lgPendingSpec=spec;
+  // pre-select whatever was chosen last time, so a regular night is one tap
+  try{
+    var want=String(LG.lastLegs||3);
+    document.getElementById('legsPick').querySelectorAll('button[data-legs]').forEach(function(b){ b.classList.toggle('on', b.dataset.legs===want); });
+  }catch(e){}
+  document.getElementById('legsSplash').classList.remove('hidden');
+}
 document.getElementById('legsPick').addEventListener('click',function(e){
   var b=e.target.closest('button[data-legs]'); if(!b) return;
   this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on',x===b); });
@@ -7334,8 +7400,13 @@ document.getElementById('legsGo').onclick=function(){
   var c=lgFillConflict();
   if(c){ fillAskOpen(c, function(){ _lgPendingSpec=spec; document.getElementById('legsGo').onclick(); }); return; }
   _lgPendingSpec=null;
+  LG.lastLegs=legs;                                  // remember the pick so the next match is one tap
   var sides=lgSidesFor(spec);
+  // lg: is this a LEAGUE match? Decided by the switch at the moment it starts. A
+  // match with lg:false is kept just as fully — it simply lives on this device
+  // until someone adds it to the league (League card → "Add tonight's games").
   LG.cur={ id:lgId('m'), ts:Date.now(), game:config.game, mode:config.mode, legs:legs, spec:spec, sides:sides,
+    lg:(leagueOn() && !!league.id),
     score:sides.map(function(){return 0;}), results:[], winner:null, done:false };
   saveLeague();
   lgRunStart(spec,0);
@@ -7431,9 +7502,15 @@ function lgUndoLeg(){
 function lgCommitMatch(){
   var m=LG.cur; if(!m||!m.done) return;
   LG.cur=null;
-  var t=lgEnsureTourn(); t.matches.push(m);
+  // a league match joins the league and is shared; anything else is kept here,
+  // in the same shape, until someone adds it. A match with NO tag is a league
+  // match: before 3.12 a match could only exist with the switch on, so a match
+  // half-played across the upgrade must not be sent to the wrong place.
+  var rec=((m.lg!==false) && league.id)?league:LG.local;
+  var t=lgEnsureTournIn(rec); t.matches.push(m);
   saveLeague();
-  lgSync();                                      // share it with the league's other devices
+  if(rec===league && league.id) lgSync();         // share it with the league's other devices
+  try{ renderLeagueUI(); }catch(e){}
 }
 function lgAbandon(){ if(LG.cur){ LG.cur=null; saveLeague(); } }
 
