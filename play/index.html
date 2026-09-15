@@ -310,7 +310,9 @@
   #game.cricket.board-open #playArea{position:fixed;inset:0;z-index:200;margin:0;border-radius:0;
        display:flex;flex-direction:column;justify-content:center;gap:12px;padding:14px;
        background:radial-gradient(circle at 50% 28%,#0d1430,#060a14);}
-  #game.cricket.board-open #playArea svg.board{max-width:calc(100vw - 28px);margin:0 auto;}
+  /* (9/14) height-capped too: sized by width alone, an iPad held sideways pushed
+     Back / Undo / Redo / Score It off the top and bottom of the screen */
+  #game.cricket.board-open #playArea svg.board{max-width:min(calc(100vw - 28px), calc(100vh - 300px));margin:0 auto;}
 
   #backBtn{display:none;}
   #game.cricket.board-open #backBtn{display:block;position:absolute;top:16px;left:16px;z-index:1;}
@@ -3186,7 +3188,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.12';
+var DK_VER='3.13';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4603,7 +4605,8 @@ function declareWin(teamIdx,detail){
 }
 function displayName(t){
   if(config.mode==='2p'||t.members.length===1) return shortName(t.members[0]);
-  return `${t.name} (${t.members.map(shortName).join(' & ')})`;
+  const who=t.members.map(shortName).join(' & ');
+  return /^Team \d+$/.test(t.name||'') ? who : `${t.name} (${who})`;   // (9/14) no "Team 1 (Eve & Fay)"
 }
 
 //============================ RENDER ============================
@@ -7337,7 +7340,10 @@ function lgSidesFor(spec){
   return buildTeams().map(function(t){
     var team=lgSideTeam(t.members,tid);
     var single=(config.mode==='2p'||t.members.length===1);
-    return {name: single ? t.members[0] : (team||t.name), members:t.members.slice(), team:team};
+    // (9/14) a pair with no league team is named by its players, never "Team 1" —
+    // that placeholder showed up in Stats as a team of its own
+    var pair=t.members.map(shortName).join(' & ');
+    return {name: single ? t.members[0] : (team || (/^Team \d+$/.test(t.name||'') ? pair : t.name)), members:t.members.slice(), team:team};
   });
 }
 // The side that spans two teams, or null when every side is clean.
@@ -7555,7 +7561,7 @@ function lgStandings(matches){
         if(r.closer&&r.winner===i&&s.members.indexOf(r.closer)>=0){ var c=ent(players,r.closer); c.co++; if(r.coPts>c.hiCo) c.hiCo=r.coPts; }
         if(r.hi3By&&s.members.indexOf(r.hi3By)>=0){ var b3=ent(players,r.hi3By); if(r.hi3>b3.hi3) b3.hi3=r.hi3; }
         if(r.hiInBy&&s.members.indexOf(r.hiInBy)>=0){ var bi=ent(players,r.hiInBy); if(r.hiIn>bi.hiIn) bi.hiIn=r.hiIn; } });
-      if(s.team) targets.push(ent(teams,s.team)); else if(s.members.length>1) targets.push(ent(teams,s.name));
+      if(s.team) targets.push(ent(teams,s.team)); else if(s.members.length>1 && !/^Team \d+$/.test(s.name||'')) targets.push(ent(teams,s.name));
       targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
         e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; e.dts=(e.dts||0)+agg.dts; });
     });
