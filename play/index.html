@@ -884,6 +884,20 @@
   #bdCalls .bc:last-child{animation:markpop .35s cubic-bezier(.2,1.5,.4,1);}
   #game.kpmode .dartfloat{display:none;}
   #game.bdopen #backBtn{display:block;position:absolute;top:14px;left:14px;z-index:2;}
+  /* (9/16, Nathan, iPad at league night) Tablet sizes: ← Back sat 14px from the
+     top — under the status bar, so it looked faded and would barely take a press —
+     and the Undo / Score It / Redo row floated ~90px above the bottom edge. Clear
+     the status bar, centre the board in the room between the calls and the
+     buttons, and sit the buttons just above the home bar. (Phones: see below.) */
+  @media (min-width:601px){
+    #game.bdopen #backBtn{top:calc(env(safe-area-inset-top, 0px) + 14px);}
+    #game.bdopen #bdCalls{top:calc(env(safe-area-inset-top, 0px) + 12px);}
+    #game.bdopen #playArea{justify-content:flex-start;
+      padding:calc(env(safe-area-inset-top, 0px) + 92px) 10px calc(env(safe-area-inset-bottom, 0px) + 12px);}
+    #game.kpmode.bdopen #boardwrap{flex:1 1 auto;min-height:0;align-items:center;}
+    #game.bdopen svg.board{max-width:min(97vw, calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 196px)) !important;
+      width:min(97vw, calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 196px));}
+  }
   @media (max-width:600px){
     /* The board overlay is position:fixed over the whole screen, so it ignores
        the wrap's safe-area padding — the old top-centre calls band sat under
@@ -927,8 +941,11 @@
   #welcome .card,#mergeCard .card{max-width:520px;width:100%;text-align:center;}
   #welcome .lead,#mergeCard .lead{font-size:19px;color:#e6dcc4;margin:0 0 12px;line-height:1.5;}
   #welcome .why,#mergeCard .why{font-size:13.5px;color:var(--muted);margin:10px 0 0;}
-  #wcName,#mgPick{width:100%;font-size:21px;padding:13px 14px;border-radius:10px;border:1.5px solid #57451c;
-    background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);}
+  /* (9/16) #wcEmail is type=email, which the global text-box rule does not match —
+     on an iPad it rendered as a tiny white system field. Styled like the name box. */
+  #wcName,#wcEmail,#mgPick{width:100%;font-size:21px;padding:13px 14px;border-radius:10px;border:1.5px solid #57451c;
+    background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);
+    box-sizing:border-box;-webkit-appearance:none;appearance:none;}
   #welcome .acts,#mergeCard .acts{margin-top:14px;}
   .wcActs{display:flex;gap:10px;} .wcActs button{flex:1;}
   #welcome .ic{width:74px;height:74px;border-radius:16px;margin:0 auto 8px;display:block;}
@@ -1778,20 +1795,15 @@
     <div class="card">
       <img class="ic" src="darts-icon-180.png" alt="">
       <h2>Welcome to Dart Keeper</h2>
+      <!-- (9/15, Nathan) Name AND e-mail, both required, before anything else.
+           The e-mail is what a shared library and a league hang on; asking for
+           it later is what turned a new phone at the bar into a five-minute job. -->
       <div id="wcStep1">
         <p class="lead">What name should go on the board?</p>
         <input type="text" id="wcName" placeholder="Your name" autocomplete="name" autocapitalize="words" spellcheck="false">
-        <p class="why">This becomes your player. You can add everyone else later.</p>
-        <div class="acts"><button class="primary" id="wcGo" style="width:100%">Continue</button></div>
-      </div>
-      <div id="wcStep2" class="hidden">
-        <p class="lead">Playing in a league?</p>
-        <div class="acts wcActs">
-          <button class="primary" id="wcJoin">I have a join code</button>
-          <button class="accent" id="wcCreate">Start a league</button>
-        </div>
-        <button class="ghost" id="wcSkip" style="width:100%;margin-top:8px;">Just keep score for now</button>
-        <p class="why">You can do this any time from League Mode.</p>
+        <input type="email" id="wcEmail" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" style="margin-top:8px;">
+        <p class="why">Your name goes on the board. Your e-mail keeps your players, league and stats with you.</p>
+        <div class="acts"><button class="primary" id="wcGo" style="width:100%" disabled>Continue</button></div>
       </div>
     </div>
   </div>
@@ -1965,17 +1977,16 @@
             <div class="lgSeasonLine" id="lgAttachLine"></div>
             <div class="row"><input type="text" id="lgAttachEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"><button class="primary" id="lgAttachGo">Make it official</button></div>
           </div>
-          <!-- (2026-09-01, Nathan) In the league but on no team yet: pick the
-               team, prove it with a code from one of its members — accepted on
-               the spot. Members of a team (and the head) hand out its code. -->
+          <!-- (9/15, Nathan) No team code. Once you are in the league, picking
+               your team is final on the spot. -->
           <div id="lgTeamRow" style="display:none;margin-top:8px;">
             <div class="row lgMeRow"><span class="lgMeLbl">Team</span><select id="lgPickTeam" class="grow"><option value="">— pick your team —</option></select></div>
-            <div class="row" style="margin-top:6px;"><input type="text" id="lgTeamCode" class="grow" placeholder="6-digit code from a team member" inputmode="numeric" maxlength="7"><button class="accent" id="lgTeamJoin">Join team</button></div>
+            <div class="row" style="margin-top:6px;"><button class="accent" id="lgTeamJoin" style="width:100%;">Join team</button></div>
           </div>
-          <div id="lgInviteRowMain"><button class="primary" id="lgInvite" style="width:100%;font-size:22px;padding:13px;">League Code</button><button class="accent" id="lgTeamCodeBtn" style="display:none;width:100%;margin-top:8px;font-size:22px;padding:13px;">Team Code</button></div>
-          <div id="lgTeamCodeBox" style="display:none;"></div>
-          <div class="row" id="lgInviteRow" style="display:none;margin-top:8px;"><input type="text" id="lgInviteFor" class="grow" placeholder="Their e-mail (optional — locks the code)" autocomplete="off" inputmode="email"><button class="accent" id="lgInviteGo">Make code</button></div>
+          <div id="lgInviteRowMain"><button class="primary" id="lgInvite" style="width:100%;font-size:22px;padding:13px;">Invite A Player</button></div>
           <div id="lgInviteCode" style="display:none;"></div>
+          <div class="row" id="lgInviteSendRow" style="display:none;margin-top:8px;"><button class="accent" id="lgInviteSend" style="width:100%;">Send It</button></div>
+          <p class="small" id="lgInviteTip" style="display:none;margin:6px 0 0;">Standing next to them? Add/Manage Players → Share hands over your players and puts them in this league with one code.</p>
         </div>
         <!-- (2026-08-31, Nathan) Seasons are CALENDARS now, not switches. Set
              Season names one and gives it a start and an end date; it syncs to
@@ -2004,14 +2015,16 @@
         </div>
       </div>
       <div id="lgNoLeague">
-        <!-- (2026-09-01, Nathan) A new player picks their league from EVERY
-             league in Dart Keeper, then proves it with a code from a member.
-             The code is accepted on the spot — the e-mail must be typed, not
-             yet confirmed. -->
-        <div class="row lgMeRow" style="margin-top:10px;"><span class="lgMeLbl">League</span><select id="lgPickLeague" class="grow"><option value="">— pick your league —</option></select></div>
-        <div class="row" style="margin-top:8px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
-        <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit code from a member" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
-        <div class="row" id="lgCreateRow" style="margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="…or start a new league" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
+        <!-- (9/15, Nathan) One question first, then one door: a code from a
+             member — or a library shared by one, which lets them in on its own. -->
+        <p class="lead" id="lgAskLead" style="margin:10px 0 8px;">Are you in a league?</p>
+        <div class="row" id="lgAskRow"><button class="primary grow" id="lgWayJoin">I have a code</button><button class="accent grow" id="lgWayNew">Start a new league</button></div>
+        <div class="row" id="lgEmailRow" style="display:none;margin-top:8px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
+        <div id="lgJoinWay" style="display:none;">
+          <div class="row lgMeRow" style="margin-top:8px;"><span class="lgMeLbl">League</span><select id="lgPickLeague" class="grow"><option value="">— pick your league —</option></select></div>
+          <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit code from a member" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
+        </div>
+        <div class="row" id="lgCreateRow" style="display:none;margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="League name" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
         <div class="row" id="lgVerifyRow" style="display:none;margin-top:8px;align-items:center;gap:10px;">
           <span class="grow small" id="lgVerifyWait">📧 Waiting for you to tap the link…</span>
           <button class="ghost" id="lgVerifyResend">Send it again</button>
@@ -2917,6 +2930,13 @@ function shareTakeToggle(){
 async function shareGo(){
   const code=(document.getElementById('shareCodeIn').value||'').trim();
   if(!/^\d{6}$/.test(code)){ shareMsg('That code should be 6 digits.'); return; }
+  // (9/15, Nathan) No e-mail, no league: the address is the identity the share
+  // code vouches for, so ask for it here rather than after the fact.
+  if(!lgEmail()){
+    shareMsg('Put your e-mail in the box above first — it’s how their league and your stats find you.');
+    try{ document.getElementById('bkEmail').focus(); }catch(e){}
+    return;
+  }
   shareMsg('Fetching…');
   try{
     // the address goes with it so the relay can put us in the sharer's league —
@@ -2933,6 +2953,12 @@ async function shareGo(){
       if(r.league && r.league.id && !(league&&league.id)){
         var _rec=lgAdopt(r.league, true);
         lgAutoOn(_rec); saveLeague(); renderLeagueUI();       // League On only if a night is open (3.0 rule)
+        // (9/15, Nathan) "make sure anyone with a received library has any/all
+        // players' e-mail, regardless of what device they signed up on": adopting
+        // brings the league's book of addresses down; this sync sends ours up, so
+        // a report can be mailed to everyone from any phone.
+        try{ var _me=myName(); if(_me && lgEmail() && !emailOfPlayer(_me)) setPlayerEmail(_me, lgEmail()); }catch(e){}
+        try{ lgSync(function(){ renderLeagueUI(); if(typeof renderLibrary==='function') renderLibrary(); }); }catch(e){}
         shareMsg('Added — and you are now in '+(r.league.name||'their league')+'.'+(LG.on?' League is On for tonight.':''));
         if(r.verified===false) relayBackup({op:'maglink',email:lgEmail()}).catch(function(){});
       }else if(r.data.league && r.data.league.name && !(league&&league.id)){
@@ -3188,7 +3214,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.13';
+var DK_VER='3.14';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4640,8 +4666,83 @@ function placeSessionButtons(){
     else { if(rb.parentElement!==q.parentElement || rb.previousElementSibling!==q) q.parentElement.insertBefore(rb,q.nextSibling); }
   }
 }
+// (9/16, Nathan) A small x where the finger touched the board, one per dart of
+// the turn in play. It lands near the press but settles toward the middle of the
+// space that was hit; two or three darts in the SAME space line up side by side
+// (along the ring for thin bands, along the wedge for the wide singles, a little
+// triangle in the bull). Undo takes the last x back with its dart.
+const TAPX_BAND={'3':[136,158],'2':[216,238],'in':[40,136],'out':[158,216],'b1':[18,40],'b2':[0,18]};
+function tapMark(svg,cx,cy,el){
+  try{
+    const m=svg.getScreenCTM(); if(!m||!el) return;
+    const pt=svg.createSVGPoint(); pt.x=cx; pt.y=cy;
+    const p=pt.matrixTransform(m.inverse());
+    const NS='http://www.w3.org/2000/svg', r=4.5;
+    const g=document.createElementNS(NS,'g');
+    g.setAttribute('class','tapx'); g.setAttribute('pointer-events','none');
+    g.dataset.v=el.dataset.v; g.dataset.m=el.dataset.m; g.dataset.r=el.dataset.r||'';
+    g.dataset.tx=p.x; g.dataset.ty=p.y;
+    // inline style on purpose: the board's own line rules would win over attributes
+    const seg=(x1,y1,x2,y2,st)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" style="'+st+'"/>';
+    const halo='stroke:#000;stroke-width:4;stroke-linecap:round;opacity:.55;fill:none';
+    const ink='stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:1;fill:none';
+    g.innerHTML=seg(-r,-r,r,r,halo)+seg(r,-r,-r,r,halo)+seg(-r,-r,r,r,ink)+seg(r,-r,-r,r,ink);
+    svg.appendChild(g);
+    tapLayout(svg);
+  }catch(e){}
+}
+function tapLayout(svg){
+  const CX=268, CY=268, SP=12;                            // board centre; gap between marks in one space
+  const pol=(rad,deg)=>[CX+rad*Math.sin(deg*Math.PI/180), CY-rad*Math.cos(deg*Math.PI/180)];
+  const groups={};
+  svg.querySelectorAll('g.tapx').forEach(function(g){ const k=g.dataset.v+'|'+g.dataset.m+'|'+g.dataset.r; (groups[k]=groups[k]||[]).push(g); });
+  Object.keys(groups).forEach(function(k){
+    const gs=groups[k], n=gs.length, g0=gs[0], v=+g0.dataset.v, mult=g0.dataset.m;
+    const tx=+g0.dataset.tx-CX, ty=+g0.dataset.ty-CY;
+    const tr=Math.sqrt(tx*tx+ty*ty), ta=Math.atan2(tx,-ty)*180/Math.PI;
+    gs.forEach(function(g,i){
+      const off=i-(n-1)/2;                                // -1,0,+1 for three; ±.5 for two
+      let x,y;
+      if(v===25 && mult==='2'){                            // bullseye: centre, or a small triangle
+        if(n===1){ x=CX+tx*.4; y=CY+ty*.4; }
+        else { const d=-90+i*(360/n); x=CX+6.5*Math.cos(d*Math.PI/180); y=CY+6.5*Math.sin(d*Math.PI/180); }
+      } else if(v===25){                                   // outer bull: along its ring
+        const b=TAPX_BAND.b1, rm=(b[0]+b[1])/2;
+        [x,y]=pol(rm, ta+off*((SP+3)/rm)*180/Math.PI);   // a tight ring: a little more room
+      } else {
+        const band=TAPX_BAND[mult==='1'?(g0.dataset.r||'out'):mult], rm=(band[0]+band[1])/2;
+        const c=NUMBERS.indexOf(v)*18;
+        let da=((ta-c+540)%360)-180; da=Math.max(-9,Math.min(9,da));
+        if(mult!=='1'){                                    // thin triple/double band: along the ring
+          const base=n===1 ? c+da*.5 : c;
+          [x,y]=pol(rm, base+off*(SP/rm)*180/Math.PI);
+        } else {                                           // wide single: along the wedge
+          const rr=n===1 ? rm+(tr-rm)*.5 : rm+off*SP;
+          [x,y]=pol(rr, n===1 ? c+da*.5 : c);
+        }
+      }
+      g.setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+')');
+    });
+  });
+}
+var _tapTurn='';
+function tapMarksSync(){
+  const svg=document.querySelector('#boardwrap svg'); if(!svg) return;
+  const xs=svg.querySelectorAll('g.tapx');
+  // Fat 6 scores each dart the moment it lands (its dart list empties at once),
+  // so there the marks last until the thrower changes; everywhere else they
+  // follow the turn's own darts, so Undo takes the last x back with its dart.
+  const key=G?(G.cur+':'+(G.round||0)):'';
+  if(!G || key!==_tapTurn){ _tapTurn=key; if(G&&G.isFat6){ xs.forEach(function(x){ x.remove(); }); return; } }
+  if(G&&G.isFat6) return;
+  const n=(G&&G.darts)?G.darts.length:0;
+  let cut=false;
+  for(let i=xs.length-1;i>=n;i--){ xs[i].remove(); cut=true; }
+  if(cut) tapLayout(svg);
+}
 function renderGame(){
   placeSessionButtons();
+  tapMarksSync();                      // every mode, before any early return
   if(G.isX){
     renderX();
     try{ renderWinCall(); }catch(e){}
@@ -5484,7 +5585,9 @@ function buildBoard(){
     if(e.isPrimary===false || (e.button!==undefined && e.button>0)) return;
     const el=e.target.closest('[data-v]');
     if(!el)return;
+    const _h=history.length;
     throwDart(parseInt(el.dataset.v,10),parseInt(el.dataset.m,10),el.dataset.r);
+    if(history.length>_h) tapMark(e.currentTarget,e.clientX,e.clientY,el);   // only when a dart actually landed (every throw saves an undo step)
   });
   const mini=document.getElementById('miniBoard');
   if(mini){
@@ -6696,6 +6799,18 @@ function renderLeagueUI(){
   var addOpen=(!LG.list.length||_lgAddOpen);
   if(noL) noL.style.display=addOpen?'':'none';
   if(hasL) hasL.style.display=inL?'':'none';
+  // (9/15, Nathan) ask first, then show only that way's fields
+  var _ask=document.getElementById('lgAskRow'), _emr=document.getElementById('lgEmailRow'),
+      _jw=document.getElementById('lgJoinWay'), _cr=document.getElementById('lgCreateRow'),
+      _al=document.getElementById('lgAskLead');
+  if(_ask&&_emr&&_jw&&_cr){
+    _ask.style.display=_lgWay?'none':'';
+    _emr.style.display='';                      // your address is always editable here
+    _jw.style.display=_lgWay==='join'?'':'none';
+    _cr.style.display=_lgWay==='new'?'':'none';
+    if(_al) _al.textContent=_lgWay==='join'?'Pick your league, then enter the code a member gave you.'
+      :(_lgWay==='new'?'Name your league — you can invite the others in a moment.':'Are you in a league?');
+  }
   var at=document.getElementById('lgAddToggle'); if(at){ at.style.display=LG.list.length?'':'none'; at.textContent=addOpen?'− Hide':'+ Create or join another league'; }
   var list=document.getElementById('lgList');
   if(list){
@@ -6767,14 +6882,12 @@ function renderLeagueUI(){
   }
   var em=document.getElementById('lgEmail'); if(em&&document.activeElement!==em) em.value=lgEmail();
   try{ lgHeadTools(); }catch(e){}
-  // in the league but on no team: pick one and prove it with a team code
-  var tr=document.getElementById('lgTeamRow'), tp=document.getElementById('lgPickTeam'), tcb=document.getElementById('lgTeamCodeBtn');
-  if(tr&&tp&&tcb){
+  // in the league but on no team: pick one — no code, the pick is final (9/15)
+  var tr=document.getElementById('lgTeamRow'), tp=document.getElementById('lgPickTeam');
+  if(tr&&tp){
     var _myTeam=lgMyOkTeam(), _isMember=inL&&!lgIsAttachedOnly(), _tnames=Object.keys(league.teams||{}).sort(function(a,b){return a.localeCompare(b,undefined,{sensitivity:'base'});});
     tr.style.display=(_isMember&&!_myTeam&&_tnames.length)?'':'none';
     if(document.activeElement!==tp){ var _keep=tp.value; tp.innerHTML='<option value="">— pick your team —</option>'+_tnames.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join(''); if(_keep) tp.value=_keep; }
-    tcb.style.display=(_isMember&&_myTeam)?'':'none';
-    if(!inL) document.getElementById('lgTeamCodeBox').style.display='none';
   }
   var s=lgSeason(), tn=lgTourn(), line=document.getElementById('lgSeasonLine');
   if(line){
@@ -6810,58 +6923,14 @@ function renderLeagueUI(){
 }
 function lgHint(m){ var h=document.getElementById('lgHint'); if(h) h.textContent=m||''; }
 var _lgAddOpen=false;
-// (2026-09-01, Nathan: "everyone on a team should already be in Delta —
-// Carrie's phone asked her what league to CREATE.") A roster name is the
-// membership. A fresh device that knows its player's name asks the relay
-// which league has that name on a team, and attaches to it on the spot: the
-// league, the team, the seasons all appear, no create-or-join question.
-// Scoring works immediately (matches file into the league's own season and
-// tournament on this device); they push the moment an e-mail is verified,
-// which also makes the membership official (relay op `attach`, no code).
-function lgFindMine(name){
-  name=String(name||'').trim(); if(!name) return Promise.resolve(null);
-  return relayLeague({op:'find',name:name}).then(function(r){
-    if(r&&r.ok&&r.leagues&&r.leagues[0]) return r.leagues[0];
-    // no exact hit: the obvious near-miss(es) get offered — once per typed name
-    var near=(r&&r.ok&&r.near)||[];
-    if(near.length && !(LG.nearNo||{})[name.toLowerCase()] && !(league&&league.id)) nearAskOpen(name, near);
-    return null;
-  }).catch(function(){ return null; });
-}
-function nearAskOpen(typed, cands){
-  var el=document.getElementById('nearSplash'); if(!el||!el.classList.contains('hidden')) return;
-  document.getElementById('nearTitle').textContent=cands.length===1?('Are you '+cands[0].yourName+'?'):'Are you one of these?';
-  document.getElementById('nearWho').textContent='“'+typed+'” isn’t on a roster, but this is:';
-  var pick=document.getElementById('nearPick'); pick.innerHTML='';
-  cands.forEach(function(c){
-    var b=document.createElement('button'); b.className='primary';
-    b.innerHTML='<b>'+esc(c.yourName)+'</b><small>'+esc(c.yourTeam||'')+(c.name?' · '+esc(c.name):'')+'</small>';
-    b.onclick=function(){
-      el.classList.add('hidden');
-      try{ if(typed&&typed!==c.yourName&&roster.indexOf(typed)>=0&&roster.indexOf(c.yourName)<0) renamePlayer(typed,c.yourName); }catch(e){}
-      LG.me=c.yourName; try{ setMyName(c.yourName); }catch(e){}
-      var rec=lgAttachFound(c); saveLeague(); renderLeagueUI();
-      try{ openLeagueCard(); lgHint('✓ You’re '+shortName(c.yourName)+' on '+(c.yourTeam||c.name)+'. One e-mail makes it official.'); }catch(e){}
-    };
-    pick.appendChild(b);
-  });
-  el.classList.remove('hidden');
-}
+var _lgWay='';                 // '' = asking, 'join' = has a code, 'new' = starting one
+// (9/15, Nathan) The name-is-membership shortcut and its "Are you Mike B?"
+// follow-up are GONE: typing a name no longer asks the relay anything. A league
+// is entered deliberately — a code from a member, or a library shared by one.
 document.getElementById('nearNo').onclick=function(){
   document.getElementById('nearSplash').classList.add('hidden');
   LG.nearNo=LG.nearNo||{}; LG.nearNo[String(LG.me||'').toLowerCase()]=1; saveLeague();
 };
-function lgAttachFound(Lg){
-  if(!Lg||!Lg.id) return null;
-  var rec=lgAdopt(Lg,true);
-  if(!rec) return null;
-  rec.myTeam=Lg.yourTeam||rec.myTeam||'';
-  if(Lg.yourName){ LG.me=Lg.yourName; setMyName(Lg.yourName); }
-  lgRehomeLocal(rec);
-  lgAutoOn(rec);
-  saveLeague(); renderLeagueUI();
-  return rec;
-}
 // A device that ARRIVES in a league while that league has a tournament open
 // tonight is at league night: its League switch turns on by itself (Nathan,
 // 9/1 — Carrie's iPad scored 8 games with the switch off). Only on arrival
@@ -6985,12 +7054,11 @@ function openLeagueCard(){
   _lgAddOpen=false; _lgToolsOpen=false;          // the drawer never opens itself
   if(!league.id) lgLoadLeagues();
   try{ lgResumePending(); }catch(e){}
-  if(!league.id && LG.me){                       // does my name already belong to a league?
-    lgHint('Looking for your league\u2026');
-    lgFindMine(LG.me).then(function(Lg){ if(Lg){ lgAttachFound(Lg); lgHint(''); } else lgHint(''); });
-  }
+  _lgWay='';                                     // the card always opens on the question
   document.getElementById('lgName').value='';
-  lgHint(''); document.getElementById('lgInviteCode').style.display='none'; document.getElementById('lgInviteRow').style.display='none';
+  lgHint(''); document.getElementById('lgInviteCode').style.display='none';
+  document.getElementById('lgInviteSendRow').style.display='none';
+  document.getElementById('lgInviteTip').style.display='none';
   document.getElementById('lgVerifyRow').style.display='none';
   renderLeagueUI();
   document.getElementById('leagueCard').classList.remove('hidden');
@@ -7150,7 +7218,9 @@ function lgTapShield(ms){
   document.body.appendChild(sh);
   setTimeout(function(){ try{ sh.remove(); }catch(e){} }, ms||450);
 }
-document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; renderLeagueUI(); lgTapShield(); };
+document.getElementById('lgAddToggle').onclick=function(){ _lgAddOpen=!_lgAddOpen; _lgWay=''; renderLeagueUI(); lgTapShield(); };
+document.getElementById('lgWayJoin').onclick=function(){ _lgWay='join'; renderLeagueUI(); try{ lgLoadLeagues(); }catch(e){} lgTapShield(); };
+document.getElementById('lgWayNew').onclick=function(){ _lgWay='new'; renderLeagueUI(); lgTapShield(); };
 var _lgToolsOpen=false;
 document.getElementById('lgToolsToggle').onclick=function(){ _lgToolsOpen=!_lgToolsOpen; renderLeagueUI(); lgTapShield(); };
 
@@ -7204,23 +7274,23 @@ document.getElementById('lgJoin').onclick=function(){
     else lgHint((r&&r.error)||'Could not join.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
 };
+// (9/15, Nathan) The league code was the door; the team is just where you play.
 document.getElementById('lgTeamJoin').onclick=function(){
   var team=document.getElementById('lgPickTeam').value;
   if(!team){ lgHint('Pick your team first.'); return; }
   if(!LG.me){ lgHint('Pick your name first.'); return; }
-  var code=(document.getElementById('lgTeamCode').value||'').replace(/\D/g,'');
-  if(code.length!==6){ lgHint('A team code is 6 digits — ask someone on '+team+'.'); return; }
   lgHint('Joining '+team+'…');
-  relayLeague({op:'teamjoin',league:league.id,code:code,team:team,me:LG.me}).then(function(r){
+  lgCall({op:'team_set',league:league.id,team:team,player:LG.me,me:LG.me},lgHint).then(function(r){
     if(r&&r.ok&&r.league){
-      lgAdopt(r.league,true); league.myTeam=r.team||team;
-      try{ setPlayerTeam(LG.me,r.team||team); }catch(e){}
-      document.getElementById('lgTeamCode').value=''; renderLeagueUI();
-      lgHint('✓ You’re on '+(r.team||team)+' as '+shortName(LG.me)+'.');
+      lgAdopt(r.league,true); league.myTeam=team;
+      try{ setPlayerTeam(LG.me,team); }catch(e){}
+      try{ if(lgEmail()) setPlayerEmail(LG.me,lgEmail()); }catch(e){}
+      renderLeagueUI();
+      lgHint('✓ You’re on '+team+' as '+shortName(LG.me)+'.');
       lgSync(function(){ renderLeagueUI(); });
     }
     else if(r&&r.testMuted) lgHint('Preview build — the relay refuses league changes from here.');
-    else lgHint((r&&r.error)||'Could not join the team.');
+    else if(r&&!r.pending) lgHint((r&&r.error)||'Could not join the team.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
 };
 document.getElementById('lgHtMembers').addEventListener('click',function(e){
@@ -7251,20 +7321,6 @@ document.getElementById('lgHtHandoff').onclick=function(){
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not hand off.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
-document.getElementById('lgTeamCodeBtn').onclick=function(){
-  var team=lgMyOkTeam();                        // only a member of the team hands out its code (Nathan, 9/1)
-  if(!team){ lgHint('You’re not on a team yet.'); return; }
-  var box=document.getElementById('lgTeamCodeBox');
-  if(box.style.display!=='none'){ box.style.display='none'; return; }
-  lgHint('Making a '+team+' code…');
-  lgCall({op:'teamcode',league:league.id,team:team,me:LG.me},lgHint).then(function(r){
-    if(r&&r.ok&&r.code){
-      box.style.display='';
-      box.innerHTML='<b>'+r.code.slice(0,3)+' '+r.code.slice(3)+'</b><small>'+esc(r.team)+' — give this to the new teammate. It works once, for 48 hours.</small>';
-      lgHint('');
-    } else if(r&&!r.pending) lgHint((r&&r.error)||'Could not make a code.');
-  }).catch(function(){ lgHint('Could not connect — try again.'); });
-};
 document.getElementById('lgVerifyResend').onclick=function(){
   lgHint('Sending another link…');
   relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
@@ -7272,21 +7328,36 @@ document.getElementById('lgVerifyResend').onclick=function(){
     else lgHint((v&&v.error)||'Could not send the e-mail.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
+// (9/15, Nathan: "it was difficult to figure out how to generate the code and
+// get it to him") One tap makes the code; the next one sends it.
+var _lgInviteCode='';
 document.getElementById('lgInvite').onclick=function(){
-  var row=document.getElementById('lgInviteRow'); row.style.display=row.style.display==='none'?'flex':'none';
-  document.getElementById('lgInviteCode').style.display='none';
-};
-document.getElementById('lgInviteGo').onclick=function(){
-  var f=(document.getElementById('lgInviteFor').value||'').trim().toLowerCase();
-  if(f && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f)){ lgHint('That doesn’t look like an e-mail address.'); return; }
+  var box=document.getElementById('lgInviteCode');
+  if(box.style.display!=='none'){ box.style.display='none';
+    document.getElementById('lgInviteSendRow').style.display='none';
+    document.getElementById('lgInviteTip').style.display='none'; return; }
   lgHint('Making a join code…');
-  lgCall({op:'invite',league:league.id,'for':f||undefined},lgHint).then(function(r){
+  lgCall({op:'invite',league:league.id},lgHint).then(function(r){
     if(r&&r.ok&&r.code){
-      var box=document.getElementById('lgInviteCode'); box.style.display='';
-      box.innerHTML='<b>'+r.code.slice(0,3)+' '+r.code.slice(3)+'</b><small>Give this to '+(f?esc(f):'the new member')+'. It works once, for 48 hours'+(f?', and only for that e-mail':'')+'.</small>';
-      document.getElementById('lgInviteFor').value=''; lgHint('');
+      _lgInviteCode=r.code;
+      box.style.display='';
+      box.innerHTML='<b>'+r.code.slice(0,3)+' '+r.code.slice(3)+'</b><small>Works once, for 48 hours. They open Dart Keeper → League → I have a code.</small>';
+      document.getElementById('lgInviteSendRow').style.display='';
+      document.getElementById('lgInviteTip').style.display='';
+      lgHint('');
     } else if(r&&!r.pending) lgHint((r&&r.error)||'Could not make a code.');
   }).catch(function(){ lgHint('Could not connect — check your signal and try again.'); });
+};
+document.getElementById('lgInviteSend').onclick=function(){
+  if(!_lgInviteCode){ lgHint('Make a code first.'); return; }
+  var msg='Join me in '+(league.name||'my league')+' on Dart Keeper.\n\n'
+    +'1. Open https://dartkeeper.net/play/\n2. Put it on your home screen\n3. League → I have a code → '+_lgInviteCode
+    +'\n\nThe code works once, for 48 hours.';
+  try{
+    if(navigator.share){ navigator.share({title:'Dart Keeper',text:msg}).catch(function(){}); lgHint(''); return; }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(msg).then(function(){ lgHint('✓ Copied — paste it into a text.'); },function(){ lgHint('Read them the code above.'); }); return; }
+  }catch(e){}
+  lgHint('Read them the code above.');
 };
 document.getElementById('lgSync').onclick=function(){ lgHint('Syncing…'); lgSync(function(r){ lgHint((r&&r.ok)?'✓ Up to date.':((r&&r.error)||'Could not sync — check your signal.')); renderLeagueUI(); }); };
 document.getElementById('lgLeave').onclick=function(){
@@ -7765,7 +7836,13 @@ function wakeRequest(){
   }catch(e){}
 }
 wakeRequest();
-setTimeout(welcomeShow, 400);
+// (9/15, Nathan) A scanned sticker opens in a browser tab, which is where people
+// lose the app. So on a first run the home-screen card comes FIRST; the name is
+// asked once they have installed it or acknowledged the steps.
+setTimeout(function(){
+  try{ if(welcomeNeeded() && !dkStandalone() && !dkSnoozed()){ dkA2HSShow(); return; } }catch(e){}
+  welcomeShow();
+}, 400);
 try{ lgRedeemToken(); }catch(e){}          // arrived by tapping the e-mail link
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') wakeRequest(); });
 window.addEventListener('pageshow',wakeRequest);
@@ -7783,30 +7860,37 @@ function welcomeNeeded(){
 function welcomeShow(){
   if(!welcomeNeeded()) return;
   document.getElementById('wcStep1').classList.remove('hidden');
-  document.getElementById('wcStep2').classList.add('hidden');
   document.getElementById('welcome').classList.remove('hidden');
+  wcCheck();
   setTimeout(function(){ try{ document.getElementById('wcName').focus(); }catch(e){} }, 250);
 }
 function welcomeDone(){
   document.getElementById('welcome').classList.add('hidden');
   try{ localStorage.setItem('darts_welcome_seen_v1','1'); }catch(e){}
-  setTimeout(function(){ try{ dkA2HSShow(); }catch(e){} }, 500);   // now offer the home-screen install
 }
+// Continue stays dead until there is a name AND an e-mail that looks real.
+function wcCheck(){
+  var n=(document.getElementById('wcName').value||'').trim();
+  var e=(document.getElementById('wcEmail').value||'').trim();
+  var ok=!!n && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+  var b=document.getElementById('wcGo'); if(b) b.disabled=!ok;
+  return ok;
+}
+['wcName','wcEmail'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',wcCheck); });
 document.getElementById('wcGo').onclick=function(){
+  if(!wcCheck()) return;
   var n=(document.getElementById('wcName').value||'').trim().slice(0,40);
-  if(!n){ document.getElementById('wcName').focus(); return; }
   addPlayer(n);
   var real=roster.filter(function(x){ return x.toLowerCase()===n.toLowerCase(); })[0]||n;
-  setMyName(real); LG.me=real; try{ saveLeague(); }catch(e){}
-  document.getElementById('wcStep1').classList.add('hidden');
-  document.getElementById('wcStep2').classList.remove('hidden');
-  // a roster name is a membership: attach quietly in the background
-  try{ lgFindMine(real).then(function(Lg){ if(Lg&&!league.id) lgAttachFound(Lg); }); }catch(e){}
+  setMyName(real); LG.me=real;
+  lgSetEmail(document.getElementById('wcEmail').value);
+  try{ setPlayerEmail(real, lgEmail()); }catch(e){}     // the name on the board owns this address
+  try{ saveLeague(); }catch(e){}
+  // (9/15) nothing else happens on its own — no league lookup, no library.
+  welcomeDone();
 };
-document.getElementById('wcName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcGo').click(); } });
-document.getElementById('wcSkip').onclick=welcomeDone;
-document.getElementById('wcJoin').onclick=function(){ welcomeDone(); try{ LG.on=true; saveLeague(); document.getElementById('leagueBtn').click(); }catch(e){} };
-document.getElementById('wcCreate').onclick=document.getElementById('wcJoin').onclick;
+document.getElementById('wcName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcEmail').focus(); } });
+document.getElementById('wcEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcGo').click(); } });
 
 // After taking someone's library: you are probably already in it under their
 // spelling. Offer to fold your own profile into that name.
@@ -7855,7 +7939,12 @@ document.getElementById('mgMerge').onclick=function(){
   var into=document.getElementById('mgPick').value, me=myName();
   document.getElementById('mergeCard').classList.add('hidden');
   if(!into||!me||into===me) return;
-  if(mergePlayers(me,into)) shareMsg('Merged — you are '+shortName(into)+' now, with all your games.');
+  if(mergePlayers(me,into)){
+    // the address they signed up with follows them onto the name they picked
+    try{ if(lgEmail()) setPlayerEmail(into,lgEmail()); }catch(e){}
+    try{ LG.me=into; saveLeague(); }catch(e){}
+    shareMsg('Merged — you are '+shortName(into)+' now, with all your games.');
+  }
   else shareMsg('Could not merge those two.');
 };
 
@@ -7902,10 +7991,8 @@ window.addEventListener('online', function(){ try{ bkQueue(); }catch(e){} });
 refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
-// A name on a league roster IS the membership (9/1): a device that picked its
-// name but never joined a league asks the relay, once online, whether that
-// name sits on a team somewhere — and attaches in the background if so.
-setTimeout(function(){ try{ if(LG.me && !(league&&league.id) && navigator.onLine!==false) lgFindMine(LG.me).then(function(Lg){ if(Lg&&!(league&&league.id)) lgAttachFound(Lg); }); }catch(e){} }, 4000);
+// (9/15, Nathan) Nothing joins a league by itself any more. A league is entered
+// on purpose: a code from a member, or a library shared by one.
 setTimeout(function(){ try{ lgResumePending(); }catch(e){} }, 2500);
 
 // ---- ADD TO HOME SCREEN --------------------------------------------------
@@ -7968,18 +8055,21 @@ window.addEventListener('beforeinstallprompt', function(e){
   if(!document.getElementById('a2hs').classList.contains('hidden')) dkA2HSRender();  // upgrade to a real button
 });
 window.addEventListener('appinstalled', function(){ dkSnooze(3650); dkA2HSHide(); });
-document.getElementById('a2hsLater').onclick=function(){ dkSnooze(7); dkA2HSHide(); };
+// On a first run the name card waits behind this one (9/15).
+function dkA2HSThen(){ try{ if(welcomeNeeded()) setTimeout(welcomeShow, 150); }catch(e){} }
+document.getElementById('a2hsLater').onclick=function(){ dkSnooze(7); dkA2HSHide(); dkA2HSThen(); };
 document.getElementById('a2hsGo').onclick=function(){
-  if(!dkInstallEvt){ dkA2HSHide(); return; }
+  if(!dkInstallEvt){ dkA2HSHide(); dkA2HSThen(); return; }
   var e=dkInstallEvt; dkInstallEvt=null;
   try{ e.prompt(); }catch(_){ }
   if(e.userChoice && e.userChoice.then) e.userChoice.then(function(c){
     if(c && c.outcome==='accepted') dkSnooze(3650); else dkSnooze(7);
-    dkA2HSHide();
-  }); else dkA2HSHide();
+    dkA2HSHide(); dkA2HSThen();
+  }); else { dkA2HSHide(); dkA2HSThen(); }
 };
 // give the install event a beat to arrive so Android gets the real button
-setTimeout(dkA2HSShow, 700);
+// (a first run already showed it at 400 ms, ahead of the name card)
+setTimeout(function(){ try{ if(!welcomeNeeded()) dkA2HSShow(); }catch(e){} }, 700);
 
 // ---- KEEP THE SCREEN AWAKE ----------------------------------------------
 // A scoreboard on the wall that dims mid-leg is useless. Two mechanisms, because
