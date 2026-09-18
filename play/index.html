@@ -3214,7 +3214,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.15';
+var DK_VER='3.16';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -5722,6 +5722,9 @@ function openBoard01(){                        // temporary full-screen board fo
   renderGame();          // the confirm label depends on bdopen (Miss vs Score It)
 }
 function closeBoard01(){
+  // (9/17, Nathan) Anything half-typed on the calculator is stale the moment the
+  // board is used — come back to a clean 0, never to a number nobody meant.
+  kpExpr='';
   document.getElementById('game').classList.remove('bdopen');
   // put Undo/Redo back where the normal 01 layout expects them
   var bar=document.querySelector('#playArea .turnbar');
