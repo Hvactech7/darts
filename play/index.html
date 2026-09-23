@@ -2970,7 +2970,7 @@ async function shareGo(){
       // Only ask when the library actually brought someone. Re-taking the same
       // code adds nothing, and asking "are you already in here?" again — after
       // the person already answered — is just nagging (2026-08-26).
-      if(added.length) mergeAsk(added);                  // offer to fold your profile in
+      if(added.length) mergeAsk(added, (r.data&&r.data.players)||[]);   // offer to fold your profile in — unless the library already has me
       document.getElementById('shareCodeIn').value='';
       document.getElementById('shareTakeRow').style.display='none';
     } else shareMsg((r&&r.error)||'Could not fetch that share.');
@@ -3214,7 +3214,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.17';
+var DK_VER='3.18';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7919,9 +7919,15 @@ function mgBest(me,names){
   names.forEach(function(n){ var s=mgScore(me,n); if(s>bs){ bs=s; best=n; } });
   return bs>=20?best:null;   // no plausible match: make them choose on purpose
 }
-function mergeAsk(added){
+function mergeAsk(added, incoming){
   var me=myName();
   if(!me || !added || !added.length) return false;
+  // (9/22, Nathan — David's phone) The library that just arrived already carries
+  // THIS player's own name, so the two copies already agree: there is nothing to
+  // fold together. Asking anyway listed every other new name but his, which read
+  // as if his name had gone missing. Say nothing instead.
+  var mine=String(me).toLowerCase();
+  if(Array.isArray(incoming) && incoming.some(function(n){ return String(n||'').trim().toLowerCase()===mine; })) return false;
   _mgNames=added.filter(function(n){ return n!==me; });
   if(!_mgNames.length) return false;
   var sel=document.getElementById('mgPick');
