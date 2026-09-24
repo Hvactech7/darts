@@ -8,8 +8,8 @@
 // refresh, which is what keeps startup instant.
 //
 // Bump CACHE when the file list below changes.
-const CACHE = 'darts-v3.20';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
-const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner.jpg',
+const CACHE = 'darts-v3.21';   // versioning switched to MAJOR.MINOR at Nathan's request (v25 → v2.6)
+const CORE = ['./', 'index.html', 'manifest.json', 'darts-icon-180.png', 'darts-icon-512.png',  './dk-banner-v2.jpg',
   './dk-bg.jpg'
 ,  './dk-side-blue.jpg',
   './dk-side-red.jpg'
