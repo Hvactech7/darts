@@ -3045,7 +3045,7 @@ function recordGameResult(winnerNames, loserNames, gameType, extra){
   });
   all.forEach(n=>{ statFor(n).last=Date.now(); });
   saveStats();
-  try{ dkMatchPing(winnerNames,loserNames,gameType); }catch(e){}
+  try{ dkMatchPing(winnerNames,loserNames,gameType,extra); }catch(e){}
 }
 
 //============================ PLAYER CARD (2026-08-22) ============================
@@ -3238,7 +3238,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.21';
+var DK_VER='3.22';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3301,13 +3301,54 @@ function dkInstallPing(){
   }catch(e){}
 }
 
-// Who played who. Names only, plus the game and the winner — capped so a Fat 6
-// table of ten cannot turn one game into a giant row.
-function dkMatchPing(winners,losers,gameType){
+// Who played who — and (9/30, Nathan: "save ALL the data from ALL games") each
+// player's scoring for the game, so a night that never reached a league can still be
+// rebuilt with its averages and highs. Capped so a Fat 6 table of ten stays small.
+var DK_PING_KEYS=['pts','turns','dts','best','t180','t100','co','hiOut','hiIn','cd','ch','cm','di','dio','do','doo'];
+function dkMatchPing(winners,losers,gameType,extra){
   try{
     var w=(winners||[]).slice(0,10).map(String), l=(losers||[]).slice(0,10).map(String);
     if(!w.length && !l.length) return;
-    dkStat('match',{game:String(gameType||''),w:w,l:l,n:w.length+l.length});
+    var msg={game:String(gameType||''),w:w,l:l,n:w.length+l.length}, st={};
+    if(extra) Object.keys(extra).slice(0,10).forEach(function(n){
+      var e=extra[n]||{}, o={};
+      DK_PING_KEYS.forEach(function(k){ if(typeof e[k]==='number' && e[k]) o[k]=e[k]; });
+      if(Object.keys(o).length) st[String(n)]=o;
+    });
+    if(Object.keys(st).length) msg.st=st;
+    dkStat('match',msg);
+  }catch(e){}
+}
+// (9/30, Nathan: "save ALL the data from ALL games") A match played with the League
+// switch off stays off the league — but it is also sent to the relay whole (legs,
+// scores, every leg's stats), once, so a night scored with the switch forgotten can
+// still be recovered with its averages and highs. It is never added to a league
+// automatically.
+var LS_MREC='dk_mrec_sent_v1';
+function dkMrecSent(){ try{ return JSON.parse(localStorage.getItem(LS_MREC)||'{}')||{}; }catch(e){ return {}; } }
+function dkSendMatchRec(m){
+  try{
+    if(!m||!m.done||!m.id) return false;
+    var sent=dkMrecSent(); if(sent[m.id]) return false;
+    var rec={id:m.id,ts:m.ts,game:m.game,mode:m.mode,legs:m.legs,score:m.score,winner:m.winner,
+      sides:(m.sides||[]).map(function(sd){ return {name:sd.name,members:(sd.members||[]).slice(0,10),team:sd.team||null}; }),
+      results:(m.results||[]).slice(0,15)};
+    if(JSON.stringify(rec).length>24000) return false;   // never one giant row
+    dkStat('matchrec',{m:rec});
+    sent[m.id]=Date.now();
+    var ids=Object.keys(sent); if(ids.length>800) ids.sort(function(a,b){ return sent[a]-sent[b]; }).slice(0,ids.length-800).forEach(function(k){ delete sent[k]; });
+    try{ localStorage.setItem(LS_MREC,JSON.stringify(sent)); }catch(e){}
+    return true;
+  }catch(e){ return false; }
+}
+// Once after this update (and harmlessly on every launch after): anything still kept
+// on this device goes to the relay, one match at a time.
+function dkBackfillMatches(){
+  try{
+    if(!dkShareOn()) return;
+    var q=[]; (LG.local.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ if(m&&m.done) q.push(m); }); }); });
+    var sent=dkMrecSent(); q=q.filter(function(m){ return m.id && !sent[m.id]; }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,300);
+    (function next(){ var m=q.shift(); if(!m) return; dkSendMatchRec(m); setTimeout(next,700); })();
   }catch(e){}
 }
 
@@ -6025,6 +6066,7 @@ document.getElementById('pidStartBtn').onclick=function(){
   // no longer decides whether the night is kept — it only decides whether these
   // matches are league matches (counted, synced, e-mailed) or stay on this device.
   // Twice now a night was scored with the switch off and the games were gone.
+  // (9/30) Kept ones are also sent to the relay whole — never lost, never auto-added.
   if(spec.kind!=='ffa' && spec.kind!=='fat6'){ lgAskLegs(spec); return; }   // "How many legs?" then leg 1 (free-for-all games are never matches)
   lgAbandon();                                       // a plain game supersedes any half-played match
   lgRunStart(spec,0);
@@ -6620,6 +6662,10 @@ function lgAdopt(Lg, makeActive){
   if(Lg.claims&&typeof Lg.claims==='object') rec.claims=Lg.claims;
   lgAdoptEmails(Lg.emails);
   rec.seasons=lgMergeSeasons(rec.seasons||[], Lg.seasons); rec.lastSync=Date.now();
+  // (9/30) a game rebuilt from the play log gives way to the real one when its device
+  // sends it; the relay lists the replaced ids — drop this device's copies of them
+  if(Array.isArray(Lg.deadM)) rec.deadM=Lg.deadM.slice(-3000);
+  lgDropDeadMatches(rec);
   try{ lgFixSides(rec); }catch(e){}
   // a deleted season stays deleted: drop local copies of anything on the dead
   // list (the relay refuses them anyway — this clears them off THIS device)
@@ -6630,6 +6676,11 @@ function lgAdopt(Lg, makeActive){
   if(makeActive||!LG.active) lgSelect(rec.id);
   saveLeague(); renderLeagueUI();
   return rec;
+}
+function lgDropDeadMatches(rec){
+  var dead=(rec&&rec.deadM)||[]; if(!dead.length) return;
+  (rec.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){
+    t.matches=(t.matches||[]).filter(function(m){ return !(m&&dead.indexOf(m.id)>=0); }); }); });
 }
 // push what this device has for ONE league, merge in what the Pi sends back.
 // A sync asked for while one is in flight runs again afterwards.
@@ -6794,9 +6845,20 @@ function lgStartSeason(name){
   league.seasons.push(s); league.mySeason=s.id; saveLeague(); return s;
 }
 // A season and a tournament come into being the moment a match needs one.
+// (9/30) End Night only shows with the switch on, so a night can stay open for
+// good. One that has seen no game for 8 hours is over: it is closed the moment a
+// later game needs a tournament, never reused (a late night past midnight is fine).
+var LG_NIGHT_GAP=8*3600000;
+function lgCloseStale(t){
+  if(!t||t.endTs) return false;
+  var last=t.ts||0; (t.matches||[]).forEach(function(m){ last=Math.max(last,m.ts||0); (m.results||[]).forEach(function(r){ last=Math.max(last,(r&&r.ts)||0); }); });
+  if(Date.now()-last<LG_NIGHT_GAP) return false;
+  t.endTs=last+60000; return true;
+}
 function lgEnsureTourn(){
   var s=lgSeason()||lgStartSeason('');
   var t=lgTourn();
+  if(t&&lgCloseStale(t)) t=null;
   if(!t){ t={id:lgId('t'),ts:Date.now(),endTs:null,mailed:false,matches:[]}; s.tournaments.push(t); saveLeague(); }
   return t;
 }
@@ -6813,6 +6875,7 @@ function lgEnsureTournIn(rec){
   }
   if(!s){ s={id:lgId('s'),name:'Season '+(ss.length+1),startTs:now,endTs:null,ed:now,tournaments:[]}; ss.push(s); rec.mySeason=s.id; }
   var ts=s.tournaments||(s.tournaments=[]), t=ts[ts.length-1];
+  if(t) lgCloseStale(t);
   if(!t||t.endTs){ t={id:lgId('t'),ts:now,endTs:null,mailed:false,matches:[]}; ts.push(t); }
   return t;
 }
@@ -6993,25 +7056,40 @@ function lgAutoOn(rec){
 // Games played BEFORE the device attached live in LG.local under an
 // auto-made season. Move them into the league's real season/tournament for
 // the day they were played, so they count once this device is official.
-function lgRehomeLocal(rec){
+function lgRehomeLocal(rec){ return lgMoveLocal(rec,false); }
+// (9/30) Filing a kept game by the day it was played closes that day's night when
+// it is over, so tonight's games never land in it. Games played with the switch
+// off are NEVER moved in on their own (Nathan: practice games stay out of the
+// league) — only the Add Games button, on purpose, does this.
+function lgMoveLocal(rec,inSeasonOnly){
   try{
-    var moved=0;
+    var moved=0, today=lgDay(Date.now());
     (LG.local.seasons||[]).forEach(function(ls){
       (ls.tournaments||[]).forEach(function(lt){
-        (lt.matches||[]).forEach(function(m){
-          if(!m||!m.done) return;
+        lt.matches=(lt.matches||[]).filter(function(m){
+          if(!m||!m.done) return true;
           var when=m.ts||lt.ts||Date.now();
           var ss=(rec.seasons||[]).filter(function(x){ return (x.startTs||0)<=when && (!x.endTs||when<=lgDayEnd(x.endTs)); });
           var season=ss.length?ss[ss.length-1]:null;
-          if(!season){ season={id:lgId('s'),name:'Season '+((rec.seasons||[]).length+1),startTs:when,endTs:null,ed:Date.now(),tournaments:[]}; rec.seasons.push(season); }
+          if(!season){
+            if(inSeasonOnly) return true;                    // outside every season: stays here
+            season={id:lgId('s'),name:'Season '+((rec.seasons||[]).length+1),startTs:when,endTs:null,ed:Date.now(),tournaments:[]}; rec.seasons.push(season);
+          }
           var day=lgDay(when);
           var tourn=(season.tournaments||[]).find(function(t){ return lgDay(t.ts||0)===day; });
-          if(!tourn){ tourn={id:lgId('t'),ts:when,endTs:null,mailed:false,matches:[]}; season.tournaments.push(tourn); }
-          if(!tourn.matches.some(function(x){ return x.id===m.id; })){ tourn.matches.push(m); moved++; }
+          if(!tourn){ tourn={id:lgId('t'),ts:when,endTs:null,mailed:false,matches:[]}; season.tournaments.push(tourn);
+            season.tournaments.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); }
+          if(!tourn.matches.some(function(x){ return x.id===m.id; })){ m.lg=true; tourn.matches.push(m);
+            tourn.matches.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); moved++; }
+          // a night that is over is closed, so tonight's games never land in it
+          if(day!==today) tourn.endTs=Math.max(tourn.endTs||0, (m.ts||when)+60000);
+          return false;
         });
       });
+      ls.tournaments=(ls.tournaments||[]).filter(function(t){ return (t.matches||[]).length; });
     });
-    if(moved){ LG.local.seasons=[]; saveLeague(); }
+    LG.local.seasons=(LG.local.seasons||[]).filter(function(x){ return (x.tournaments||[]).length; });
+    if(moved) saveLeague();
     return moved;
   }catch(e){ return 0; }
 }
@@ -7524,9 +7602,11 @@ document.getElementById('legsGo').onclick=function(){
   _lgPendingSpec=null;
   LG.lastLegs=legs;                                  // remember the pick so the next match is one tap
   var sides=lgSidesFor(spec);
-  // lg: is this a LEAGUE match? Decided by the switch at the moment it starts. A
-  // match with lg:false is kept just as fully — it simply lives on this device
-  // until someone adds it to the league (League card → "Add tonight's games").
+  // lg: is this a LEAGUE match? Decided by the switch at the moment it starts — the
+  // switch IS the league night: on starts it, off ends it and e-mails it (Nathan,
+  // 8/31 and 9/30). A match with lg:false is kept just as fully: on this device, and
+  // (9/30) sent to the relay whole, so nothing scored is ever lost — but it is never
+  // put into a league unless someone adds it on purpose.
   LG.cur={ id:lgId('m'), ts:Date.now(), game:config.game, mode:config.mode, legs:legs, spec:spec, sides:sides,
     lg:(leagueOn() && !!league.id),
     score:sides.map(function(){return 0;}), results:[], winner:null, done:false };
@@ -7625,13 +7705,15 @@ function lgCommitMatch(){
   var m=LG.cur; if(!m||!m.done) return;
   LG.cur=null;
   // a league match joins the league and is shared; anything else is kept here,
-  // in the same shape, until someone adds it. A match with NO tag is a league
-  // match: before 3.12 a match could only exist with the switch on, so a match
-  // half-played across the upgrade must not be sent to the wrong place.
+  // in the same shape, until someone adds it — and (9/30) sent to the relay whole.
+  // A match with NO tag is a league match: before 3.12 a match could only exist
+  // with the switch on, so a match half-played across the upgrade must not be sent
+  // to the wrong place.
   var rec=((m.lg!==false) && league.id)?league:LG.local;
   var t=lgEnsureTournIn(rec); t.matches.push(m);
   saveLeague();
   if(rec===league && league.id) lgSync();         // share it with the league's other devices
+  else dkSendMatchRec(m);
   try{ renderLeagueUI(); }catch(e){}
 }
 function lgAbandon(){ if(LG.cur){ LG.cur=null; saveLeague(); } }
@@ -8042,6 +8124,7 @@ window.addEventListener('online', function(){ try{ bkQueue(); }catch(e){} });
 refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
+setTimeout(function(){ try{ dkBackfillMatches(); }catch(e){} },6000);   // (9/30) kept games reach the relay whole
 // (9/15, Nathan) Nothing joins a league by itself any more. A league is entered
 // on purpose: a code from a member, or a library shared by one.
 setTimeout(function(){ try{ lgResumePending(); }catch(e){} }, 2500);
