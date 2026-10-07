@@ -1944,10 +1944,10 @@
   <!-- Turning League Mode off on a night with matches = end + mail. Confirm it. -->
   <div id="nightEndSplash" class="hidden">
     <div class="card">
-      <h2>🏁 End the night?</h2>
+      <h2>🏁 End league night?</h2>
       <p class="small" id="neLine" style="margin:4px 0 10px;"></p>
-      <button class="primary" id="neGo" style="width:100%;">End tournament &amp; e-mail the league</button>
-      <button class="ghost" id="neStay" style="width:100%;margin-top:8px;">Keep playing</button>
+      <button class="primary" id="neGo" style="width:100%;">End League Night</button>
+      <button class="ghost" id="neStay" style="width:100%;margin-top:8px;">Keep Playing</button>
     </div>
   </div>
   <div id="playerCard" class="hidden">
@@ -3238,7 +3238,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.22';
+var DK_VER='3.23';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -5206,6 +5206,15 @@ function renderDarts(){
 }
 
 let _prevCMarks=null;   // display-only: which cells changed since last render (drives the pop)
+// marks per number from a list of darts — one total per line (singles 1, doubles 2, triples 3)
+function ckTally(darts){
+  var hit={};
+  (darts||[]).forEach(function(d){
+    if(!d || !d.value || !CRICKET_TARGETS.includes(d.value)) return;
+    hit[d.value]=(hit[d.value]||0)+Math.max(1,Math.min(3,d.mult||1));
+  });
+  return hit;
+}
 function renderCricket(){
   // Targets (15-20 + Bull) run down the center spine; Team 1 on the left,
   // Team 2 on the right. (Always exactly two teams in this app.)
@@ -5229,7 +5238,10 @@ function renderCricket(){
     const tripIn=t.tripleClose && t.tripleClose[n] && m>=3;
     const fresh=_prevCMarks && _prevCMarks[idx] && _prevCMarks[idx][n]!==m ? ' fresh' : '';
     const inner=tripIn ? `<span class="smiley${fresh}">😁</span>` : `<span class="marks${m>=3?' closed':''}${fresh}">${markSVG(m,idx)}</span>`;
-    const thrown=(G.ckLast&&G.ckLast[idx]&&G.ckLast[idx][n])||0;           // marks that side's last turn put here
+    // (10/6, Nathan) the side throwing shows its count LIVE, dart by dart; the others keep
+    // what their last turn put on each line
+    const live=(idx===G.cur && !G.over && G.darts && G.darts.length) ? ckTally(G.darts) : null;
+    const thrown=(live ? live[n] : (G.ckLast&&G.ckLast[idx]&&G.ckLast[idx][n]))||0;
     const dv=thrown ? `<span class="ckdt ck${idx===0?'l':'r'}">${thrown}</span>` : '';
     // the number sits on the OUTSIDE — away from the centre spine (Nathan)
     return `<td class="mcell${active}"><span class="ckwrap">${idx===0?dv+inner:inner+dv}</span></td>`;
@@ -6893,12 +6905,16 @@ function lgUnmarked(){
 }
 function renderLeagueUI(){
   var b=document.getElementById('leagueBtn');
-  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League On':'League Off'); }
+  // (10/6, Nathan) labels say what a press DOES, not the switch's state
+  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League Night: ON':'League'); }
   var t=document.getElementById('lgToggle');
-  if(t){ t.classList.toggle('on',leagueOn()); t.textContent='League '+(leagueOn()?'On':'Off'); }
+  if(t){ var _n=(leagueOn()&&league&&league.id&&lgTourn())?lgTourn().matches.length:0;
+    t.classList.toggle('on',leagueOn());
+    t.textContent=leagueOn()?('■ End League Night'+(_n?' ('+_n+' game'+(_n===1?'':'s')+')':'')):'▶ Start League Night'; }
   var en=document.getElementById('lgEndNight');
-  if(en){ var _tn=leagueOn()&&league&&league.id?lgTourn():null; en.style.display=(_tn&&_tn.matches.length)?'':'none';
-    if(_tn) en.textContent='End Tournament ('+_tn.matches.length+')'; }
+  if(en) en.style.display='none';
+  // (10/6, Nathan) only the league head sets the season
+  var ssb=document.getElementById('lgSetSeason'); if(ssb) ssb.style.display=(league&&league.id&&lgIsHead(league))?'':'none';                  // (10/6) the one button above does this now
   // matches played with the switch off are kept — offer to move them in
   var au=document.getElementById('lgAddUnmarked');
   if(au){ var _un=(league&&league.id)?lgUnmarked():[]; au.style.display=_un.length?'':'none';
@@ -7015,6 +7031,10 @@ function renderLeagueUI(){
     }
   }
   var tt=document.getElementById('lgToolsToggle'), tw=document.getElementById('lgTools');
+  // (10/6, Nathan) members get only Leave and Create/Join here; the season and the head's
+  // tools belong to the league head alone
+  var _head=inL&&lgIsHead(league);
+  ['lgSeasonLine','lgSync'].forEach(function(id){ var e=document.getElementById(id); if(e) e.style.display=_head?'':'none'; });
   if(tt&&tw){ tt.style.display=inL?'':'none'; tw.style.display=(inL&&_lgToolsOpen)?'':'none';
     tt.textContent='⚙ League Options '+(_lgToolsOpen?'▴':'▾'); }
   // recognised by name, not yet official: e-mail once, done
@@ -7225,6 +7245,7 @@ function _ssParse(v){ if(!/^\d{4}-\d{2}-\d{2}$/.test(v||'')) return null; var a=
 function lgDivName(dv){ return dv?('Division '+dv):''; }
 function _ssDivPaint(){ [].forEach.call(document.querySelectorAll('#ssDiv button'),function(b){ b.classList.toggle('on',+b.dataset.dv===_ssDv); }); }
 function seasonSplashOpen(thenOn){
+  if(league&&league.id&&!lgIsHead(league)){ lgHint('Only the league head sets the season.'); return; }
   _ssThenOn=!!thenOn;
   document.getElementById('ssHint').textContent='';
   document.getElementById('ssTitle').textContent='📅 Set Season';
@@ -7289,6 +7310,7 @@ function seasonAskOpen(sx){
     LG.on=true; saveLeague(); renderLeagueUI();
     lgHint('Tonight counts toward '+sx.name+' — a make-up night after its end date.');
   };
+  document.getElementById('saNew').style.display=(league&&league.id&&!lgIsHead(league))?'none':'';
   document.getElementById('saNew').onclick=function(){ document.getElementById('seasonAskSplash').classList.add('hidden'); seasonSplashOpen(true); };
   document.getElementById('seasonAskSplash').classList.remove('hidden');
 }
@@ -7297,7 +7319,7 @@ document.getElementById('seasonAskSplash').addEventListener('click',function(e){
 
 // ---- turning the night off = end + mail, once you say so ----
 function nightEndOpen(tn){
-  document.getElementById('neLine').textContent=tn.matches.length+' match'+(tn.matches.length===1?'':'es')+' tonight. Ending the tournament e-mails every member their report.';
+  document.getElementById('neLine').textContent=tn.matches.length+' game'+(tn.matches.length===1?'':'s')+' tonight are saved. The league report goes out to everyone at 1 AM.';
   document.getElementById('nightEndSplash').classList.remove('hidden');
 }
 document.getElementById('neStay').onclick=function(){ document.getElementById('nightEndSplash').classList.add('hidden'); };
@@ -7908,13 +7930,13 @@ function lgEndTournament(done){
   if(lgMatchOpen()){ done('Finish or quit the match in progress first (leg '+(LG.cur.results.length+1)+' of '+LG.cur.legs+').',true); return; }
   t.endTs=Date.now(); saveLeague(); renderLeagueUI();
   if(!league.id){ done('Tournament closed — this device isn’t in a league, so there was no one to send the report to.',true); return; }
-  done('Tournament closed — sending the report…',false);
+  done('League night ended — saving…',false);
   lgSync(function(){
     // a sync ADOPTS the merged league from the Pi — `s`/`t` captured above are
     // stale copies now, so find the live records by id before touching them
     var s2=league.seasons.find(function(x){return x.id===s.id;})||s;
     var t2=(s2.tournaments||[]).find(function(x){return x.id===t.id;})||t;
-    lgSendReport(t2,s2).then(function(r){ if(r&&r.ok&&!r.test){ t2.mailed=true; saveLeague(); lgSync(); } done('Tournament closed. '+lgSendMsg(r),true); renderLeagueUI(); })
+    lgSendReport(t2,s2).then(function(r){ if(r&&r.ok&&!r.test){ t2.mailed=true; saveLeague(); lgSync(); } done('League night ended. '+lgSendMsg(r),true); renderLeagueUI(); })
       .catch(function(){ done('Tournament closed, but the report could not be sent — use "Send Last Report" on the Stats page when you have signal.',true); });
   });
 }
