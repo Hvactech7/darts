@@ -543,7 +543,7 @@
   /* ---- Rules ---- */
   #rulesCard{position:fixed;inset:0;z-index:320;background:rgba(4,3,8,.82);display:flex;align-items:center;justify-content:center;padding:16px;}
   #rulesCard.hidden{display:none;}
-  #rulesCard .card{max-width:600px;width:100%;max-height:calc(100vh - 24px);display:flex;flex-direction:column;}
+  #rulesCard .card{max-width:600px;width:100%;max-height:calc(100vh - 24px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;}
   #rulesBody{flex:1 1 auto;min-height:0;overflow-y:auto;font-size:20.5px;line-height:1.5;color:#e6dcc4;}   /* +25% (Nathan, 8/24: too small at the board) */
   #rulesBody p{margin:0 0 10px;}
   #rulesBody b{color:var(--gold);}
@@ -557,7 +557,7 @@
   /* ---- Extras picker ---- */
   #extrasSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
   #extrasSplash.hidden{display:none;}
-  #extrasSplash .card{max-width:560px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #extrasSplash .card{max-width:560px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
   #extrasGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
   #extrasGrid .xg{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;padding:12px 14px;font-size:20px;}
   #extrasGrid .xg b{font-family:var(--display);letter-spacing:1px;}
@@ -1008,6 +1008,7 @@
   #menuRow{display:flex;gap:8px;flex-wrap:nowrap;margin:0 0 10px;}
   #menuRow > button{flex:1 1 0;min-width:0;white-space:nowrap;padding:9px 6px;font-size:20px;letter-spacing:.5px;}
   #menuRow #manageBtn{flex:1.45 1 0;margin:0 !important;}
+  #menuRow #leagueBtn.on{letter-spacing:0;}   /* (10/13) "League Night: ON" needs every pixel on an iPad */
   #menuRow #leagueBtn.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
   /* the two league modals borrow #confirmQuit's dress exactly */
@@ -1016,7 +1017,7 @@
   #nearSplash{z-index:320;}
   #fillSplash{z-index:310;}
   /* header and buttons stay put; only the stats scroll (the card is taller than an iPad in landscape) */
-  #playerCard .card{max-width:520px;width:100%;margin:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column;}
+  #playerCard .card{max-width:520px;width:100%;margin:16px;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;}
   .pcHead,#pcBtns{flex:0 0 auto;}
   #pcBody{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:2px;}
   .pcHead{text-align:center;margin-bottom:6px;}
@@ -1078,7 +1079,7 @@
   .stT .tri{display:inline-block;width:14px;color:#a3906a;}
   .stTbody{padding:0 0 6px 14px;border-left:2px solid rgba(87,69,28,.5);margin:0 0 6px 6px;}
   .stNote{color:#a3906a;font-size:13px;margin-top:6px;text-align:right;}
-  #leagueCard .card{max-height:calc(100vh - 36px);overflow-y:auto;}
+  #leagueCard .card{max-height:calc(100vh - 36px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
   #leagueCard .row > button{flex:0 0 auto;font-size:17px;padding:11px 14px;white-space:nowrap;}
   /* short action buttons: the rivets sat under the letters */
   #lgCreate,#lgVerifyResend,#lgInvite{background-image:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);background-position:0 0;background-size:auto;}
@@ -1118,7 +1119,7 @@
   #winMatch .lgs{display:block;font-family:var(--body);font-weight:600;font-size:15px;letter-spacing:.3px;color:#a3906a;margin-top:4px;text-shadow:none;}
   /* Stats page: one locked screen — the tables scroll inside it, like the roster */
   #statsPage.hidden{display:none;}
-  #statsCard{display:flex;flex-direction:column;max-height:calc(100vh - 28px);}
+  #statsCard{display:flex;flex-direction:column;max-height:calc(100vh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));}
   /* only the body may shrink — .seg-toggle has overflow:hidden, which lets a
      flex item collapse to nothing when the tables are tall */
   #statsCard > h2,#statsTabs,#statsBtns,#statsMsg{flex:0 0 auto;}
@@ -1277,7 +1278,7 @@
   .th-names .thTeamBtn:active{ transform:scale(.96); }
   #teamPickSplash,#seasonSplash,#seasonAskSplash,#nightEndSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
   #teamPickSplash.hidden,#seasonSplash.hidden,#seasonAskSplash.hidden,#nightEndSplash.hidden{display:none;}
-  #teamPickSplash .card,#seasonSplash .card,#seasonAskSplash .card,#nightEndSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px);overflow-y:auto;}
+  #teamPickSplash .card,#seasonSplash .card,#seasonAskSplash .card,#nightEndSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
   /* these three open OVER the league card, which is itself fixed z300 —
      same z + later DOM had the card winning and the splash invisible */
   #seasonSplash,#seasonAskSplash,#nightEndSplash{z-index:400;}
@@ -3238,7 +3239,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.23';
+var DK_VER='3.24';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6903,10 +6904,23 @@ function lgUnmarked(){
     (t.matches||[]).forEach(function(m){ if(m&&m.done) out.push(m); }); }); });
   return out.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
 }
+// (10/13) "League Night: ON" where it fits; shorter on a narrower button (phones).
+// Measured on the real text, with a few pixels to spare for how each device draws fonts.
+function lgFitBtn(b){
+  try{
+    if(!b||!b.classList.contains('on')||!b.clientWidth) return;
+    var cs=getComputedStyle(b), pad=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+6;
+    var tries=['League Night: ON','League: ON','League ON','🏆 ON'];
+    // on phones the menu buttons size to their text, so the room is measured again for each label
+    for(var i=0;i<tries.length;i++){ b.textContent=tries[i]; var r=document.createRange(); r.selectNodeContents(b); if(r.getBoundingClientRect().width<=b.clientWidth-pad) return; }
+  }catch(e){}
+}
+window.addEventListener('resize',function(){ try{ renderLeagueUI(); }catch(e){} });
 function renderLeagueUI(){
   var b=document.getElementById('leagueBtn');
   // (10/6, Nathan) labels say what a press DOES, not the switch's state
-  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML='<span class="mi">🏆 </span>'+(leagueOn()?'League Night: ON':'League'); }
+  // (10/13) the trophy steps aside while ON so "League Night: ON" fits an iPad's button (the blue says ON too)
+  if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML=leagueOn()?'League Night: ON':'<span class="mi">🏆 </span>League'; lgFitBtn(b); }
   var t=document.getElementById('lgToggle');
   if(t){ var _n=(leagueOn()&&league&&league.id&&lgTourn())?lgTourn().matches.length:0;
     t.classList.toggle('on',leagueOn());
