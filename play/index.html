@@ -3061,7 +3061,7 @@ function pcLeagueRows(name){
   function rowFor(label, matches, live){
     var e=lgStandings(matches).players.find(function(x){ return x.name===name; });
     if(!e||!e.m) return null;
-    return {label:label, live:!!live, m:e.m, mw:e.mw, lw:e.lw, ll:e.ll, co:e.co||0, coPct:lgCoPct(e), hiCo:e.hiCo||0, hiIn:e.hiIn||0, hi3:e.hi3||0, avg:(e.dts?(e.pts*3/e.dts).toFixed(1):(e.turns?(e.pts/e.turns).toFixed(1):'—')), best:e.best||'—', t180:e.t180||0};
+    return {label:label, live:!!live, m:e.m, mw:e.mw, lw:e.lw, ll:e.ll, co:e.co||0, coPct:lgCoPct(e), hiCo:e.hiCo||0, hiIn:e.hiIn||0, hi3:e.hi3||0, avg:(e.dts?(e.pts*3/e.dts).toFixed(1):(e.turns?(e.pts/e.turns).toFixed(1):'—')), best:e.best||'—', t100:e.t100||0, k100:!!e.k100};
   }
   var recs=(typeof LG!=='undefined')?LG.list.concat([LG.local]):[];
   var all=[];
@@ -3078,8 +3078,9 @@ function pcLeagueRows(name){
 }
 function pcLeagueTable(rows){
   if(!rows.length) return '';
-  var t='<table class="st pcTab"><tr><th>League</th><th>Matches</th><th>Legs</th><th title="3-dart average, 301/501">Avg</th><th>High</th><th>180s</th></tr>';
-  rows.forEach(function(r){ t+='<tr'+(r.label==='All seasons'?' class="pcAll"':'')+'><td>'+esc(r.label)+(r.live?' <span class="pcLive">live</span>':'')+'</td><td><span class="w">'+r.mw+'</span>–<span class="l">'+(r.m-r.mw)+'</span></td><td>'+r.lw+'–'+r.ll+'</td><td>'+r.avg+'</td><td>'+r.best+'</td><td>'+r.t180+'</td></tr>'; });
+  var h100=rows.some(function(r){ return r.k100; });
+  var t='<table class="st pcTab"><tr><th>League</th><th>Matches</th><th>Legs</th><th title="3-dart average, 301/501">Avg</th><th>High</th>'+(h100?'<th title="3-dart turns of 100 or more">100+</th>':'')+'</tr>';
+  rows.forEach(function(r){ t+='<tr'+(r.label==='All seasons'?' class="pcAll"':'')+'><td>'+esc(r.label)+(r.live?' <span class="pcLive">live</span>':'')+'</td><td><span class="w">'+r.mw+'</span>–<span class="l">'+(r.m-r.mw)+'</span></td><td>'+r.lw+'–'+r.ll+'</td><td>'+r.avg+'</td><td>'+r.best+'</td>'+(h100?'<td>'+r.t100+'</td>':'')+'</tr>'; });
   t+='</table>';
   // (9/2, Nathan) the close-out family: count, ratio of the legs the side won, the biggest checkout, the best 301 in-turn, the best single turn
   t+='<div class="pcSub2">Close-outs</div><table class="st pcTab"><tr><th>League</th><th title="Winning throws">Close-out</th><th title="Close-outs over the legs your side won">%</th><th title="Biggest checkout">High Close-Out</th><th title="301: the turn that got you in">High-In</th><th title="Best single turn, yours">High 3-dart</th></tr>';
@@ -3239,7 +3240,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.24';
+var DK_VER='3.25';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4686,13 +4687,17 @@ function declareWin(teamIdx,detail){
   G.closer=(t.members&&t.members.length)?t.members[Math.min(t.memberIdx||0,t.members.length-1)]:null;
   try{
     const lose=G.teams[1-teamIdx];
-    // per-player detail for the ledger / Player Card: 01 turn numbers (team
-    // history is shared by its members, as before) + the per-dart counters
+    // per-player detail for the ledger / Player Card: 01 turn numbers — each
+    // player's OWN turns (10/13; a side with no thrower names falls back to the
+    // side's turns) + the per-dart counters
     const extra={};
     G.teams.forEach(tm=>{
-      const hist=tm.history||[];
+      const hist=tm.history||[], byP=G.isCricket?{}:dkTurnsBy(tm, tm===t), named=Object.keys(byP).length>0;
       tm.members.forEach(n=>{
-        const per=G.isCricket?{}:{pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
+        const mine=byP[n]||{pts:0,turns:0,dts:0,best:0,t180:0,t100:0};
+        const per=G.isCricket?{}:named?{pts:mine.pts, turns:mine.turns, best:mine.turns?mine.best:null, t180:mine.t180,
+                   t100:mine.t100, hiOut:mine.hiOut||0, dts:mine.dts}
+                 :{pts:hist.reduce((a,b)=>a+b,0), turns:hist.length,
                    best:hist.length?Math.max(...hist):null, t180:hist.filter(x=>x===180).length,
                    t100:hist.filter(x=>x>=100).length, hiOut:(tm===t&&hist.length)?hist[hist.length-1]:0,
                    dts:hist.length*3-((tm===t&&hist.length)?(3-(tm.coDarts||3)):0)};
@@ -6846,6 +6851,20 @@ function lgSeason(){
 }
 function lgSeasonOver(s){ return !!(s&&s.endTs&&Date.now()>lgDayEnd(s.endTs)); }
 function lgTourn(){ var s=lgSeason(); if(!s) return null; var t=s.tournaments[s.tournaments.length-1]; return (t&&!t.endTs)?t:null; }
+// (10/13, Nathan) a NIGHT is every record of one evening — several devices each open their
+// own. Before 6 AM counts toward the evening before (the relay's 1 AM report uses the same rule).
+function lgNightKey(ts){ var d=new Date((ts||0)-6*3600000); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function lgNights(s){
+  var by={}, out=[];
+  ((s&&s.tournaments)||[]).forEach(function(t){
+    if(!t) return; var k=lgNightKey(t.ts);
+    var n=by[k]; if(!n){ n=by[k]={key:k, ts:t.ts||0, matches:[], open:false, mailed:false}; out.push(n); }
+    n.ts=Math.min(n.ts,t.ts||n.ts); n.matches=n.matches.concat(t.matches||[]);
+    if(!t.endTs) n.open=true; if(t.mailed) n.mailed=true;
+  });
+  out.forEach(function(n){ n.matches.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); });
+  return out.filter(function(n){ return n.matches.length || n.open; }).sort(function(a,b){ return a.ts-b.ts; });
+}
 function lgSeasonMatches(s){ var out=[]; (s.tournaments||[]).forEach(function(t){ out=out.concat(t.matches||[]); }); return out; }
 function lgDay(ts){ var d=new Date(ts); return (d.getMonth()+1)+'/'+d.getDate(); }
 function lgLongDay(ts){ return new Date(ts).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }
@@ -7031,7 +7050,7 @@ function renderLeagueUI(){
   if(line){
     if(!s) line.textContent='No season yet — Set Season names one and gives it dates.';
     else line.textContent=s.name+(s.dv?' · Division '+s.dv:'')+' · '+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'open')
-      +' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')
+      +' · '+lgNights(s).length+' night'+(lgNights(s).length===1?'':'s')
       +(lgSeasonOver(s)?' · over':'');
   }
   // every season anyone in the league created is here to pick as YOUR current one
@@ -7692,13 +7711,25 @@ function lgLegHighs(winnerIdx){
   if(hi>0){ out.hiIn=hi; out.hiInBy=hiBy; }
   return out;
 }
+// (10/13, Nathan) every number a player is credited with comes from the turns THEY threw:
+// t.who[k] names the thrower of t.history[k]. {name:{pts,turns,dts,best,t180,t100,hiOut}}
+function dkTurnsBy(t, won){
+  var h=t.history||[], who=t.who||[], out={}, solo=t.members.length===1?t.members[0]:null;
+  h.forEach(function(v,k){ var n=who[k]||solo; if(!n) return;
+    var e=out[n]=out[n]||{pts:0,turns:0,dts:0,best:0,t180:0,t100:0};
+    e.pts+=v; e.turns++; e.dts+=3; if(v>e.best) e.best=v; if(v===180) e.t180++; if(v>=100) e.t100++; });
+  if(won&&h.length){ var ln=who[h.length-1]||solo; if(ln&&out[ln]){ out[ln].dts-=(3-(t.coDarts||3)); out[ln].hiOut=h[h.length-1]; } }
+  return out;
+}
 function lgLegStats(){
   var st={}; if(!G||G.isFat6) return st;
   G.teams.forEach(function(t,i){
     var h=t.history||[];
     if(G.isCricket) st[i]={cpts:t.pts||0, rounds:G.round||0};
     else st[i]={pts:h.reduce(function(a,b){return a+b;},0), turns:h.length, best:h.length?Math.max.apply(null,h):null, t180:h.filter(function(x){return x===180;}).length,
-                dts:h.length*3-((t.score===0&&h.length)?(3-(t.coDarts||3)):0)};
+                t100:h.filter(function(x){return x>=100;}).length,
+                dts:h.length*3-((t.score===0&&h.length)?(3-(t.coDarts||3)):0),
+                p:dkTurnsBy(t, t.score===0)};          // each player's own turns (3.25+)
   });
   return st;
 }
@@ -7781,23 +7812,34 @@ function f6Stats(){
 // Derived from a list of matches at display time — no second ledger to drift.
 function lgStandings(matches){
   var teams={}, players={};
-  function ent(map,name){ if(!map[name]) map[name]={name:name,m:0,mw:0,lw:0,ll:0,pts:0,turns:0,best:0,t180:0,co:0,hiCo:0,hiIn:0,hi3:0}; return map[name]; }
+  function ent(map,name){ if(!map[name]) map[name]={name:name,m:0,mw:0,lw:0,ll:0,pts:0,turns:0,best:0,t180:0,t100:0,co:0,hiCo:0,hiIn:0,hi3:0}; return map[name]; }
   (matches||[]).forEach(function(m){
     if(!m||!m.done||m.winner==null) return;
     var legsPlayed=m.results.length;
     m.sides.forEach(function(s,i){
       var won=(m.winner===i), lw=m.score[i]||0, ll=legsPlayed-lw;
-      var agg={pts:0,turns:0,best:0,t180:0,dts:0};
+      // (10/13, Nathan) agg = the side (its team gets it); a player gets their OWN turns from
+      // legs that name the thrower (st.p, 3.25+). Older legs only knew the side, so those
+      // stay shared as before. 100+ counts only from legs that name the thrower ("start fresh").
+      var agg={pts:0,turns:0,best:0,t180:0,dts:0,t100:0}, shared={pts:0,turns:0,best:0,t180:0,dts:0}, by={};
       m.results.forEach(function(r){ var st=r.st&&r.st[i]; if(!st||st.pts==null) return;
-        agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; agg.dts+=(st.dts!=null?st.dts:(st.turns||0)*3); });
+        var d=(st.dts!=null?st.dts:(st.turns||0)*3);
+        agg.pts+=st.pts||0; agg.turns+=st.turns||0; agg.best=Math.max(agg.best,st.best||0); agg.t180+=st.t180||0; agg.dts+=d;
+        if(st.p&&typeof st.p==='object'){ agg.k100=1; Object.keys(st.p).forEach(function(n){ var e=st.p[n]||{}, o=by[n]=by[n]||{pts:0,turns:0,best:0,t180:0,dts:0,t100:0};
+            o.pts+=e.pts||0; o.turns+=e.turns||0; o.best=Math.max(o.best,e.best||0); o.t180+=e.t180||0; o.dts+=(e.dts!=null?e.dts:(e.turns||0)*3); o.t100+=e.t100||0; agg.t100+=e.t100||0; }); }
+        else { shared.pts+=st.pts||0; shared.turns+=st.turns||0; shared.best=Math.max(shared.best,st.best||0); shared.t180+=st.t180||0; shared.dts+=d; } });
       var targets=s.members.map(function(n){ return ent(players,n); });
       m.results.forEach(function(r){ if(!r) return;
         if(r.closer&&r.winner===i&&s.members.indexOf(r.closer)>=0){ var c=ent(players,r.closer); c.co++; if(r.coPts>c.hiCo) c.hiCo=r.coPts; }
         if(r.hi3By&&s.members.indexOf(r.hi3By)>=0){ var b3=ent(players,r.hi3By); if(r.hi3>b3.hi3) b3.hi3=r.hi3; }
         if(r.hiInBy&&s.members.indexOf(r.hiInBy)>=0){ var bi=ent(players,r.hiInBy); if(r.hiIn>bi.hiIn) bi.hiIn=r.hiIn; } });
-      if(s.team) targets.push(ent(teams,s.team)); else if(s.members.length>1 && !/^Team \d+$/.test(s.name||'')) targets.push(ent(teams,s.name));
-      targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll;
-        e.pts+=agg.pts; e.turns+=agg.turns; e.best=Math.max(e.best,agg.best); e.t180+=agg.t180; e.dts=(e.dts||0)+agg.dts; });
+      var tEnt=null; if(s.team) targets.push(tEnt=ent(teams,s.team)); else if(s.members.length>1 && !/^Team \d+$/.test(s.name||'')) targets.push(tEnt=ent(teams,s.name));
+      targets.forEach(function(e){ e.m++; if(won) e.mw++; e.lw+=lw; e.ll+=ll; });
+      s.members.forEach(function(n){ var e=ent(players,n), o=by[n]||{pts:0,turns:0,best:0,t180:0,dts:0,t100:0};
+        e.pts+=shared.pts+o.pts; e.turns+=shared.turns+o.turns; e.best=Math.max(e.best,shared.best,o.best); e.t180+=shared.t180+o.t180;
+        e.dts=(e.dts||0)+shared.dts+o.dts; e.t100+=o.t100; if(agg.k100) e.k100=1; });
+      if(tEnt){ tEnt.pts+=agg.pts; tEnt.turns+=agg.turns; tEnt.best=Math.max(tEnt.best,agg.best); tEnt.t180+=agg.t180; tEnt.dts=(tEnt.dts||0)+agg.dts;
+        tEnt.t100+=agg.t100; if(agg.k100) tEnt.k100=1; }
     });
   });
   function rows(map){ return Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){
@@ -7828,10 +7870,10 @@ function lgTablesHTML(st, title){
     st.teams.forEach(function(e){ html+='<tr><td>'+esc(e.name)+'</td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td></tr>'; });
     html+='</table>';
   }
-  var any01=st.players.some(function(e){return e.turns>0;});
-  html+='<div class="stH">'+esc(title)+' · Players</div><table class="st"><tr><th>Player</th><th>Matches</th><th>Legs</th><th title="Winning throws — the dart that ended the leg">Close-out</th><th title="Close-outs over the legs your side won">%</th>'+(any01?'<th title="3-dart average">Avg</th><th>High</th><th>180s</th>':'')+'</tr>';
+  var any01=st.players.some(function(e){return e.turns>0;}), any100=st.players.some(function(e){return e.k100;});
+  html+='<div class="stH">'+esc(title)+' · Players</div><table class="st"><tr><th>Player</th><th>Matches</th><th>Legs</th><th title="Winning throws — the dart that ended the leg">Close-out</th><th title="Close-outs over the legs your side won">%</th>'+(any01?'<th title="3-dart average">Avg</th><th>High</th>'+(any100?'<th title="3-dart turns of 100 or more">100+</th>':''):'')+'</tr>';
   if(!st.players.length) html+='<tr><td colspan="8" class="stEmpty">No matches yet</td></tr>';
-  st.players.forEach(function(e){ html+='<tr class="stP" data-player="'+esc(e.name)+'"><td>'+esc(shortName(e.name))+' <span class="stMore">›</span></td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td><td>'+(e.co||0)+'</td><td>'+lgCoPct(e)+'</td>'+(any01?'<td>'+lgAvg(e)+'</td><td>'+(e.best||'—')+'</td><td>'+(e.t180||0)+'</td>':'')+'</tr>'; });
+  st.players.forEach(function(e){ html+='<tr class="stP" data-player="'+esc(e.name)+'"><td>'+esc(shortName(e.name))+' <span class="stMore">›</span></td><td><span class="w">'+e.mw+'</span>–<span class="l">'+(e.m-e.mw)+'</span></td><td>'+e.lw+'–'+e.ll+'</td><td>'+(e.co||0)+'</td><td>'+lgCoPct(e)+'</td>'+(any01?'<td>'+lgAvg(e)+'</td><td>'+(e.best||'—')+'</td>'+(any100?'<td>'+(e.t100||0)+'</td>':''):'')+'</tr>'; });
   html+='</table>';
   return html;
 }
@@ -7859,21 +7901,21 @@ function renderStats(tab){
       if(seasons.length>1){
         html+='<div class="stPick">'+seasons.slice().reverse().map(function(x){ return '<button class="'+(x===s?'on':'')+'" data-season="'+x.id+'">'+esc(x.name)+(x.endTs?'':' ·live')+'</button>'; }).join('')+'</div>';
       }
-      html+='<div class="stSeason">'+esc(s.name)+' <span>'+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'now')+' · '+s.tournaments.length+' tournament'+(s.tournaments.length===1?'':'s')+'</span></div>';
+      html+='<div class="stSeason">'+esc(s.name)+' <span>'+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'now')+' · '+lgNights(s).length+' night'+(lgNights(s).length===1?'':'s')+'</span></div>';
       var open=lgTourn();
       // (2026-09-02, Nathan) ending the night lives on the League card, not here
       if(live&&open){ mail.style.display='none'; }
       else if(live){ var lastT=s.tournaments[s.tournaments.length-1]; if(lastT&&league.id){ mail.style.display=''; mail.innerHTML=lastT.mailed?'📧 Re-send<span class="mi"> Last</span> Report':'📧 Send<span class="mi"> Last</span> Report'; mail.dataset.act='resend'; } }
       html+=lgHighsHTML(lgHighs(lgSeasonMatches(s)), 'Season highs');
       html+=lgTablesHTML(lgStandings(lgSeasonMatches(s)), 'Season');
-      html+='<div class="stH">Tournaments</div>';
-      s.tournaments.slice().reverse().forEach(function(t){
+      html+='<div class="stH">Nights</div>';
+      lgNights(s).slice().reverse().forEach(function(t){       // (10/13) one row per night, every device's records together
         var _th=lgHighs(t.matches);
-        var isOpen=!t.endTs, exp=_statsOpenT[t.id]!=null?_statsOpenT[t.id]:isOpen;
-        html+='<div class="stT" data-t="'+t.id+'"><span class="tri">'+(exp?'▾':'▸')+'</span> <b>'+lgLongDay(t.ts)+'</b> · '+t.matches.length+' match'+(t.matches.length===1?'':'es')
+        var isOpen=t.open, exp=_statsOpenT[t.key]!=null?_statsOpenT[t.key]:isOpen;
+        html+='<div class="stT" data-t="'+t.key+'"><span class="tri">'+(exp?'▾':'▸')+'</span> <b>'+lgLongDay(t.ts)+'</b> · '+t.matches.length+' match'+(t.matches.length===1?'':'es')
           +(isOpen?' · <span class="w">in progress</span>':(t.mailed?' · e-mailed ✓':' · not sent'))+'</div>';
         if(exp){
-          html+='<div class="stTbody">'+lgHighsHTML(_th,'Tournament highs')+lgTablesHTML(lgStandings(t.matches),'Tournament');
+          html+='<div class="stTbody">'+lgHighsHTML(_th,'Night highs')+lgTablesHTML(lgStandings(t.matches),'Night');
           if(t.matches.length){ html+='<div class="stH">Matches</div>'; t.matches.slice().reverse().forEach(function(m){ html+=lgMatchLineHTML(m); }); }
           html+='</div>';
         }
@@ -7894,9 +7936,9 @@ function renderStats(tab){
     var names=Object.keys(statsLib).filter(function(n){ return _lg(n).g>0; }).sort(function(a,b){ return (_lg(b).w)-(_lg(a).w) || (_lg(b).g)-(_lg(a).g) || a.localeCompare(b); });
     if(!names.length) html='<div class="stEmpty">No games recorded yet.</div>';
     else{
-      html+='<div class="stH">All-time · every game</div><table class="st"><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>Avg</th><th>High</th><th>180s</th></tr>';
+      html+='<div class="stH">All-time · every game</div><table class="st"><tr><th>Player</th><th>Games</th><th>Wins</th><th>Win %</th><th>Avg</th><th>High</th><th title="3-dart turns of 100 or more">100+</th></tr>';
       names.forEach(function(n){ var s=statsLib[n], c=_lg(n);
-        html+='<tr><td>'+esc(shortName(n))+'</td><td>'+c.g+'</td><td>'+c.w+'</td><td>'+(c.g?Math.round(100*c.w/c.g)+'%':'—')+'</td><td>'+lgAvg(s)+'</td><td>'+(s.best||'—')+'</td><td>'+(s.t180||0)+'</td></tr>'; });
+        html+='<tr><td>'+esc(shortName(n))+'</td><td>'+c.g+'</td><td>'+c.w+'</td><td>'+(c.g?Math.round(100*c.w/c.g)+'%':'—')+'</td><td>'+lgAvg(s)+'</td><td>'+(s.best||'—')+'</td><td>'+(s.t100||0)+'</td></tr>'; });
       html+='</table>';
     }
   }
@@ -7956,7 +7998,7 @@ function lgEndTournament(done){
 }
 function lgStandingsData(st){
   return { teams:st.teams.map(function(e){return {name:e.name,mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll};}),
-           players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.dts?+(e.pts*3/e.dts).toFixed(1):(e.turns?+(e.pts/e.turns).toFixed(1):null),best:e.best||null,t180:e.t180||0,co:e.co||0,hiCo:e.hiCo||0,hiIn:e.hiIn||0,hi3:e.hi3||0};}) };
+           players:st.players.map(function(e){return {name:shortName(e.name),mw:e.mw,ml:e.m-e.mw,lw:e.lw,ll:e.ll,avg:e.dts?+(e.pts*3/e.dts).toFixed(1):(e.turns?+(e.pts/e.turns).toFixed(1):null),best:e.best||null,t100:e.t100||0,co:e.co||0,hiCo:e.hiCo||0,hiIn:e.hiIn||0,hi3:e.hi3||0};}) };
 }
 function lgReportData(t,s){
   return { name:league.name||'', league:league.id, email:lgEmail(), when:Date.now(), tid:t.id, sid:s.id,
