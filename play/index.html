@@ -276,15 +276,16 @@
   .cricket .chead .spine,.cricket .ptrow .spine{font-family:var(--display);font-size:16px;color:var(--muted);font-weight:700;
        text-transform:uppercase;letter-spacing:.6px;}
   /* the marks and what was thrown at them sit on ONE line, marks first */
-  .cricket .ckwrap{display:inline-flex;align-items:center;justify-content:center;gap:6px;}
-  #game.cricket #cricketBoard .cricket .ckwrap{display:flex;gap:calc(12px * var(--ckS,1));}
-  .cricket .ckdt{position:relative;font-family:var(--num);font-size:15px;font-weight:700;color:var(--gold);opacity:.85;letter-spacing:2px;line-height:1;}
-  /* nudged further out, away from the marks (Nathan, 9/23) */
-  .cricket .ckdt.ckl{left:-5px;}
-  .cricket .ckdt.ckr{left:5px;}
+  /* the count sits OUTSIDE the marks and out of the layout, so it never pushes them (Nathan, 10/15);
+     same distance from the marks as before (Nathan, 9/23) */
+  .cricket .ckwrap{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+  #game.cricket #cricketBoard .cricket .ckwrap{display:flex;width:fit-content;margin:0 auto;}
+  .cricket .ckdt{position:absolute;top:50%;transform:translateY(-50%);white-space:nowrap;font-family:var(--num);font-size:15px;font-weight:700;color:var(--gold);opacity:.85;letter-spacing:2px;line-height:1;}
+  .cricket .ckdt.ckl{right:calc(100% + 11px);}
+  .cricket .ckdt.ckr{left:calc(100% + 11px);}
   #game.cricket #cricketBoard .cricket .ckdt{font-size:calc(30px * var(--ckS,1));}
-  #game.cricket #cricketBoard .cricket .ckdt.ckl{left:calc(-10px * var(--ckS,1));}
-  #game.cricket #cricketBoard .cricket .ckdt.ckr{left:calc(10px * var(--ckS,1));}
+  #game.cricket #cricketBoard .cricket .ckdt.ckl{right:calc(100% + 22px * var(--ckS,1));}
+  #game.cricket #cricketBoard .cricket .ckdt.ckr{left:calc(100% + 22px * var(--ckS,1));}
   .cricket .marks{font-size:28px;letter-spacing:4px;font-weight:800;color:var(--blue);text-shadow:0 0 10px rgba(79,124,255,.35);}
   #game.cricket #cricketBoard .cricket .marks.closed{color:var(--gold);text-shadow:none;border:none;width:auto;height:auto;margin:0 auto;box-shadow:none;}
   .cricket .cric-pts{font-family:var(--display);font-size:47px;font-weight:900;}
@@ -3240,7 +3241,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.25';
+var DK_VER='3.26';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
