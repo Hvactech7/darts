@@ -555,6 +555,17 @@
   /* on any screen with the big board, Rules parks in the open lower-left corner */
   .boardwrap #rulesBtn{position:absolute;left:8px;bottom:6px;z-index:3;font-size:16px;padding:9px 14px;}
   @media (max-width:600px){ .boardwrap #rulesBtn{font-size:13px;padding:7px 10px;left:4px;bottom:2px;} }
+  /* (10/21) the Extras on a tablet: Quit in the lower-left corner, Rules mirrored lower-right */
+  .boardwrap #quitBtn{position:absolute;left:8px;bottom:6px;z-index:3;font-size:16px;padding:9px 14px;white-space:nowrap;}
+  @media (min-width:700px){                       /* tablets only -- a phone keeps Rules lower-left */
+    #game.fat6 .boardwrap #rulesBtn{left:auto;right:8px;}
+    #game.fat6 .boardwrap #quitBtn,#game.fat6 .boardwrap #rulesBtn{width:120px;height:46px;box-sizing:border-box;padding:0;text-align:center;}   /* a true mirror */
+  }
+  /* Undo / Redo take ONLY the room Quit gave up (83 + 107 + 102 + a 10 gap = 2 x 151) -- the three dart
+     boxes keep exactly the width they had (Nathan 10/21: "you shrunk the 3 dart scores/blocks!") */
+  @media (min-width:700px){ #game.fat6 #playArea .turnbar #undoBtn,#game.fat6 #playArea .turnbar #redoBtn{flex:0 0 151px;min-width:0;}
+    /* Fat 6: Lose a life where the Extras' dart boxes are, the same width */
+    #game.fat6 #playArea .turnbar #missBtn{flex:1 1 0;min-width:0;margin:0;font-size:24px;white-space:nowrap;} }
   /* ---- Extras picker ---- */
   #extrasSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
   #extrasSplash.hidden{display:none;}
@@ -828,6 +839,35 @@
   #game:not(.cricket):not(.fat6) #playArea #redoBtn{margin-top:0;order:3;}
   #game:not(.cricket):not(.fat6) #playArea #quitBtn{order:0;}
   #game:not(.cricket):not(.fat6) #playArea #inputToggle{order:1;margin:0;white-space:nowrap;}
+  /* (10/21, Nathan) iPad portrait, 301/501 keypad: same layout, every bottom button and Miss/Score It 4px taller */
+  @media (min-width:700px) and (orientation:portrait){
+    #game.kpmode:not(.cricket):not(.fat6) #playArea .turnbar>button{height:58px;}
+    #game.kpmode #kpOK{padding-top:15px;padding-bottom:15px;}
+    /* cricket: the same +4px on every bottom button (Quit, Rules, Undo, Redo, Miss/Score It) */
+    #game.cricket:not(.board-open) #scoreActions button{min-height:60px;}
+    #game.cricket:not(.board-open) #scoreActions{max-width:none;}      /* the full width of the board (Nathan 10/21) */
+    /* the Dart Board screen (01): Undo, Miss / Score It and Redo the same +4px */
+    #game.bdopen #playArea .gamebtns #undoBtn,#game.bdopen #playArea .gamebtns #redoBtn{min-height:56px;}
+    #game.bdopen #playArea .gamebtns #endTurnBtn{min-height:81px;}
+    /* Back (top-left of the board screens) 20% bigger overall (Nathan 10/21) */
+    #game.bdopen #backBtn,#game.cricket.board-open #backBtn{font-size:20.4px;padding:15.6px 19.2px;letter-spacing:1.8px;border-radius:8.4px;}
+    /* Fat 6 + the Extras games (one layout), Nathan 10/21: Quit / Undo / Redo as tall as the 501 row (58),
+       Lose a life / Miss / Score It a normal 78 -- NOT stretched to fill the screen, and no gap above it
+       (bgFit leaves this screen alone on an iPad held upright) */
+    #game.fat6 #playArea .turnbar #undoBtn,#game.fat6 #playArea .turnbar #redoBtn,#game.fat6 #playArea .turnbar #quitBtn{
+      height:58px;box-sizing:border-box;padding-top:0;padding-bottom:0;}
+    #game.fat6 #playArea .gamebtns #missBtn,#game.fat6.xgame #playArea .gamebtns #endTurnBtn{height:78px;box-sizing:border-box;padding-top:0;padding-bottom:0;}
+    #game.fat6 #playArea .turnbar #missBtn{height:64px;box-sizing:border-box;padding-top:0;padding-bottom:0;}   /* = the Extras' dart boxes */
+    /* Fat 6 (Nathan 10/21): the board + buttons sit at the bottom; the room above goes to a bigger target
+       ("point") and bigger player boxes, which may wrap to a second row for more players */
+    #game.fat6:not(.xgame) .f6-target .val{font-size:150px;}
+    #game.fat6:not(.xgame) .f6-who{font-size:30px;}
+    #game.fat6:not(.xgame) .f6-target .lbl{font-size:19px;}
+    #game.fat6:not(.xgame) .f6-players{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:74%;max-width:none;}   /* 4 across: 4 | 4+2 | 4+4 */
+    #game.fat6:not(.xgame) .f6-players > .f6-p{min-width:0 !important;padding:7px 6px !important;}
+    #game.fat6:not(.xgame) .f6-players > .f6-p .nm{font-size:25px !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    #game.fat6:not(.xgame) .f6-players > .f6-p .lv{font-size:17px !important;letter-spacing:0 !important;white-space:nowrap;}
+  }
 
   /* small accent buttons: no rivets — they crowd the short labels */
   #addPlayer,#saveGroupBtn,#addTeam{background-image:linear-gradient(180deg,#d9691f,#a3421a 55%,#6e2a10);background-position:0 0;background-size:auto;}
@@ -3241,7 +3281,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.26';
+var DK_VER='3.27';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4728,6 +4768,11 @@ function displayName(t){
 // keeps the old centred bottom row. Idempotent — safe to call every render.
 function placeSessionButtons(){
   var q=document.getElementById('quitBtn'); if(!q||!G) return;
+  // (10/21, Nathan) Fat 6 on a tablet: Lose a life sits in the turn row, the size of the Extras' three dart boxes
+  var mb=document.getElementById('missBtn'), tbm=document.querySelector('#playArea .turnbar'), udm=document.getElementById('undoBtn');
+  var gbm=mb && document.getElementById('endTurnBtn') && document.getElementById('endTurnBtn').parentElement;
+  if(mb && G.isFat6 && !G.isX && window.innerWidth>=700 && tbm && udm && udm.parentElement===tbm){ if(mb.nextSibling!==udm) tbm.insertBefore(mb,udm); }
+  else if(mb && gbm && mb.parentElement!==gbm) gbm.insertBefore(mb,gbm.firstChild);
   if(G.isCricket){
     var sa=document.getElementById('scoreActions'), su=document.getElementById('scoreUndoBtn');
     if(sa&&su&&q.parentElement!==sa) sa.insertBefore(q,su);
@@ -4737,7 +4782,7 @@ function placeSessionButtons(){
   }else{
     // Fat 6 and the Extras games: Quit on the LEFT, Undo+Redo paired on the RIGHT
     var tb2=document.querySelector('#playArea .turnbar'), ud=document.getElementById('undoBtn');
-    if(tb2&&ud&&ud.parentElement===tb2&&q.nextSibling!==ud) tb2.insertBefore(q,ud);
+    if(tb2&&ud&&ud.parentElement===tb2&&q.nextSibling!==ud && !((G.isX || G.isFat6) && window.innerWidth>=700)) tb2.insertBefore(q,ud);
   }
   // Rules (Nathan): runs AFTER Quit settles, so both land in one pass. On every
   // screen with the big board it parks in the board's open lower-left corner;
@@ -4748,7 +4793,10 @@ function placeSessionButtons(){
     var gx=document.getElementById('game');
     var boardUp = gx.classList.contains('fat6') || gx.classList.contains('bdopen') || gx.classList.contains('board-open');
     var bw=document.getElementById('boardwrap');
-    if(boardUp && bw){ if(rb.parentElement!==bw) bw.appendChild(rb); }
+    // (10/21, Nathan) Fat 6 and the Extras on a tablet: Quit takes the board's lower-left corner,
+    // Rules mirrors it lower-right, and Undo / Redo widen into the room Quit left in the row
+    if((G.isFat6 || G.isX) && window.innerWidth>=700 && bw){ if(q.parentElement!==bw) bw.appendChild(q); if(rb.parentElement!==bw) bw.appendChild(rb); }
+    else if(boardUp && bw){ if(rb.parentElement!==bw) bw.appendChild(rb); }
     else if(G.isCricket){ var sa0=document.getElementById('scoreActions'); if(sa0&&(rb.parentElement!==sa0||rb.previousElementSibling!==q)) sa0.insertBefore(rb,q.nextSibling); }   // just right of Quit (Nathan)
     else { if(rb.parentElement!==q.parentElement || rb.previousElementSibling!==q) q.parentElement.insertBefore(rb,q.nextSibling); }
   }
@@ -4883,6 +4931,9 @@ function renderGame(){
 function fitScreen(){
   var g=document.getElementById('game');
   if(!g) return;
+  // measure from the stylesheet heights: bgFit's iPad Fat 6 / Extras growth goes INTO the spare height
+  // this leaves, so counting it here would shrink the screen and grow the buttons again, every render
+  ['quitBtn','rulesBtn','undoBtn','redoBtn','missBtn','endTurnBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.height=''; });
   var _bsvg=(document.getElementById('boardwrap')||{querySelector:function(){return null;}}).querySelector('svg');
   if(g.classList.contains('hidden')||g.classList.contains('board-open')||g.classList.contains('bdopen')){
     g.style.transform=''; g.style.width=''; g.style.marginLeft='';
@@ -5091,9 +5142,35 @@ try{ if(document.fonts && document.fonts.ready) document.fonts.ready.then(functi
 
 function bgFit(){
   var g=document.getElementById('game');
+  // heights the iPad-upright Fat 6 / Extras fit below sets inline -- these buttons are shared with the
+  // 01 and cricket screens, so every fit starts from the stylesheet
+  ['quitBtn','rulesBtn','undoBtn','redoBtn','missBtn','endTurnBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.style.height=''; });
   if(!g||g.classList.contains('hidden')||g.classList.contains('cricket')) return;
   if(g.classList.contains('kpmode')){ kpGrow(); return; }
   var pa=document.getElementById('playArea');
+  // (10/21, Nathan) an iPad held upright, Fat 6 / Extras: fixed heights (CSS), and the spare height goes INTO
+  // Undo / Redo (sharing with the Extras' Miss / Score It row) -- never into a stretched Lose a life, which is
+  // the size of the Extras' dart boxes
+  if(pa && g.classList.contains('fat6') && window.innerWidth>=700 && window.innerHeight>window.innerWidth){
+    var act=[].slice.call(pa.querySelectorAll('.gamebtns button')).filter(function(b){ return b.offsetParent; });
+    act.forEach(function(b){ b.style.paddingTop=''; b.style.paddingBottom=''; });
+    [].slice.call(pa.querySelectorAll('.gamebtns')).forEach(function(r){ r.style.marginTop=''; });
+    var tb=[].slice.call(pa.querySelectorAll('.turnbar #undoBtn, .turnbar #redoBtn')).filter(function(b){ return b.offsetParent; });   // Lose a life stays the dart boxes' size
+    var padB2=parseFloat(getComputedStyle(document.querySelector('.wrap')||document.body).paddingBottom)||0;
+    var spare=window.innerHeight-pa.getBoundingClientRect().bottom-padB2-6;
+    if(spare<=4 || !tb.length) return;
+    var k=(g.getBoundingClientRect().width/g.offsetWidth)||1;            // #game may be scaled to fit
+    var H=window.innerHeight;
+    var forTb=act.length ? Math.min(H*0.06, spare*0.6/k) : Math.min(23, spare/k);   // Fat 6: the Extras' 81, not a slab
+    var forAct=act.length ? Math.min(H*0.045, 32, spare/k-forTb) : 0;
+    tb.forEach(function(b){ b.style.height=(58+forTb).toFixed(1)+'px'; });
+    act.forEach(function(b){ b.style.height=(78+Math.max(0,forAct)).toFixed(1)+'px'; });
+    // Fat 6: whatever is still spare lowers the board and the buttons to the bottom (the header keeps the room)
+    if(!g.classList.contains('xgame')){ var bwF=document.getElementById('boardwrap');
+      var left2=window.innerHeight-pa.getBoundingClientRect().bottom-padB2-6;
+      if(bwF && left2>2){ var mt0=parseFloat(bwF.style.marginTop)||parseFloat(getComputedStyle(bwF).marginTop)||0; bwF.style.marginTop=(mt0+left2/k).toFixed(1)+'px'; } }
+    return;
+  }
   // the visible row: 01 keeps a hidden .gamebtns around and its buttons live
   // in #scoreActions instead
   var row=null;
@@ -5550,6 +5627,8 @@ function buildBoard(){
   // button is destroyed for good (placeSessionButtons re-parks it after).
   var _rb=document.getElementById('rulesBtn');
   if(_rb && _rb.closest('#boardwrap')) document.body.appendChild(_rb);
+  var _qb=document.getElementById('quitBtn');            // the Extras park Quit there too (10/21)
+  if(_qb && _qb.closest('#boardwrap')) document.body.appendChild(_qb);
   // NOTE: gradient stop colours below carry a baked saturate(1.2) — see svg.board in the CSS
   const cx=268,cy=268;
   // wider double (16→22) and triple (12→22) bands = bigger tap targets
