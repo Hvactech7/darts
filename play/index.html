@@ -135,7 +135,9 @@
   button.primary:active,button.accent:active,button.confirm-btn:active{filter:brightness(1.12);}
   button.ghost{background:rgba(255,255,255,.04);}
   button.warn{background:rgba(255,64,104,.08);border-color:rgba(255,64,104,.4);color:#ff90a6;}
-  button:disabled{opacity:.35;cursor:default;box-shadow:none;}
+  /* (10/25, Nathan) Undo / Redo always look lit, on every screen: with nothing to
+     undo they still do nothing (disabled), they just aren't dimmed */
+  button:disabled:not(#undoBtn):not(#redoBtn):not(#scoreUndoBtn):not(#scoreRedoBtn){opacity:.35;cursor:default;box-shadow:none;}
   .seg-toggle{display:flex;background:rgba(10,7,30,.5);border:1px solid var(--line);border-radius:13px;overflow:hidden;padding:4px;gap:4px;}
   .seg-toggle button{flex:1;border:none;border-radius:9px;background:transparent;}
   .seg-toggle button.on{background:linear-gradient(135deg,var(--blue-lt),var(--blue));color:#fff;box-shadow:0 0 16px rgba(79,124,255,.45);}
@@ -808,6 +810,16 @@
   #kpGrid button{font-family:var(--num);font-size:58px;font-weight:700;padding:8px 0;line-height:1.2;}
   #kpGrid button.kpop{font-size:91px;line-height:1;padding:0;}
   #kpOK{width:100%;font-size:34px;padding:13px;}
+  /* (10/25, Nathan) Miss | Bust: on 170 or less, with nothing entered, the confirm
+     splits in two so a bust can be called without typing what was thrown */
+  #kpOKRow{display:flex;gap:9px;}
+  #kpOKRow #kpOK{flex:1 1 0;min-width:0;}
+  .bustbtn{display:none;font-weight:800;}
+  #game.cansplit #kpBust{display:block;flex:1 1 0;min-width:0;font-size:inherit;}
+  #game.kpmode #kpBust{font-size:34px;padding:13px;}
+  #game.bdopen #playArea .gamebtns #bustBtn{order:1 !important;}
+  #game.bdopen.cansplit #playArea .gamebtns #bustBtn{display:block !important;flex:1 1 0;min-width:0;font-size:29px;}
+  #game.bdopen.cansplit #playArea .gamebtns #endTurnBtn{flex:1 1 0;}
   /* kpmode: undo the tall-board sketch layout — normal flow, cards on top */
   #game:not(.cricket):not(.fat6){margin-top:6px;display:flex;flex-direction:column;min-height:calc(100% - 6px);}
   #game:not(.cricket):not(.fat6) #playArea{margin-top:auto;display:flex;flex-direction:column;}
@@ -842,13 +854,13 @@
   /* (10/21, Nathan) iPad portrait, 301/501 keypad: same layout, every bottom button and Miss/Score It 4px taller */
   @media (min-width:700px) and (orientation:portrait){
     #game.kpmode:not(.cricket):not(.fat6) #playArea .turnbar>button{height:58px;}
-    #game.kpmode #kpOK{padding-top:15px;padding-bottom:15px;}
+    #game.kpmode #kpOK,#game.kpmode #kpBust{padding-top:15px;padding-bottom:15px;}
     /* cricket: the same +4px on every bottom button (Quit, Rules, Undo, Redo, Miss/Score It) */
     #game.cricket:not(.board-open) #scoreActions button{min-height:60px;}
     #game.cricket:not(.board-open) #scoreActions{max-width:none;}      /* the full width of the board (Nathan 10/21) */
     /* the Dart Board screen (01): Undo, Miss / Score It and Redo the same +4px */
     #game.bdopen #playArea .gamebtns #undoBtn,#game.bdopen #playArea .gamebtns #redoBtn{min-height:56px;}
-    #game.bdopen #playArea .gamebtns #endTurnBtn{min-height:81px;}
+    #game.bdopen #playArea .gamebtns #endTurnBtn,#game.bdopen #playArea .gamebtns #bustBtn{min-height:81px;}
     /* Back (top-left of the board screens) 20% bigger overall (Nathan 10/21) */
     #game.bdopen #backBtn,#game.cricket.board-open #backBtn{font-size:20.4px;padding:15.6px 19.2px;letter-spacing:1.8px;border-radius:8.4px;}
     /* Fat 6 + the Extras games (one layout), Nathan 10/21: Quit / Undo / Redo as tall as the 501 row (58),
@@ -980,7 +992,7 @@
       font-size:0 !important;padding:12px 14px !important;}
     #game.bdopen #playArea .gamebtns #undoBtn::before{content:'\21B6';font-size:26px;font-family:var(--body);}
     #game.bdopen #playArea .gamebtns #redoBtn::before{content:'\21B7';font-size:26px;font-family:var(--body);}
-    #game.bdopen #playArea .gamebtns #endTurnBtn{font-size:20px !important;white-space:nowrap;}
+    #game.bdopen #playArea .gamebtns #endTurnBtn,#game.bdopen #playArea .gamebtns #bustBtn{font-size:20px !important;white-space:nowrap;}
     /* narrow screen: the centred dart calls reach the top-left corner, so ←Back
        sat on top of the first one (same defect as the cricket overlay) */
     /* (backBtn top now set beside the calls row above, safe-area aware) */
@@ -1431,7 +1443,7 @@
   #game.cricket .dartfloat,#game.fat6 .dartfloat,#game.kpmode .dartfloat{display:none;}
 
   /* prominent session controls */
-  #undoBtn,#redoBtn,#missBtn,#endTurnBtn{ font-size:26px; padding:18px 22px; }   /* per-turn controls big; session controls small */
+  #undoBtn,#redoBtn,#missBtn,#endTurnBtn,#bustBtn{ font-size:26px; padding:18px 22px; }   /* per-turn controls big; session controls small */
 
 
   .chead .cpts{font-family:var(--num);font-size:95px;font-weight:700;line-height:1;margin-top:4px;}   /* +35% (Nathan) */
@@ -1677,7 +1689,7 @@
     .dartfloat{width:46px;gap:8px;top:42%;}
     .dartfloat span{font-size:34px;}
     .dartfloat span.long{font-size:20px;}
-    #undoBtn,#redoBtn,#missBtn,#endTurnBtn{font-size:18px;padding:12px 12px;}
+    #undoBtn,#redoBtn,#missBtn,#endTurnBtn,#bustBtn{font-size:18px;padding:12px 12px;}
     #inputToggle{font-size:16px;padding:10px 8px;letter-spacing:.5px;margin:0 4px;}
     /* 4-up bottom row (Quit | Dart Board | Undo | Redo) on a phone: compact Quit
        and Dart Board, and Undo/Redo collapse to arrows (same treatment as the
@@ -1735,7 +1747,7 @@
     #kpHint{font-size:20px;}
     #kpHint.out{font-size:55px;}   /* match the phone's equation size */
     #kpDisplay{min-height:46px;padding:8px 12px;margin-bottom:8px;}
-    #kpOK{font-size:22px;padding:12px;}
+    #kpOK,#game.kpmode #kpBust{font-size:22px;padding:12px;}
     #kpWrap{gap:7px;}
     /* cricket */
     #game.cricket #cricketBoard .cricket .marks{font-size:calc(38px * var(--ckS,1));}
@@ -2285,7 +2297,7 @@
             <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
             <button data-k="+" class="kpop">+</button><button data-k="0">0</button><button data-k="x" class="kpop">×</button>
           </div>
-          <button id="kpOK" class="confirm-btn">✓ Score It</button>
+          <div id="kpOKRow"><button id="kpOK" class="confirm-btn">✓ Score It</button><button id="kpBust" class="warn bustbtn">Bust</button></div>
         </div>
         <div class="kpSide" id="kpQuickR">
           <button data-q="60">60</button><button data-q="80">80</button><button data-q="100">100</button><button data-q="180">180</button>
@@ -2297,6 +2309,7 @@
       <div class="gamebtns">
         <button class="ghost" id="missBtn">Miss / 0</button>
         <button class="confirm-btn" id="endTurnBtn">✓ Score It</button>
+        <button class="warn bustbtn" id="bustBtn">Bust</button>
       </div>
     </div>
 
@@ -3281,7 +3294,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.27';
+var DK_VER='3.28';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4918,6 +4931,7 @@ function renderGame(){
   }
   else if(G.isCricket) confirmBtn.textContent=(G.darts&&G.darts.length)?'✓ Score It':'Miss';
   else confirmBtn.textContent='✓ Score It';
+  splitBust01();
   confirmBtn.classList.toggle('primary',!!G.pendingWin);
   confirmBtn.classList.toggle('confirm-btn',!G.pendingWin);
   var _ccw=document.getElementById('cricketConfirmBtn');
@@ -5858,11 +5872,29 @@ function kpCanBackspace(){
   var _g=document.getElementById('game');
   return _g.classList.contains('kpmode') && !_g.classList.contains('bdopen') && !!kpExpr;
 }
-// Empty-input confirm label for 01: pressing it records a scoreless turn, which
-// covers a plain miss — and a bust, when the score is low enough that one is
-// possible (≤181: 180 leaves 1, and anything over the remainder goes negative).
-function missLabel01(){
-  return curTeam().score<=181 ? 'Miss/Bust' : 'Miss';
+// Empty-input confirm label for 01: pressing it records a scoreless turn. A bust
+// has its own button beside it from 170 down (canBust01); above that, a bust is
+// called by typing the score (Nathan 10/25).
+function missLabel01(){ return 'Miss'; }
+function kpZero(){ return !kpExpr || kpEval(kpExpr)===0; }   // calculator empty or showing 0
+function canBust01(){
+  return kpAllowed() && !G.over && !G.pendingWin && !G.darts.length && kpZero() && curTeam().score<=170;
+}
+// Bust with nothing entered: the turn scores nothing, the score stays where the
+// turn started, and it shows as BUST (not MISS)
+function bust01(){
+  if(!canBust01()) return;
+  pushHistory();
+  curTeam().score=G.turnStartScore;
+  G.darts=[{value:0,mult:1,score:0,label:'BUST',bust:true,noCount:false}];
+  commitTurn();
+  if(document.getElementById('game').classList.contains('bdopen')){ closeBoard(); closeBoard01(); }
+  kpExpr=''; kpRender();
+}
+function splitBust01(){   // try: renderGame can run on a resumed game before `let kpExpr` exists (TDZ)
+  var g=document.getElementById('game'), on=false;
+  try{ on=!!G && canBust01(); }catch(e){}
+  if(g) g.classList.toggle('cansplit', on);
 }
 document.getElementById('undoBtn').onclick=()=>{
   // char-backspace only where the calculator is actually visible — in the board
@@ -6056,8 +6088,9 @@ function kpRender(){
   const ok=document.getElementById('kpOK'); if(ok) ok.disabled = kpEval(kpExpr)>180 || !kpAllowed() || (G&&(G.over||!!G.pendingWin));
   // Empty calculator = pressing confirm records a miss (or covers a bust when
   // one is possible) — say so. Anything typed = it scores.
-  if(ok) ok.textContent = kpExpr ? '✓ Score It'
+  if(ok) ok.textContent = !kpZero() ? '✓ Score It'
     : (kpAllowed()&&G&&!G.over&&!G.pendingWin ? missLabel01() : '✓ Score It');
+  splitBust01();
   kpPreview();
 }
 function kpCommit(total){
@@ -6087,6 +6120,8 @@ document.getElementById('kpGrid').addEventListener('click',e=>{
   else { const seg=kpExpr.split(/[+x]/).pop(); if(seg.length<3 && kpExpr.length<20) kpExpr=(kpExpr+k).replace(/(^|[+x])0+(?=\d)/g,'$1'); }
   kpRender();
 });
+document.getElementById('kpBust').onclick=bust01;
+document.getElementById('bustBtn').onclick=bust01;
 document.getElementById('kpOK').onclick=()=>{ const v=kpEval(kpExpr); if(v<=180) kpCommit(v); };
 ['kpQuickL','kpQuickR'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{
