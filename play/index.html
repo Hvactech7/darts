@@ -88,6 +88,11 @@
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;height:100%;overflow:hidden;}
+  /* (10/28, Nathan: Bill's Samsung kept popping "15 — Tap to see search results") Chrome's Touch to
+     Search fires on selectable text; a scorekeeper's text is never something to select, so none of it
+     is. Typing boxes stay selectable. Also stops the iPad's hold-to-select loupe on a held number. */
+  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
   body{
     background:
       radial-gradient(120% 70% at 50% -12%, rgba(79,124,255,.22), transparent 55%),
@@ -3294,7 +3299,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.29';
+var DK_VER='3.30';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7044,10 +7049,13 @@ function lgEnsureTournIn(rec){
 function lgTargetRec(){ return (leagueOn() && league.id)?league:LG.local; }
 // Every finished match that is NOT in the league, newest first. This is what the
 // League card offers to add, and what the Stats page counts as "unmarked".
+// (10/28, Nathan) only TONIGHT's switch-off games are offered — the offer is for a night someone forgot
+// to turn League on. Older ones are that iPad's practice games and are never offered again (Ben's iPad
+// kept asking to add 20+ games from weeks ago). They stay on the iPad, and reach the relay as always.
 function lgUnmarked(){
-  var out=[];
+  var out=[], tonight=lgNightKey(Date.now());
   (LG.local.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){
-    (t.matches||[]).forEach(function(m){ if(m&&m.done) out.push(m); }); }); });
+    (t.matches||[]).forEach(function(m){ if(m&&m.done&&lgNightKey(m.ts||t.ts||0)===tonight) out.push(m); }); }); });
   return out.sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
 }
 // (10/13) "League Night: ON" where it fits; shorter on a narrower button (phones).
@@ -7236,18 +7244,19 @@ function lgAutoOn(rec){
 // Games played BEFORE the device attached live in LG.local under an
 // auto-made season. Move them into the league's real season/tournament for
 // the day they were played, so they count once this device is official.
-function lgRehomeLocal(rec){ return lgMoveLocal(rec,false); }
+function lgRehomeLocal(rec,only){ return lgMoveLocal(rec,false,only); }
 // (9/30) Filing a kept game by the day it was played closes that day's night when
 // it is over, so tonight's games never land in it. Games played with the switch
 // off are NEVER moved in on their own (Nathan: practice games stay out of the
 // league) — only the Add Games button, on purpose, does this.
-function lgMoveLocal(rec,inSeasonOnly){
+function lgMoveLocal(rec,inSeasonOnly,only){
   try{
     var moved=0, today=lgDay(Date.now());
     (LG.local.seasons||[]).forEach(function(ls){
       (ls.tournaments||[]).forEach(function(lt){
         lt.matches=(lt.matches||[]).filter(function(m){
           if(!m||!m.done) return true;
+          if(only && only.indexOf(m)<0) return true;         // not one of the games being added
           var when=m.ts||lt.ts||Date.now();
           var ss=(rec.seasons||[]).filter(function(x){ return (x.startTs||0)<=when && (!x.endTs||when<=lgDayEnd(x.endTs)); });
           var season=ss.length?ss[ss.length-1]:null;
@@ -7497,7 +7506,7 @@ document.getElementById('lgAddUnmarked').onclick=function(){
   if(!league||!league.id) return;
   var un=lgUnmarked(); if(!un.length) return;
   un.forEach(function(m){ m.lg=true; });                 // they are league matches from here on
-  var moved=lgRehomeLocal(league);
+  var moved=lgRehomeLocal(league,un);                  // tonight's only: older kept games stay where they are
   if(!moved){ lgHint('Nothing to add.'); return; }
   if(!leagueOn()){ LG.on=true; }                         // they are league games; the switch follows
   saveLeague(); renderLeagueUI();
