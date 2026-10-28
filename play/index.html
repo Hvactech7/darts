@@ -3294,7 +3294,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.28';
+var DK_VER='3.29';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6965,7 +6965,19 @@ function lgSeason(){
   return cover.length?cover[cover.length-1]:ss[ss.length-1];
 }
 function lgSeasonOver(s){ return !!(s&&s.endTs&&Date.now()>lgDayEnd(s.endTs)); }
-function lgTourn(){ var s=lgSeason(); if(!s) return null; var t=s.tournaments[s.tournaments.length-1]; return (t&&!t.endTs)?t:null; }
+// (10/27, Nathan) League ON = this iPad's games count for the league e-mail; OFF = this iPad's league
+// games are over. Nothing on another iPad can touch it: every iPad keeps its own record of the night,
+// and after a sync each holds all of them, so taking the last one in the list let Alan's OFF end
+// Nathan's. Each iPad now remembers the record it started and only ever ends that one.
+function lgMyTournMap(){ try{ return JSON.parse(localStorage.getItem('dk_lg_mytourn_v1')||'{}')||{}; }catch(e){ return {}; } }   // literal: may run before the var line
+function lgMyTournKey(){ return (league&&league.id)||'local'; }
+function lgSetMyTourn(id){ var m=lgMyTournMap(); m[lgMyTournKey()]=id; try{ localStorage.setItem('dk_lg_mytourn_v1',JSON.stringify(m)); }catch(e){} }
+function lgTourn(){
+  var s=lgSeason(); if(!s) return null;
+  var id=lgMyTournMap()[lgMyTournKey()]; if(!id) return null;      // nothing opened here: never adopt another board's night
+  var t=(s.tournaments||[]).filter(function(x){ return x&&x.id===id; })[0];
+  return (t&&!t.endTs)?t:null;
+}
 // (10/13, Nathan) a NIGHT is every record of one evening — several devices each open their
 // own. Before 6 AM counts toward the evening before (the relay's 1 AM report uses the same rule).
 function lgNightKey(ts){ var d=new Date((ts||0)-6*3600000); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
@@ -7006,7 +7018,7 @@ function lgEnsureTourn(){
   var s=lgSeason()||lgStartSeason('');
   var t=lgTourn();
   if(t&&lgCloseStale(t)) t=null;
-  if(!t){ t={id:lgId('t'),ts:Date.now(),endTs:null,mailed:false,matches:[]}; s.tournaments.push(t); saveLeague(); }
+  if(!t){ t={id:lgId('t'),ts:Date.now(),endTs:null,mailed:false,matches:[]}; s.tournaments.push(t); lgSetMyTourn(t.id); saveLeague(); }
   return t;
 }
 // The same thing inside ANY record, so a match played with the League switch off
