@@ -3414,7 +3414,7 @@ function dkBackfillMatches(){
 }
 
 //============================ BACKUP (Pi relay, Battle Tees pattern) ============================
-var DK_RELAY='wss://relay.dartkeeper.net/dartkeeper';   // (9/6) off the Pi: Cloudflare Workers. The Pi relay (wss://raspi5.tail734d97.ts.net/dartkeeper) stays up as the rollback.
+var DK_RELAY='wss://relay.dartkeeper.net/dartkeeper';   // (9/6) off the Pi: Cloudflare Workers. (10/29) the Pi relay is RETIRED (Tailscale removed from raspi5) -- there is no Pi rollback.
 // relay.json beside the app names the relay every phone should dial, so a cutover or a rollback is one
 // file edit and a deploy — no app build. The constant above is the answer when the file can't be read;
 // the last answer that was read is remembered for offline launches; a manual override in localStorage wins.
