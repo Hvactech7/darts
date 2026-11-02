@@ -2421,6 +2421,7 @@ function setPlayerEmail(n,e){
   if(e&&!EMAIL_OK.test(e)) return false;
   playerEmails[n]={e:e,at:Date.now()}; savePlayerEmails();
   try{ if(LG.active&&typeof lgSync==='function') lgSync(); }catch(x){}   // the league learns it right away
+  try{ setTimeout(dkSendPlayerEmails,500); }catch(x){}                       // (11/1) and the relay, backup e-mail or not
   return true;
 }
 
@@ -3299,7 +3300,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.31';
+var DK_VER='3.32';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3428,6 +3429,21 @@ function dkBackfillMatches(){
     var tried=dkMrecSent(), ok=dkMrecOk(), cut=Date.now()-14*86400000;
     q=q.filter(function(m){ return m.id && !ok[m.id] && ((m.ts||0)>=cut || !tried[m.id]); }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,300);
     (function next(){ var m=q.shift(); if(!m) return; dkSendMatchRec(m); setTimeout(next,700); })();
+  }catch(e){}
+}
+// (11/1, Nathan) Player-Card e-mails reach the relay like kept games do. A league push needs this iPad's
+// backup e-mail; Ben's iPad has none, so the address Nathan saved on his card never left it. Sent when the
+// list changes, marked only on the relay's answer, so an offline launch just tries again next time.
+var LS_PEMAILOK='dk_pemails_ok_v1', _pemFlight=false;
+function dkSendPlayerEmails(){
+  try{
+    if(_pemFlight) return;
+    var pe={}; Object.keys(playerEmails||{}).sort().slice(0,120).forEach(function(n){ var e=emailOfPlayer(n); if(e) pe[n]=e; });
+    if(!Object.keys(pe).length) return;
+    var sig=JSON.stringify(pe), had=''; try{ had=localStorage.getItem(LS_PEMAILOK)||''; }catch(e){}
+    if(sig===had) return;
+    _pemFlight=true; setTimeout(function(){ _pemFlight=false; },10000);
+    dkStat('pemails',{pe:pe},function(){ _pemFlight=false; try{ localStorage.setItem(LS_PEMAILOK,sig); }catch(e){} });
   }catch(e){}
 }
 
@@ -8360,6 +8376,7 @@ refreshResume();             // "Continue Match" if we're between legs
 try{ dkPing('scan'); }catch(e){}      // QR arrivals only; no-op for everyone else
 try{ dkInstallPing(); }catch(e){}     // every install, QR or not — once, ever
 setTimeout(function(){ try{ dkBackfillMatches(); }catch(e){} },6000);   // (9/30) kept games reach the relay whole
+setTimeout(function(){ try{ dkSendPlayerEmails(); }catch(e){} },4000);  // (11/1) Player-Card e-mails too
 // (9/15, Nathan) Nothing joins a league by itself any more. A league is entered
 // on purpose: a code from a member, or a library shared by one.
 setTimeout(function(){ try{ lgResumePending(); }catch(e){} }, 2500);
