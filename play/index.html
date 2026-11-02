@@ -3299,7 +3299,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.30';
+var DK_VER='3.31';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3315,7 +3315,9 @@ function dkShareSet(on){ try{ localStorage.setItem(LS_SHARE,on?'1':'0'); }catch(
 // The free half of "where": the phone's own timezone and language. No prompt,
 // no permission, and it beats an IP guess for country. The IP half happens on
 // the relay, which already sees the address without being told.
-function dkStat(ev,extra){
+// onAck (optional): called once the relay answers that it stored the row; without one the socket
+// is fire-and-forget as before.
+function dkStat(ev,extra,onAck){
   try{
     if(!dkShareOn()) return;
     if(/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
@@ -3328,11 +3330,16 @@ function dkStat(ev,extra){
     var em=''; try{ em=(localStorage.getItem(LS_BKEMAIL)||'').trim(); }catch(e){}
     if(em) msg.email=em;                       // only if they typed one themselves
     if(extra) for(var k in extra) msg[k]=extra[k];
+    var rid=onAck?('s'+Math.random().toString(36).slice(2,9)):'';
+    if(rid) msg.rid=rid;
     var ws=new WebSocket(DK_RELAY);
     var done=setTimeout(function(){ try{ws.close();}catch(e){} },8000);
     ws.onopen=function(){
       try{ ws.send(JSON.stringify(msg)); }catch(e){}
-      setTimeout(function(){ clearTimeout(done); try{ws.close();}catch(e){} },600);
+      if(!rid) setTimeout(function(){ clearTimeout(done); try{ws.close();}catch(e){} },600);
+    };
+    if(rid) ws.onmessage=function(e){
+      try{ var r=JSON.parse(e.data); if(r&&r.t==='statOk'&&r.rid===rid){ clearTimeout(done); try{ws.close();}catch(x){} onAck(r); } }catch(x){}
     };
     ws.onerror=function(){ clearTimeout(done); };
   }catch(e){}
@@ -3385,20 +3392,28 @@ function dkMatchPing(winners,losers,gameType,extra){
 // scores, every leg's stats), once, so a night scored with the switch forgotten can
 // still be recovered with its averages and highs. It is never added to a league
 // automatically.
-var LS_MREC='dk_mrec_sent_v1';
+// (11/1, Nathan) "sent" used to be written the moment the socket was asked to send — so a game finished
+// with no internet (Ben's iPad, 10/27: 9 league games) was marked sent and never tried again. Now a game
+// is marked only when the relay answers that it has it (dk_mrec_ok_v2); until then every launch retries.
+// v1 is kept read-only: it says which games were already tried before this fix (see dkBackfillMatches).
+var LS_MREC='dk_mrec_sent_v1', LS_MRECOK='dk_mrec_ok_v2', _mrecFlight={};
 function dkMrecSent(){ try{ return JSON.parse(localStorage.getItem(LS_MREC)||'{}')||{}; }catch(e){ return {}; } }
+function dkMrecOk(){ try{ return JSON.parse(localStorage.getItem(LS_MRECOK)||'{}')||{}; }catch(e){ return {}; } }
 function dkSendMatchRec(m){
   try{
     if(!m||!m.done||!m.id) return false;
-    var sent=dkMrecSent(); if(sent[m.id]) return false;
+    if(dkMrecOk()[m.id] || _mrecFlight[m.id]) return false;
     var rec={id:m.id,ts:m.ts,game:m.game,mode:m.mode,legs:m.legs,score:m.score,winner:m.winner,
       sides:(m.sides||[]).map(function(sd){ return {name:sd.name,members:(sd.members||[]).slice(0,10),team:sd.team||null}; }),
       results:(m.results||[]).slice(0,15)};
     if(JSON.stringify(rec).length>24000) return false;   // never one giant row
-    dkStat('matchrec',{m:rec});
-    sent[m.id]=Date.now();
-    var ids=Object.keys(sent); if(ids.length>800) ids.sort(function(a,b){ return sent[a]-sent[b]; }).slice(0,ids.length-800).forEach(function(k){ delete sent[k]; });
-    try{ localStorage.setItem(LS_MREC,JSON.stringify(sent)); }catch(e){}
+    _mrecFlight[m.id]=1;
+    setTimeout(function(){ delete _mrecFlight[m.id]; },10000);          // no answer: the next launch tries again
+    dkStat('matchrec',{m:rec},function(){
+      var ok=dkMrecOk(); ok[m.id]=Date.now(); delete _mrecFlight[m.id];
+      var ids=Object.keys(ok); if(ids.length>800) ids.sort(function(a,b){ return ok[a]-ok[b]; }).slice(0,ids.length-800).forEach(function(k){ delete ok[k]; });
+      try{ localStorage.setItem(LS_MRECOK,JSON.stringify(ok)); }catch(e){}
+    });
     return true;
   }catch(e){ return false; }
 }
@@ -3408,7 +3423,10 @@ function dkBackfillMatches(){
   try{
     if(!dkShareOn()) return;
     var q=[]; (LG.local.seasons||[]).forEach(function(s){ (s.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ if(m&&m.done) q.push(m); }); }); });
-    var sent=dkMrecSent(); q=q.filter(function(m){ return m.id && !sent[m.id]; }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,300);
+    // not yet confirmed, and either from the last 14 days or never tried at all: the first launch of this
+    // version re-sends two weeks of games once (the relay skips any it already has), then only real gaps
+    var tried=dkMrecSent(), ok=dkMrecOk(), cut=Date.now()-14*86400000;
+    q=q.filter(function(m){ return m.id && !ok[m.id] && ((m.ts||0)>=cut || !tried[m.id]); }).sort(function(a,b){ return (b.ts||0)-(a.ts||0); }).slice(0,300);
     (function next(){ var m=q.shift(); if(!m) return; dkSendMatchRec(m); setTimeout(next,700); })();
   }catch(e){}
 }
@@ -7264,8 +7282,11 @@ function lgMoveLocal(rec,inSeasonOnly,only){
             if(inSeasonOnly) return true;                    // outside every season: stays here
             season={id:lgId('s'),name:'Season '+((rec.seasons||[]).length+1),startTs:when,endTs:null,ed:Date.now(),tournaments:[]}; rec.seasons.push(season);
           }
-          var day=lgDay(when);
-          var tourn=(season.tournaments||[]).find(function(t){ return lgDay(t.ts||0)===day; });
+          var day=lgDay(when), tourn=null;
+          // (11/1) tonight's games go into THIS iPad's own night, so its League OFF ends them (3.29: one iPad
+          // never touches another's) -- not into whichever iPad's record for tonight comes first
+          if(day===today && rec===league) tourn=lgEnsureTourn();
+          if(!tourn) tourn=(season.tournaments||[]).find(function(t){ return lgDay(t.ts||0)===day; });
           if(!tourn){ tourn={id:lgId('t'),ts:when,endTs:null,mailed:false,matches:[]}; season.tournaments.push(tourn);
             season.tournaments.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); }
           if(!tourn.matches.some(function(x){ return x.id===m.id; })){ m.lg=true; tourn.matches.push(m);
