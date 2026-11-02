@@ -2571,6 +2571,15 @@ function renamePlayer(oldName,newName){
     return false;
   }
   if(roster.some(n=>n!==oldName && n.trim().toLowerCase()===newName.toLowerCase())){ flashToast('That name is already in the library'); return false; }
+  if(lgNameTaken(oldName,newName)){ flashToast('That name is already in the league'); return false; }
+  if(!renameCore(oldName,newName)) return false;
+  lgQueueRename(oldName,newName);
+  return true;
+}
+// (11/1, Nathan) "I want the player to always keep their stats and other info" -- the one place a name
+// changes on this device: library, stats, team, e-mail, duos, groups, Fat 6 places, every game it holds
+// (league and kept), the game on the board. Used by the Rename button and by a rename from the relay.
+function renameCore(oldName,newName){
   const i=roster.indexOf(oldName); if(i<0) return false;
   roster[i]=newName;
   if(playerTeams[oldName]!==undefined){ playerTeams[newName]=playerTeams[oldName]; delete playerTeams[oldName]; }
@@ -2584,11 +2593,25 @@ function renamePlayer(oldName,newName){
   duoTeams=nd;
   groupLib.forEach(g=>{ g.members=(g.members||[]).map(m=>m===oldName?newName:m); });
   if(statsLib[oldName]){ statsLib[newName]=statsLib[oldName]; delete statsLib[oldName]; }
+  try{ (f6log||[]).forEach(function(e){ if(e&&e.places&&e.places[oldName]!==undefined){ e.places[newName]=e.places[oldName]; delete e.places[oldName]; } }); saveF6log(); }catch(e){}
   teamSel=teamSel.map(a=>a.map(m=>m===oldName?newName:m));
   f6Sel=f6Sel.map(m=>m===oldName?newName:m);
+  if(myName()===oldName) setMyName(newName);
+  renameInMatches(oldName,newName);
   saveRoster(); savePlayerTeams(); saveDuoTeams(); saveGroups(); saveStats();
   renderLibrary(); renderColumns(); renderLineup(); updateStart(); renderGroups();
   return true;
+}
+function renameInMatches(from,into){
+  var n=0, sides=function(m){ (m&&m.sides||[]).forEach(function(sd){
+    if(sd&&sd.members&&sd.members.indexOf(from)>=0){ sd.members=sd.members.map(function(x){ return x===from?into:x; }); if(sd.name===from) sd.name=into; n++; }
+  }); };
+  var recs=(LG.list||[]).concat([LG.local||{}]);
+  recs.forEach(function(rec){ (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(sides); }); }); });
+  if(LG.me===from) LG.me=into;
+  try{ if(typeof G!=='undefined'&&G&&G.teams){ var g=0; G.teams.forEach(function(t){ if(t&&t.members&&t.members.indexOf(from)>=0){ t.members=t.members.map(function(x){ return x===from?into:x; }); if(t.name===from) t.name=into; g++; } }); if(g){ saveGameState(); try{ renderGame(); }catch(e){} } } }catch(e){}
+  if(n||LG.me===into) saveLeague();
+  return n;
 }
 function renderLibrary(){
   const el=document.getElementById('libList');
@@ -3300,7 +3323,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.32';
+var DK_VER='3.33';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6862,11 +6885,14 @@ function lgSyncOne(rec, cb){
   var st=_lgSyncState[rec.id]||(_lgSyncState[rec.id]={busy:false,again:false});
   if(st.busy){ st.again=true; if(cb) cb(null); return; }
   st.busy=true;
-  relayLeague({op:'push',league:rec.id,data:{seasons:lgSeasonsForPush(rec),assign:lgAssignments(),me:LG.me||'',emails:lgEmails()}}).then(function(r){
-    st.busy=false; if(r&&r.ok&&r.league) lgAdopt(r.league); else lgDetachIf(r,rec);
-    if(cb) cb(r);
-    if(st.again){ st.again=false; lgSyncOne(rec); }
-  }).catch(function(){ st.busy=false; st.again=false; if(cb) cb(null); });
+  lgFlushRenames(rec,function(clear){
+    if(!clear){ st.busy=false; st.again=false; if(cb) cb(null); return; }   // a rename still waiting goes before any push
+    relayLeague({op:'push',league:rec.id,data:{seasons:lgSeasonsForPush(rec),assign:lgAssignments(),me:LG.me||'',emails:lgEmails(),ren:rec.renApplied||0}}).then(function(r){
+      st.busy=false; if(r&&r.ok&&r.league) lgAdopt(r.league); else lgDetachIf(r,rec);
+      if(cb) cb(r);
+      if(st.again){ st.again=false; lgSyncOne(rec); }
+    }).catch(function(){ st.busy=false; st.again=false; if(cb) cb(null); });
+  });
 }
 function lgSync(cb){ lgSyncOne(league&&league.id?league:null, cb); }          // the active league
 // ---- team rosters (Nathan, 2026-08-22): sponsored membership ----
@@ -7324,26 +7350,66 @@ function lgMoveLocal(rec,inSeasonOnly,only){
 function lgApplyRenames(rec, renames){
   if(!Array.isArray(renames)||!renames.length) return 0;
   var done=rec.renApplied||0, n=0;
-  renames.forEach(function(r){
+  renames.slice().sort(function(a,b){ return (+(a&&a.at)||0)-(+(b&&b.at)||0); }).forEach(function(r){
     if(!r||!r.from||!r.into||(+r.at||0)<=done) return;
     var from=r.from, into=r.into;
-    (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ (m.sides||[]).forEach(function(sd){
-      if(sd&&sd.members&&sd.members.indexOf(from)>=0){ sd.members=sd.members.map(function(x){ return x===from?into:x; }); if(sd.name===from) sd.name=into; }
-    }); }); }); });
     var hasFrom=roster.indexOf(from)>=0, hasInto=roster.indexOf(into)>=0;
     if(hasFrom&&hasInto) mergePlayers(from,into);
-    else if(hasFrom){                              // a plain rename, no claim guard: the head decided this on the relay
-      roster=roster.map(function(x){ return x===from?into:x; });
-      if(playerTeams[from]!==undefined){ playerTeams[into]=playerTeams[from]; delete playerTeams[from]; }
-      if(statsLib[from]){ statsLib[into]=statsLib[from]; delete statsLib[from]; }
-      if(playerEmails[from]){ playerEmails[into]=playerEmails[from]; delete playerEmails[from]; }
-      saveRoster(); savePlayerTeams(); saveStats(); savePlayerEmails();
-    }
+    else if(hasFrom) renameCore(from,into);        // a plain rename, no claim guard: the relay already checked who asked
+    renameInMatches(from,into);                    // (11/1) kept games and the board too, not just this league
     if(LG.me===from) LG.me=into;
     done=Math.max(done,+r.at||0); n++;
   });
   if(n){ rec.renApplied=done; saveLeague(); try{ renderColumns(); renderLibrary(); }catch(e){} }
   return n;
+}
+// (11/1, Nathan) "I also want player names that get changed to update instantly to the relay and all
+// devices in the league". A rename on this iPad goes to every league it holds that knows the name; with
+// no internet it waits in a queue and goes first on the next sync (before any push, or the push would put
+// the new name on the team beside the old one).
+var LS_RENQ='dk_lg_renq_v1';
+function lgRenQ(){ try{ return JSON.parse(localStorage.getItem(LS_RENQ)||'[]')||[]; }catch(e){ return []; } }
+function lgRenQSave(q){ try{ localStorage.setItem(LS_RENQ,JSON.stringify(q.slice(-40))); }catch(e){} }
+function lgKnowsName(rec,n){
+  if(!rec) return false;
+  if(lgTeamOfRoster(rec,n)) return true;
+  if(rec.claims&&rec.claims[n]) return true;
+  return (rec.seasons||[]).some(function(se){ return (se.tournaments||[]).some(function(t){ return (t.matches||[]).some(function(m){ return (m.sides||[]).some(function(sd){ return sd&&sd.members&&sd.members.indexOf(n)>=0; }); }); }); });
+}
+function lgNameTaken(from,into){
+  var lo=String(into).trim().toLowerCase();
+  return (LG.list||[]).some(function(rec){
+    if(!lgKnowsName(rec,from)) return false;
+    var t=rec.teams||{}, hit=false;
+    Object.keys(t).forEach(function(tm){ Object.keys(t[tm]||{}).forEach(function(p){ if(p!==from&&p.toLowerCase()===lo) hit=true; }); });
+    Object.keys(rec.claims||{}).forEach(function(p){ if(p!==from&&p.toLowerCase()===lo) hit=true; });
+    return hit;
+  });
+}
+function lgQueueRename(from,into){
+  // lgKnowsName runs after renameCore moved the games, so look for the NEW name in this iPad's copy
+  var q=lgRenQ();
+  (LG.list||[]).forEach(function(rec){ if(rec&&rec.id&&(lgKnowsName(rec,into)||lgKnowsName(rec,from))) q.push({league:rec.id,from:from,into:into,at:Date.now()}); });
+  lgRenQSave(q);
+  lgSyncAll();
+}
+// send this league's queued renames one at a time; cb(true) when none are left waiting
+function lgFlushRenames(rec,cb){
+  var q=lgRenQ(), mine=q.filter(function(x){ return x&&x.league===rec.id; });
+  if(!mine.length){ cb(true); return; }
+  if(!lgEmail()){ cb(false); return; }
+  var it=mine[0];
+  relayLeague({op:'rename',league:rec.id,from:it.from,into:it.into,me:LG.me||''}).then(function(r){
+    if(!r){ cb(false); return; }
+    lgRenQSave(lgRenQ().filter(function(x){ return !(x&&x.league===it.league&&x.from===it.from&&x.into===it.into&&x.at===it.at); }));
+    if(r.ok){ if(r.league) lgAdopt(r.league); }
+    else if(r.taken||/claimed/i.test(r.error||'')){                // the league said no: the old name comes back here too
+      flashToast(r.error||'The league kept the old name');
+      if(roster.indexOf(it.into)>=0&&roster.indexOf(it.from)<0) renameCore(it.into,it.from);
+    }
+    else if(lgDetachIf(r,rec)){ cb(true); return; }
+    lgFlushRenames(rec,cb);
+  }).catch(function(){ cb(false); });
 }
 function lgHeadTools(){
   var box=document.getElementById('lgHeadTools'); if(!box) return;
@@ -8366,6 +8432,20 @@ renderLeagueUI();
 if(LG.cur && LG.cur.done) lgCommitMatch();   // finished on the winner screen, then the app was killed
 setTimeout(function(){ lgSyncAll(); }, 1500);
 window.addEventListener('online', function(){ lgSyncAll(); });
+// (11/1, Nathan) a name changed on one iPad shows on the others within the minute
+var _lgPullAt=0;
+function lgPullAll(force){
+  if(document.hidden||!lgEmail()||!(LG.list||[]).length) return;
+  if(!force&&Date.now()-_lgPullAt<50000) return;
+  _lgPullAt=Date.now();
+  LG.list.slice().forEach(function(rec){
+    if(!rec||!rec.id) return;
+    if(lgRenQ().some(function(x){ return x&&x.league===rec.id; })){ lgSyncOne(rec); return; }
+    relayLeague({op:'pull',league:rec.id}).then(function(r){ if(r&&r.ok&&r.league) lgAdopt(r.league); }).catch(function(){});
+  });
+}
+setInterval(function(){ try{ lgPullAll(false); }catch(e){} }, 60000);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ try{ if(Date.now()-_lgPullAt>15000) lgPullAll(true); }catch(e){} } });
 // Auto-backup used to retry only on the NEXT change — a save that failed on a
 // flaky hotspot at the end of the night sat unsent until something else
 // changed. Now it also retries when the connection comes back and at launch
