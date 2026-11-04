@@ -1118,6 +1118,16 @@
   #legsPick button{font-family:var(--num);font-size:34px;font-weight:700;padding:12px 0;}
   #lgToggle.on{background:linear-gradient(180deg,#2b5f96,#1c3f68 55%,#122844);color:#dceeff;border-color:#7fb8ef;
     box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(74,168,255,.35),inset 0 1px 0 rgba(255,255,255,.3);}
+  /* (11/3, Nathan) "League Night" with an ON/OFF switch beside it: blue when on, grayed out when off */
+  #lgToggle{display:flex;align-items:center;justify-content:space-between;gap:14px;text-align:left;white-space:nowrap;}
+  @media (max-width:430px){ #lgToggle{font-size:19px !important;padding:11px 12px !important;} }
+  #lgToggle:not(.on){background:#24252b;color:#8d8f99;border-color:#3b3d46;box-shadow:none;}
+  #lgToggle .lgSw{position:relative;flex:0 0 auto;width:92px;height:40px;border-radius:20px;background:#3b3d46;border:1px solid #4a4c56;transition:background .2s;}
+  #lgToggle .lgSwKnob{position:absolute;top:4px;left:4px;width:30px;height:30px;border-radius:50%;background:#9a9ca6;transition:left .2s,background .2s;}
+  #lgToggle .lgSwTxt{position:absolute;top:0;bottom:0;right:12px;display:flex;align-items:center;font-size:17px;font-weight:800;letter-spacing:1px;}
+  #lgToggle.on .lgSw{background:#4aa8ff;border-color:#bfe0ff;}
+  #lgToggle.on .lgSwKnob{left:56px;background:#fff;}
+  #lgToggle.on .lgSwTxt{right:auto;left:13px;color:#06213f;}
   .lgOpt{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:17px;color:#e9ddc0;cursor:pointer;}
   .lgOpt input{width:22px;height:22px;accent-color:#2b5f96;}
   .lgSeason{margin-top:12px;padding:10px 12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);}
@@ -1334,12 +1344,12 @@
     background:rgba(0,0,0,.25); }
   .th-names .thTeamBtn .car{ font-size:.72em; opacity:.85; }
   .th-names .thTeamBtn:active{ transform:scale(.96); }
-  #teamPickSplash,#seasonSplash,#seasonAskSplash,#nightEndSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
-  #teamPickSplash.hidden,#seasonSplash.hidden,#seasonAskSplash.hidden,#nightEndSplash.hidden{display:none;}
-  #teamPickSplash .card,#seasonSplash .card,#seasonAskSplash .card,#nightEndSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
+  #teamPickSplash,#seasonSplash,#seasonAskSplash,#nightEndSplash,#schedSplash{position:fixed;inset:0;z-index:300;background:rgba(4,3,8,.8);display:flex;align-items:center;justify-content:center;padding:16px;}
+  #teamPickSplash.hidden,#seasonSplash.hidden,#seasonAskSplash.hidden,#nightEndSplash.hidden,#schedSplash.hidden{display:none;}
+  #teamPickSplash .card,#seasonSplash .card,#seasonAskSplash .card,#nightEndSplash .card,#schedSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
   /* these three open OVER the league card, which is itself fixed z300 —
      same z + later DOM had the card winning and the splash invisible */
-  #seasonSplash,#seasonAskSplash,#nightEndSplash{z-index:400;}
+  #seasonSplash,#seasonAskSplash,#nightEndSplash,#schedSplash{z-index:400;}
   .ssDateRow input[type=date]{min-height:44px;color-scheme:dark;}
   #teamPickGrid{display:grid;grid-template-columns:1fr;gap:9px;}
   #teamPickGrid button{padding:13px 14px;font-size:19px;width:100%;}
@@ -2009,6 +2019,20 @@
       <button class="ghost" id="neStay" style="width:100%;margin-top:8px;">Keep Playing</button>
     </div>
   </div>
+  <!-- (11/3, Nathan) the league head's weekly league night: League turns on and off by itself -->
+  <div id="schedSplash" class="hidden">
+    <div class="card">
+      <h2>🕖 League Night</h2>
+      <p class="small" style="margin:4px 0 10px;">Every league iPad turns League on at the start and off at the end.</p>
+      <div class="row lgMeRow"><span class="lgMeLbl">Day</span><select id="schDay" class="grow"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></div>
+      <div class="row lgMeRow" style="margin-top:6px;"><span class="lgMeLbl">Starts</span><input type="time" id="schStart" class="grow"></div>
+      <div class="row lgMeRow" style="margin-top:6px;"><span class="lgMeLbl">Ends</span><input type="time" id="schEnd" class="grow"></div>
+      <p class="small" id="schMsg" style="margin:8px 0 0;min-height:1.2em;"></p>
+      <button class="primary" id="schSave" style="width:100%;margin-top:6px;">Save</button>
+      <button class="ghost" id="schOff" style="width:100%;margin-top:8px;">Turn Off League Night</button>
+      <button class="ghost" id="schCancel" style="width:100%;margin-top:8px;">Cancel</button>
+    </div>
+  </div>
   <div id="playerCard" class="hidden">
     <div class="card">
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
@@ -2024,6 +2048,7 @@
     <div class="card">
       <h2>🏆 League Mode</h2>
       <button class="ghost" id="lgToggle" style="width:100%;font-size:22px;padding:13px;">League Off</button>
+      <div class="lgSeasonLine" id="lgSchedLine" style="display:none;margin:8px 0 0;text-align:center;"></div>
       <!-- (2026-09-02, Nathan) ending tonight's tournament belongs HERE, not on
            the Stats page. Same confirm as switching League Off. -->
       <button class="warn" id="lgEndNight" style="display:none;width:100%;margin-top:8px;font-size:22px;padding:13px;">End Tournament</button>
@@ -2083,6 +2108,7 @@
           <div class="lgSeason">
             <div class="lgSeasonLine" id="lgSeasonLine"></div>
             <button class="accent" id="lgSetSeason" style="width:100%;">📅 Set Season</button>
+            <button class="accent" id="lgSetSched" style="width:100%;margin-top:8px;">🕖 Set League Night</button>
             <button class="ghost" id="lgSync" style="width:100%;margin-top:8px;">↻ Sync now</button>
             <button class="ghost" id="lgLeave" style="width:100%;margin-top:8px;font-size:14px;padding:8px;opacity:.8;">Leave this league</button>
             <!-- (2026-09-02, Nathan) the head's broom: remove a device, fold two
@@ -3323,7 +3349,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.33';
+var DK_VER='3.34';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3430,6 +3456,7 @@ function dkSendMatchRec(m){
     var rec={id:m.id,ts:m.ts,game:m.game,mode:m.mode,legs:m.legs,score:m.score,winner:m.winner,
       sides:(m.sides||[]).map(function(sd){ return {name:sd.name,members:(sd.members||[]).slice(0,10),team:sd.team||null}; }),
       results:(m.results||[]).slice(0,15)};
+    if(m.off) rec.off=1;                                   // (11/3) League turned off by hand on a scheduled night: not a league game
     if(JSON.stringify(rec).length>24000) return false;   // never one giant row
     _mrecFlight[m.id]=1;
     setTimeout(function(){ delete _mrecFlight[m.id]; },10000);          // no answer: the next launch tries again
@@ -6626,7 +6653,7 @@ var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
 // leagues this device belongs to, and which one is ACTIVE. `league` is always
 // the active league's record (or LG.local — history kept before joining any
 // league, which Create uploads). Matches, reports and Stats act on `league`.
-function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0}; }
+function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0,schedule:o.schedule||null}; }   // (11/3) league night survives a relaunch offline
 var LG=(function(){
   var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
   if(!v||typeof v!=='object') v={};
@@ -6850,6 +6877,7 @@ function lgAdopt(Lg, makeActive){
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
   if(Lg.head) rec.head=Lg.head;
+  if('schedule' in Lg) rec.schedule=Lg.schedule||null;     // (11/3) the head's league night
   try{ lgApplyRenames(rec, Lg.renames); }catch(e){}
   if(Array.isArray(Lg.dead)) rec.dead=Lg.dead.slice(0,50);
   lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
@@ -7136,13 +7164,18 @@ function renderLeagueUI(){
   // (10/13) the trophy steps aside while ON so "League Night: ON" fits an iPad's button (the blue says ON too)
   if(b){ b.classList.toggle('on',leagueOn()); b.innerHTML=leagueOn()?'League Night: ON':'<span class="mi">🏆 </span>League'; lgFitBtn(b); }
   var t=document.getElementById('lgToggle');
-  if(t){ var _n=(leagueOn()&&league&&league.id&&lgTourn())?lgTourn().matches.length:0;
-    t.classList.toggle('on',leagueOn());
-    t.textContent=leagueOn()?('■ End League Night'+(_n?' ('+_n+' game'+(_n===1?'':'s')+')':'')):'▶ Start League Night'; }
+  if(t){
+    t.classList.toggle('on',leagueOn()); t.setAttribute('role','switch'); t.setAttribute('aria-checked',leagueOn()?'true':'false');
+    t.innerHTML='<span>League Night</span><span class="lgSw"><span class="lgSwKnob"></span><span class="lgSwTxt">'+(leagueOn()?'ON':'OFF')+'</span></span>'; }
   var en=document.getElementById('lgEndNight');
   if(en) en.style.display='none';
   // (10/6, Nathan) only the league head sets the season
-  var ssb=document.getElementById('lgSetSeason'); if(ssb) ssb.style.display=(league&&league.id&&lgIsHead(league))?'':'none';                  // (10/6) the one button above does this now
+  var ssb=document.getElementById('lgSetSeason'); if(ssb) ssb.style.display=(league&&league.id&&lgIsHead(league))?'':'none';
+  var shb=document.getElementById('lgSetSched'); if(shb) shb.style.display=(league&&league.id&&lgIsHead(league))?'':'none';
+  var shl=document.getElementById('lgSchedLine');
+  if(shl){ var _sc=(league&&league.id)?lgSchedOf(league):null, _w=_sc?lgSchedNow():null;
+    shl.style.display=_sc?'':'none';
+    if(_sc) shl.textContent='🕖 League night: '+(_w?'until '+lgTime12(_sc.end)+' tonight':lgSchedText(_sc)); }                  // (10/6) the one button above does this now
   // matches played with the switch off are kept — offer to move them in
   var au=document.getElementById('lgAddUnmarked');
   if(au){ var _un=(league&&league.id)?lgUnmarked():[]; au.style.display=_un.length?'':'none';
@@ -7301,6 +7334,61 @@ function lgAutoOn(rec){
     return true;
   }catch(e){ return false; }
 }
+// ---- (11/3, Nathan) the scheduled league night ----
+// "its too hard to get everyone to turn it on/off. lets make it done by the league administrator(me)."
+// The league head sets one weekly night (Pacific time). At the start every iPad in the league turns
+// League ON by itself; at the end it turns OFF. Anyone can still turn their own iPad off -- it then
+// stays off for the rest of that night, and its games are not added by the relay. A game started
+// before the end counts (a game's league tag is decided when it starts) and finishes first.
+var LS_SCHED='dk_lg_sched_v1', LG_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function lgSchedOf(rec){ var s=rec&&rec.schedule; return (s&&s.on!==false&&s.dow>=0&&s.dow<=6&&/^\d\d:\d\d$/.test(s.start||'')&&/^\d\d:\d\d$/.test(s.end||'')&&s.start!==s.end)?s:null; }
+function lgPTClock(ms){
+  var p={}; try{ new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',weekday:'short',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(ms)).forEach(function(x){ p[x.type]=x.value; }); }catch(e){ var d=new Date(ms); return {dow:d.getDay(),mins:d.getHours()*60+d.getMinutes()}; }
+  return {dow:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(p.weekday), mins:(+p.hour)*60+(+p.minute), ymd:p.year+'-'+p.month+'-'+p.day};
+}
+function lgHM(t){ return (+t.slice(0,2))*60+(+t.slice(3)); }
+// the night that `ms` falls in ({key: its start day}), or null
+function lgSchedWin(sc,ms){
+  if(!sc) return null; var c=lgPTClock(ms), a=lgHM(sc.start), b=lgHM(sc.end);
+  if(a<b) return (c.dow===sc.dow&&c.mins>=a&&c.mins<b)?{key:c.ymd}:null;
+  if(c.dow===sc.dow&&c.mins>=a) return {key:c.ymd};
+  if(c.dow===(sc.dow+1)%7&&c.mins<b) return {key:lgPTClock(ms-86400000).ymd};
+  return null;
+}
+function lgSchedAll(){ try{ return JSON.parse(localStorage.getItem(LS_SCHED)||'{}')||{}; }catch(e){ return {}; } }
+function lgSchedSt(){ return (league&&league.id&&lgSchedAll()[league.id])||{}; }
+function lgSchedPut(v){ if(!league||!league.id) return; var a=lgSchedAll(); a[league.id]=v; try{ localStorage.setItem(LS_SCHED,JSON.stringify(a)); }catch(e){} }
+function lgSchedNow(){ return (league&&league.id)?lgSchedWin(lgSchedOf(league),Date.now()):null; }
+// League turned off by hand: inside the night it stays off for the rest of it
+function lgSchedByHandOff(){ var w=lgSchedNow(); if(w) lgSchedPut({key:w.key,st:'off'}); }
+function lgSchedOffTonight(ts){ var w=(league&&league.id)?lgSchedWin(lgSchedOf(league),ts||Date.now()):null, st=lgSchedSt(); return !!(w&&st.key===w.key&&st.st==='off'); }
+function lgTime12(t){ var h=+t.slice(0,2), m=t.slice(3); return ((h%12)||12)+':'+m+' '+(h<12?'AM':'PM'); }
+function lgSchedText(sc){ return LG_DAYS[sc.dow]+'s, '+lgTime12(sc.start)+' – '+lgTime12(sc.end); }
+function lgSchedTick(){
+  try{
+    if(!league||!league.id) return;
+    var w=lgSchedNow(), st=lgSchedSt();
+    if(w){
+      if(st.key===w.key) return;                             // tonight already turned on (or turned off by hand)
+      if(!lgEmail()) return;                                 // can't reach the league: its games go to the relay as kept games
+      if(lgSeasonOver(lgSeason())) return;                   // the head decides about a finished season
+      lgSchedPut({key:w.key,st:'on'});
+      if(!LG.on){ LG.on=true; saveLeague(); renderLeagueUI(); }
+      return;
+    }
+    if(st.st!=='on') return;                                 // the schedule didn't turn this iPad on
+    if(!LG.on){ lgSchedPut({key:st.key,st:'done'}); return; }
+    if(lgMatchOpen()) return;                                // the game in progress finishes first
+    lgSchedPut({key:st.key,st:'done'});
+    var tn=lgTourn();
+    if(tn&&tn.matches.length){ lgEndTournament(function(msg,final){ if(final){ LG.on=false; saveLeague(); renderLeagueUI(); } }); return; }
+    if(tn){ var s=lgSeason(); if(s){ var ix=s.tournaments.indexOf(tn); if(ix>=0) s.tournaments.splice(ix,1); } }
+    LG.on=false; saveLeague(); renderLeagueUI();
+  }catch(e){}
+}
+setInterval(lgSchedTick,20000);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') setTimeout(lgSchedTick,1500); });
+setTimeout(lgSchedTick,5000);
 // Games played BEFORE the device attached live in LG.local under an
 // auto-made season. Move them into the league's real season/tournament for
 // the day they were played, so they count once this device is official.
@@ -7507,7 +7595,7 @@ document.getElementById('lgToggle').onclick=function(){
   if(tn&&lgMatchOpen()){ lgHint('Finish or quit the match in progress first.'); return; }
   if(tn&&tn.matches.length){ nightEndOpen(tn); return; }          // confirm before mailing
   if(tn){ var s2=lgSeason(); if(s2){ var ix=s2.tournaments.indexOf(tn); if(ix>=0) s2.tournaments.splice(ix,1); } }
-  LG.on=false; saveLeague(); renderLeagueUI();
+  LG.on=false; lgSchedByHandOff(); saveLeague(); renderLeagueUI();
 };
 
 // ---- Set Season: a calendar, not a switch ----
@@ -7598,10 +7686,34 @@ document.getElementById('neStay').onclick=function(){ document.getElementById('n
 document.getElementById('nightEndSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('neStay').click(); });
 document.getElementById('neGo').onclick=function(){
   document.getElementById('nightEndSplash').classList.add('hidden');
+  lgSchedByHandOff();
   lgEndTournament(function(msg,final){ lgHint(msg);
     if(final){ LG.on=false; saveLeague(); renderLeagueUI(); } });
 };
 document.getElementById('lgEndNight').onclick=function(){ var tn=lgTourn(); if(tn) nightEndOpen(tn); };
+// (11/3, Nathan) the head sets league night; the relay keeps it and every iPad follows it
+function schedOpen(){
+  var sc=(league&&league.schedule)||{dow:2,start:'18:55',end:'22:55'};
+  document.getElementById('schDay').value=String(sc.dow); document.getElementById('schStart').value=sc.start; document.getElementById('schEnd').value=sc.end;
+  document.getElementById('schMsg').textContent=lgSchedOf(league)?'Now: '+lgSchedText(lgSchedOf(league))+'.':'League night is off.';
+  document.getElementById('schOff').style.display=lgSchedOf(league)?'':'none';
+  document.getElementById('schedSplash').classList.remove('hidden');
+}
+function schedSend(on){
+  var msg=document.getElementById('schMsg');
+  var sc={on:on,dow:+document.getElementById('schDay').value,start:document.getElementById('schStart').value,end:document.getElementById('schEnd').value};
+  if(!/^\d\d:\d\d$/.test(sc.start)||!/^\d\d:\d\d$/.test(sc.end)||sc.start===sc.end){ msg.textContent='Pick a start and an end time.'; return; }
+  msg.textContent='Saving…';
+  relayLeague({op:'schedule',league:league.id,schedule:sc}).then(function(r){
+    if(r&&r.ok&&r.league){ lgAdopt(r.league); document.getElementById('schedSplash').classList.add('hidden'); lgHint(on?'✓ League night: '+lgSchedText(sc)+'.':'✓ League night is off.'); lgSchedTick(); }
+    else msg.textContent=(r&&r.error)||'Could not save. Try again.';
+  }).catch(function(){ msg.textContent='No connection. Try again with internet.'; });
+}
+document.getElementById('lgSetSched').onclick=function(){ if(league&&league.id&&lgIsHead(league)) schedOpen(); };
+document.getElementById('schSave').onclick=function(){ schedSend(true); };
+document.getElementById('schOff').onclick=function(){ schedSend(false); };
+document.getElementById('schCancel').onclick=function(){ document.getElementById('schedSplash').classList.add('hidden'); };
+document.getElementById('schedSplash').addEventListener('click',function(e){ if(e.target===this) document.getElementById('schCancel').click(); });
 // (2026-09-08, Nathan) Move every match that was played with the switch off into
 // the league. lgRehomeLocal already files them by the day they were played, so a
 // forgotten switch costs a tap instead of a night.
@@ -8019,7 +8131,7 @@ function lgCommitMatch(){
   var t=lgEnsureTournIn(rec); t.matches.push(m);
   saveLeague();
   if(rec===league && league.id) lgSync();         // share it with the league's other devices
-  else dkSendMatchRec(m);
+  else { if(lgSchedOffTonight(m.ts)) m.off=1; dkSendMatchRec(m); }
   try{ renderLeagueUI(); }catch(e){}
 }
 function lgAbandon(){ if(LG.cur){ LG.cur=null; saveLeague(); } }
