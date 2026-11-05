@@ -1060,13 +1060,29 @@
   #cqBtns{display:flex;gap:10px;margin-top:16px;}
   #cqBtns button{flex:1;}
   /* (11/4) Delete account + Report open over the library, the Player Card and the League card (all z300) */
-  #delSplash,#reportSplash{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(4,3,8,.8);padding:16px;}
-  #delSplash.hidden,#reportSplash.hidden{display:none;}
-  #delSplash .card,#reportSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
+  #delSplash,#reportSplash,#licSplash,#u13Splash{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(4,3,8,.8);padding:16px;}
+  #delSplash.hidden,#reportSplash.hidden,#licSplash.hidden,#u13Splash.hidden{display:none;}
+  #delSplash .card,#reportSplash .card,#licSplash .card,#u13Splash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
+  /* (11/5, P7) the Licenses sheet: one line per piece, its full licence under it on a tap */
+  #licSplash .card{max-width:560px;}
+  #licList .licHead{margin:12px 0 4px;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-lt);}
+  #licList details{border-top:1px solid rgba(232,200,118,.18);padding:7px 0;}
+  #licList summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;font-size:16px;}
+  #licList summary::-webkit-details-marker{display:none;}
+  #licList summary::before{content:'▸';color:var(--gold-lt);}
+  #licList details[open] summary::before{content:'▾';}
+  #licList summary b{font-weight:700;}
+  #licList summary .lw{font-size:13px;opacity:.75;}
+  #licList summary .ll{flex-basis:100%;padding-left:16px;font-size:13px;color:var(--gold-lt);}
+  #licList pre{white-space:pre-wrap;word-break:break-word;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;margin:6px 0 0;padding:8px;background:rgba(0,0,0,.35);border-radius:6px;max-height:50vh;overflow:auto;}
   #daCode{letter-spacing:6px;font-size:22px;text-align:center;}
   #bkLinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
   #bkLinks button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:14px;padding:7px 6px;letter-spacing:.2px;}
   #bkLinks #bkDelete{color:#ff9bb0;}
+  @media (max-width:600px){ #bkLinks button{flex:1 1 40%;} }
+  /* (11/5, A2) under 13 (the store's age signal): no online account -- the online controls dim and open the 13+ card */
+  body.dk-u13 #wcEmail,body.dk-u13 #bkCodeRow,body.dk-u13 .pcMail,body.dk-u13 .pcMailNote{display:none !important;}
+  body.dk-u13 #bkEmail,body.dk-u13 #bkSaveBtn,body.dk-u13 #bkRestoreBtn,body.dk-u13 #shareOfferBtn,body.dk-u13 #shareTakeBtn,body.dk-u13 #shareStatRow,body.dk-u13 #statsMailBtn{opacity:.45;}   /* (11/5) four links: two rows of two on a phone, one row on an iPad */
   #lgPickReport{flex:none;padding:6px 10px;font-size:16px;}
   #lgPickLeague{min-width:0;}   /* (11/4) leaves room for ⚑ on a phone */
   input.bad{border-color:#ff6e86 !important;}
@@ -2150,6 +2166,9 @@
         <div class="row" id="lgVerifyRow" style="display:none;margin-top:8px;align-items:center;gap:10px;">
           <span class="grow small" id="lgVerifyWait">📧 Waiting for you to tap the link…</span>
           <button class="ghost" id="lgVerifyResend">Send it again</button>
+          <!-- (11/5, AP10) an address confirmed by a code instead of a link (the store reviewers') types it here -->
+          <input type="text" id="lgVerifyCode" class="grow" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="display:none;">
+          <button class="primary" id="lgVerifyOk" style="display:none;">OK</button>
         </div>
       </div>
       <p class="small" id="lgHint" style="margin:6px 0 0;"></p>
@@ -2225,6 +2244,26 @@
       <button class="warn" id="rpGo" style="width:100%;margin-top:6px;">Report</button>
       <button class="confirm-btn" id="rpBlock" style="width:100%;margin-top:8px;">Report &amp; Block</button>
       <button class="ghost" id="rpCancel" style="width:100%;margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+  <!-- (11/5, launch item P7) Open-source licenses: every third-party piece in the app with its full licence. The list is
+       made at BUILD time from .build/licenses/manifest.json (build.py fills dkLicData); inside the iOS app the shell's own
+       list (Capacitor and its plugins) comes from DKNative.licenses (dk-shell/scripts/bundle.mjs). -->
+  <script type="application/json" id="dkLicData">{"build":true,"scope":"web","items":[{"name":"Orbitron","what":"Font (titles, buttons)","version":"2.001","license":"SIL Open Font License 1.1","copyright":["Copyright 2018 The Orbitron Project Authors (https://github.com/theleagueof/orbitron), with Reserved Font Name: \"Orbitron\"."],"url":"https://github.com/theleagueof/orbitron","text":"OFL-1.1.txt"},{"name":"Rajdhani","what":"Font (numbers)","version":"1.201","license":"SIL Open Font License 1.1","copyright":["Copyright (c) 2014 Indian Type Foundry (info@indiantypefoundry.com)"],"url":"https://fonts.google.com/specimen/Rajdhani","text":"OFL-1.1.txt"},{"name":"Cinzel","what":"Font (headings)","version":"2.000","license":"SIL Open Font License 1.1","copyright":["Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)"],"url":"https://github.com/NDISCOVER/Cinzel","text":"OFL-1.1.txt"}],"texts":{"OFL-1.1.txt":"This Font Software is licensed under the SIL Open Font License, Version 1.1.\nThis license is copied below, and is also available with a FAQ at:\nhttps://openfontlicense.org\n\n\n-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded, \nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION & CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."}}</script>
+  <div id="licSplash" class="hidden">
+    <div class="card">
+      <h2>📜 Open-source licenses</h2>
+      <p class="small" style="margin:2px 0 0;">Dart Keeper is built with these. Tap one to read its license.</p>
+      <div id="licList"></div>
+      <button class="primary" id="licDone" style="width:100%;margin-top:12px;">Done</button>
+    </div>
+  </div>
+  <!-- (11/5, A2: Nathan, option a) the store says this player is under 13: no online account. Shown by any online control. -->
+  <div id="u13Splash" class="hidden">
+    <div class="card">
+      <h2>Online features are 13+</h2>
+      <p class="small" style="margin:4px 0 0;">You can still keep score on this device.</p>
+      <button class="primary" id="u13Ok" style="width:100%;margin-top:12px;">OK</button>
     </div>
   </div>
 
@@ -2315,6 +2354,7 @@
         <button class="ghost" id="bkPrivacy">Privacy policy</button>
         <button class="ghost" id="bkTerms" style="display:none;">Terms</button>
         <button class="ghost" id="bkContact">Contact us</button>
+        <button class="ghost" id="bkLicenses">Licenses</button>
         <button class="ghost" id="bkDelete">Delete account</button>
       </div>
     </div>
@@ -3561,6 +3601,94 @@ document.getElementById('bkPrivacy').onclick=function(){ dkOpenUrl(DK_PRIVACY_UR
 document.getElementById('bkTerms').onclick=function(){ dkOpenUrl(DK_TERMS_URL); };
 if(DK_TERMS_LIVE) document.getElementById('bkTerms').style.display='';
 document.getElementById('bkContact').onclick=function(){ location.href='mailto:'+DK_CONTACT+'?subject='+encodeURIComponent('Dart Keeper'); };
+// (11/5, launch item P7) Open-source licenses. The fonts' OFL and the iOS app's MIT/Apache notices must ship with the app.
+function licData(el){ try{ var d=JSON.parse((el&&el.textContent)||'{}'); return d&&d.build?d:null; }catch(e){ return null; } }
+function licSection(title, d){
+  var h=title?'<div class="licHead">'+esc(title)+'</div>':'';
+  (d.items||[]).forEach(function(it){
+    var body=(it.copyright&&it.copyright.length?it.copyright.join('\n')+'\n\n':'')+((d.texts||{})[it.text]||'');
+    h+='<details><summary><b>'+esc(it.name)+'</b><span class="lw">'+esc([it.what,it.version].filter(Boolean).join(' · '))+'</span><span class="ll">'+esc(it.license)+'</span></summary>'
+      +'<pre>'+esc(body)+(it.url?'\n\n'+esc(it.url):'')+'</pre></details>';
+  });
+  return h;
+}
+function licOpen(){
+  var web=licData(document.getElementById('dkLicData'));
+  var shell=(window.DKNative&&DKNative.licenses&&DKNative.licenses.build)?DKNative.licenses:null;
+  var h=web?licSection(shell?'In Dart Keeper':'',web):'<p class="small">The list is added when the app is built.</p>';
+  if(shell) h+=licSection('In the iOS app',shell);
+  document.getElementById('licList').innerHTML=h;
+  document.getElementById('licSplash').classList.remove('hidden');
+}
+document.getElementById('bkLicenses').onclick=licOpen;
+
+//============================ AGE SIGNAL (11/5/2026, launch item A1) ============================
+// The shells read the app store's age signal and hand it here: dk-shell (iOS)
+// through Apple's Declared Age Range (read by itself at each launch only where iOS says an age law covers the person),
+// the Android shell through Google Play Age Signals (only when the page asks; its library waits on Nathan's OK). Both
+// expose DKNative.ageSignal() and call window.onAgeSignal(r) with
+//   {source:'apple'|'google', status:'sharing'|'declined'|'unavailable'|'error'|'verificationRequired',
+//    lower, upper (years, null = open/unknown), declaration, parental:[...], eligible, required, reason, at}
+// and keep the last one on DKNative.age. This records the newest signal on THIS device (dk_age_signal_v1) -- never sent
+// to the relay, never backed up; Delete account clears it -- and applies decision A2 (dkAgeGate below: under 13 = no
+// online account). Any later age rule (13-15 / 16-17) goes in dkAgeGate too.
+var LS_AGESIG='dk_age_signal_v1';
+function dkAgeSignalRead(){ try{ return JSON.parse(localStorage.getItem(LS_AGESIG)||'null'); }catch(e){ return null; } }
+function onAgeSignal(r){
+  try{
+    if(!r||typeof r!=='object') return;
+    var n=function(v){ return (v===null||v===undefined||v==='')?null:(isFinite(+v)?Math.max(0,Math.min(150,Math.round(+v))):null); };
+    var s=function(v,k){ return v==null?null:String(v).slice(0,k||40); };
+    var rec={source:s(r.source,10),status:s(r.status,24),lower:n(r.lower),upper:n(r.upper),declaration:s(r.declaration),
+      parental:Array.isArray(r.parental)?r.parental.slice(0,8).map(function(x){ return s(x); }):[],eligible:typeof r.eligible==='boolean'?r.eligible:null,
+      required:Array.isArray(r.required)?r.required.slice(0,8).map(function(x){ return s(x,60); }):null,reason:s(r.reason,80),at:(isFinite(+r.at)&&+r.at>0)?+r.at:Date.now()};
+    localStorage.setItem(LS_AGESIG,JSON.stringify(rec));
+    // ---- A2 (Nathan 11/5, option a): under 13 = no online account (dkAgeGate, below) ----
+    dkAgeGate(rec);
+  }catch(e){}
+}
+window.onAgeSignal=onAgeSignal;
+// a signal that reached the shell before this script ran (the shells deliver after the page loads, so normally none)
+try{ if(window.DKNative&&DKNative.age) onAgeSignal(DKNative.age); }catch(e){}
+
+// ---- A2 (Nathan 11/5/2026 1:06 PM, option a): UNDER 13 = NO ONLINE ACCOUNT. They keep score on this device. ----
+// Set by a signal that SHARES a range below 13 (upper < 13); lifted only by one that shares 13 or older. No signal,
+// declined, unsupported, a plain browser: nothing changes. While set: no e-mail on the welcome card, and none of backups
+// (save, restore, auto, library share), leagues (join, create, sync, reports), Share game records, Player Card e-mails --
+// relayBackup / relayLeague / dkStat answer without opening a socket, and each of those controls opens the 13+ card.
+// A device that already had an e-mail or a league keeps everything it holds locally; Delete account (relayAccount)
+// stays reachable and is the way to take the address off the relay.
+function dkU13(){ try{ return localStorage.getItem('dk_u13_v1')==='1'; }catch(e){ return false; } }
+function dkU13Msg(){ return 'Online features are for players 13 and up.'; }
+function dkAgeGate(rec){
+  if(!rec||rec.status!=='sharing') return;                   // declined / unavailable / error: nothing changes
+  var was=dkU13();
+  try{
+    if(rec.upper!==null&&rec.upper<13) localStorage.setItem('dk_u13_v1','1');
+    else if(rec.lower!==null&&rec.lower>=13) localStorage.removeItem('dk_u13_v1');
+  }catch(e){}
+  if(dkU13()!==was) dkU13Apply();
+}
+function dkU13Apply(){
+  var u=dkU13();
+  document.body.classList.toggle('dk-u13',u);
+  var c=document.getElementById('shareStatChk'); if(c){ c.checked=dkShareOn(); c.disabled=u; }
+  var be=document.getElementById('bkEmail'); if(be) be.disabled=u;
+  if(u){ try{ clearTimeout(bkTimer); }catch(e){} try{ bkWaitStop(); lgWaitStop(); }catch(e){} }
+  try{ renderLeagueUI(); }catch(e){}
+  try{ if(!document.getElementById('welcome').classList.contains('hidden')) wcCheck(); }catch(e){}
+}
+function dkU13Card(){ document.getElementById('u13Splash').classList.remove('hidden'); }
+document.getElementById('u13Ok').onclick=function(){ document.getElementById('u13Splash').classList.add('hidden'); };
+// every online control, caught before its own handler (capture): the card instead
+document.addEventListener('click',function(e){
+  if(!dkU13()) return;
+  var t=e.target&&e.target.closest&&e.target.closest('#leagueBtn,#bkSaveBtn,#bkRestoreBtn,#shareOfferBtn,#shareTakeBtn,#shareGoBtn,#shareStatRow,#pcEmailSave,#statsMailBtn');
+  if(!t) return;
+  e.preventDefault(); e.stopImmediatePropagation(); dkU13Card();
+},true);
+try{ dkU13Apply(); }catch(e){}
+document.getElementById('licDone').onclick=function(){ document.getElementById('licSplash').classList.add('hidden'); };
 
 // ---- Delete my account. With an e-mail on this device the relay mails a code to it first (proof the inbox
 // is yours); then it erases the backup, everything tied to the address, its usage rows, and its place in every
@@ -3605,7 +3733,7 @@ async function daStart(){
     if(!r||!r.ok){ daBusy(false); daMsg((r&&r.error)||DA_OFFLINE); return; }
     if(r.needCode){
       _da.step=2; daBusy(false); daMsg('');
-      document.getElementById('daLine').innerHTML='Enter the code we sent to <b>'+esc(_da.email)+'</b>.';
+      document.getElementById('daLine').innerHTML=r.askCode?'Enter your 6-digit code for <b>'+esc(_da.email)+'</b>.':'Enter the code we sent to <b>'+esc(_da.email)+'</b>.';   // (11/5) askCode: the reviewers' address (no mail)
       document.getElementById('daCodeRow').style.display='flex';
       try{ document.getElementById('daCode').focus(); }catch(e){}
       return;
@@ -3697,7 +3825,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.37';
+var DK_VER='3.38';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3707,7 +3835,7 @@ function dkDev(){
           try{ localStorage.setItem(LS_DEV,d); }catch(e){} }
   return d;
 }
-function dkShareOn(){ try{ return localStorage.getItem(LS_SHARE)!=='0'; }catch(e){ return false; } }
+function dkShareOn(){ if(dkU13()) return false; try{ return localStorage.getItem(LS_SHARE)!=='0'; }catch(e){ return false; } }   // (11/5, A2) under 13: never
 function dkShareSet(on){ try{ localStorage.setItem(LS_SHARE,on?'1':'0'); }catch(e){} }
 // The Backup & Share checkbox (back 11/4/2026). Wired HERE, after LS_SHARE is assigned: wired earlier in the file it ran
 // while LS_SHARE was still undefined, read the default and showed the switch on after a reload even when it was off.
@@ -3877,6 +4005,7 @@ function bkPayload(){
 }
 function bkFingerprint(){ return JSON.stringify(bkPayload()); }
 function relayBackup(payload){
+  if(dkU13()) return Promise.resolve({ok:false,u13:true,error:dkU13Msg()});   // (11/5, A2) under 13: no online account
   return new Promise((res,rej)=>{
     let ws;
     try{ ws=new WebSocket(DK_RELAY); }catch(e){ return rej(e); }
@@ -3907,11 +4036,28 @@ function bkEmailVal(){
   localStorage.setItem(LS_BKEMAIL,em);
   return em;
 }
-let bkMode=null;                             // 'restore' while a restore code is pending
+let bkMode=null;                             // 'restore' while a restore code is pending; 'confirm' while a confirm code is (11/5)
+// (11/5, launch item AP10) an address the relay confirms with a code instead of a link answers askCode: the store
+// reviewers' address (cloud/src/review.js), which never receives mail. The code row asks for it; nothing is sent.
+function bkAskCode(mode, line){
+  bkMode=mode; const row=document.getElementById('bkCodeRow'), inp=document.getElementById('bkCode');
+  row.style.display='flex'; inp.placeholder='6-digit code'; bkMsg(line);
+  try{ inp.focus(); }catch(e){}
+}
 async function bkSave(){
   const em=bkEmailVal(); if(!em) return;
   // (verification is a link now — the code path that used to live here is gone;
   //  the code row below is still used by Restore, which is a different thing)
+  if(bkMode==='confirm'){
+    const c=(document.getElementById('bkCode').value||'').replace(/\D/g,'');
+    if(c.length!==6){ bkMsg('Enter the 6-digit code, then tap Back up again.'); return; }
+    bkMsg('Checking the code…');
+    try{
+      const v=await relayBackup({op:'confirm',email:em,code:c});
+      if(!(v&&v.ok)){ bkMsg((v&&v.error)||'That code didn’t work.'); return; }
+    }catch(e){ bkMsg('Could not connect — check your signal and try again.'); return; }
+    bkMode=null; document.getElementById('bkCode').value=''; document.getElementById('bkCodeRow').style.display='none';
+  }
   bkMsg('Backing up…');
   try{
     const r=await relayBackup({op:'save',email:em,data:bkPayload()});
@@ -3921,7 +4067,8 @@ async function bkSave(){
     }else if(r&&r.needVerify){
       // First backup from this address: a link in the e-mail, not a code to copy.
       const s=await relayBackup({op:'maglink',email:em});
-      if(s&&s.ok){ bkMsg('First time — we sent a link to '+em+'. Tap it and this backs up on its own.'); bkWaitForLink(em); }
+      if(s&&s.ok&&s.askCode) bkAskCode('confirm','Enter your 6-digit code for '+em+', then tap Back up again.');
+      else if(s&&s.ok){ bkMsg('First time — we sent a link to '+em+'. Tap it and this backs up on its own.'); bkWaitForLink(em); }
       else bkMsg((s&&s.error)||'Could not send the e-mail.');
     }else bkMsg((r&&r.error)||'Backup failed.');
   }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
@@ -3943,10 +4090,11 @@ async function bkRestore(){
   const em=bkEmailVal(); if(!em) return;
   const code=(document.getElementById('bkCode')&&document.getElementById('bkCode').value||'').trim();
   if(bkMode!=='restore' || !/^\d{6}$/.test(code)){
-    bkMsg('Emailing you a restore code…');
+    bkMsg('Getting a restore code…');
     try{
       const r=await relayBackup({op:'code',email:em});
-      if(r&&r.ok){ bkMode='restore'; document.getElementById('bkCodeRow').style.display='flex'; bkMsg('Enter the 6-digit code from the email, then tap Restore again.'); }
+      if(r&&r.ok&&r.askCode) bkAskCode('restore','Enter your 6-digit code, then tap Restore again.');
+      else if(r&&r.ok){ bkMode='restore'; document.getElementById('bkCodeRow').style.display='flex'; bkMsg('Enter the 6-digit code from the email, then tap Restore again.'); }
       else bkMsg((r&&r.error)||'No backup found for that email.');
     }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
     return;
@@ -7047,7 +7195,7 @@ var f6log=(function(){ try{ var v=JSON.parse(localStorage.getItem(LS_F6LOG)); if
 // progress, stays on this device — half a match is not a record.
 function saveLeague(){ try{ localStorage.setItem(LS_LEAGUE,JSON.stringify(LG)); }catch(e){} try{ bkQueue(); }catch(e){} }
 function saveF6log(){ try{ localStorage.setItem(LS_F6LOG,JSON.stringify(f6log)); }catch(e){} try{ bkQueue(); }catch(e){} }
-function leagueOn(){ return !!LG.on; }
+function leagueOn(){ return !!LG.on && !dkU13(); }   // (11/5, A2) under 13: no league night (the league's local copy stays)
 // ---- leagues live on the Pi (2026-08-21) ----
 // One league per name. Your identity is your backup e-mail (the one the relay
 // verifies). Members sponsor newcomers with a single-use join code. Results
@@ -7055,6 +7203,7 @@ function leagueOn(){ return !!LG.on; }
 function lgEmail(){ try{ return (localStorage.getItem(LS_BKEMAIL)||'').trim().toLowerCase(); }catch(e){ return ''; } }
 function lgSetEmail(v){ v=(v||'').trim().toLowerCase(); try{ localStorage.setItem(LS_BKEMAIL,v); }catch(e){} var bi=document.getElementById('bkEmail'); if(bi) bi.value=v; return v; }
 function relayLeague(msg){
+  if(dkU13()) return Promise.resolve({ok:false,u13:true,error:dkU13Msg()});   // (11/5, A2) under 13: no leagues
   return new Promise(function(resolve,reject){
     var ws, done=false, rid='lg'+Math.random().toString(36).slice(2,8);
     var timer=setTimeout(function(){ if(!done){ done=true; try{ws.close();}catch(e){} reject(new Error('timeout')); } },12000);
@@ -7122,7 +7271,11 @@ function lgCall(msg, hint){
         try{ LG.pending={msg:msg, at:Date.now()}; saveLeague(); }catch(e){}
         _lgPendingAction=function(){ try{ LG.pending=null; saveLeague(); }catch(e){} lgCall(msg,hint).then(resolve, function(){ resolve({ok:false,pending:true}); }); };
         relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
-          if(v&&v.ok){
+          if(v&&v.ok&&v.askCode){                  // (11/5, AP10) the reviewers' address: its code, typed here
+            lgVerifyAsk(true);
+            hint('Enter your 6-digit code for '+lgEmail()+', then tap OK.');
+          }else if(v&&v.ok){
+            lgVerifyAsk(false);
             document.getElementById('lgVerifyRow').style.display='flex';
             hint('First time with this e-mail — we sent a link to '+lgEmail()+'. Tap it and this finishes on its own.');
             lgWaitForLink();                       // no code to type: watch for the tap
@@ -7684,7 +7837,7 @@ document.getElementById('nearNo').onclick=function(){
 // (attach by name, join by code) — never on a routine sync.
 function lgAutoOn(rec){
   try{
-    if(LG.on||!rec) return false;
+    if(LG.on||!rec||dkU13()) return false;
     var today=lgDay(Date.now()), open=null;
     (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ if(t&&!t.endTs&&lgDay(t.ts||0)===today) open=t; }); });
     if(!open) return false;
@@ -7724,7 +7877,7 @@ function lgTime12(t){ var h=+t.slice(0,2), m=t.slice(3); return ((h%12)||12)+':'
 function lgSchedText(sc){ return LG_DAYS[sc.dow]+'s, '+lgTime12(sc.start)+' – '+lgTime12(sc.end); }
 function lgSchedTick(){
   try{
-    if(!league||!league.id) return;
+    if(!league||!league.id||dkU13()) return;
     var w=lgSchedNow(), st=lgSchedSt();
     if(w){
       if(st.key===w.key) return;                             // tonight already turned on (or turned off by hand)
@@ -8213,6 +8366,26 @@ document.getElementById('lgHtHandoff').onclick=function(){
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not hand off.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
+// (11/5, AP10) the verify row as a link wait (false) or as a code box (true: the relay answered askCode)
+function lgVerifyAsk(code){
+  document.getElementById('lgVerifyWait').style.display=code?'none':'';
+  document.getElementById('lgVerifyResend').style.display=code?'none':'';
+  document.getElementById('lgVerifyCode').style.display=code?'':'none';
+  document.getElementById('lgVerifyOk').style.display=code?'':'none';
+  if(code){ document.getElementById('lgVerifyCode').value=''; document.getElementById('lgVerifyRow').style.display='flex'; try{ document.getElementById('lgVerifyCode').focus(); }catch(e){} }
+}
+document.getElementById('lgVerifyOk').onclick=function(){
+  var c=(document.getElementById('lgVerifyCode').value||'').replace(/\D/g,'');
+  if(c.length!==6){ lgHint('Enter the 6-digit code.'); return; }
+  lgHint('Checking the code…');
+  relayBackup({op:'confirm',email:lgEmail(),code:c}).then(function(v){
+    if(!(v&&v.ok)){ lgHint((v&&v.error)||'That code didn’t work.'); return; }
+    document.getElementById('lgVerifyRow').style.display='none'; lgVerifyAsk(false);
+    lgHint('✓ E-mail confirmed.');
+    var a=_lgPendingAction; _lgPendingAction=null; if(a) a();
+  }).catch(function(){ lgHint('Could not connect — try again.'); });
+};
+document.getElementById('lgVerifyCode').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('lgVerifyOk').click(); } });
 document.getElementById('lgVerifyResend').onclick=function(){
   lgHint('Sending another link…');
   relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
@@ -8792,11 +8965,12 @@ function wcCheck(){
   var n=(document.getElementById('wcName').value||'').trim();
   var e=(document.getElementById('wcEmail').value||'').trim();
   var nameOk=dkNameOk(n);                          // (11/4) the word filter: Continue stays dead and the box says why
-  var ok=!!n && nameOk && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+  var u13=dkU13();                                 // (11/5, A2) under 13: no e-mail asked (no online account)
+  var ok=!!n && nameOk && (u13 || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e));
   var b=document.getElementById('wcGo'); if(b) b.disabled=!ok;
   var ni=document.getElementById('wcName'), why=document.querySelector('#wcStep1 .why');
   if(ni) ni.classList.toggle('bad',!nameOk);
-  if(why){ if(why._t==null) why._t=why.textContent; why.textContent=nameOk?why._t:'Pick a different name.'; }
+  if(why){ if(why._t==null) why._t=why.textContent; why.textContent=nameOk?(u13?'Your name goes on the board.':why._t):'Pick a different name.'; }
   return ok;
 }
 ['wcName','wcEmail'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',wcCheck); });
@@ -8806,8 +8980,10 @@ document.getElementById('wcGo').onclick=function(){
   addPlayer(n);
   var real=roster.filter(function(x){ return x.toLowerCase()===n.toLowerCase(); })[0]||n;
   setMyName(real); LG.me=real;
-  lgSetEmail(document.getElementById('wcEmail').value);
-  try{ setPlayerEmail(real, lgEmail()); }catch(e){}     // the name on the board owns this address
+  if(!dkU13()){                                    // (11/5, A2) under 13: they skip the e-mail
+    lgSetEmail(document.getElementById('wcEmail').value);
+    try{ setPlayerEmail(real, lgEmail()); }catch(e){}     // the name on the board owns this address
+  }
   try{ saveLeague(); }catch(e){}
   // (9/15) nothing else happens on its own — no league lookup, no library.
   welcomeDone();
