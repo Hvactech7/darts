@@ -2452,16 +2452,147 @@ const LS_HIDDEN='darts_hidden_players_v1';
 let hiddenPlayers=(function(){ try{ const v=JSON.parse(localStorage.getItem(LS_HIDDEN)); return (v&&typeof v==='object'&&!Array.isArray(v))?v:{}; }catch(e){ return {}; } })();
 function saveHidden(){ try{ localStorage.setItem(LS_HIDDEN,JSON.stringify(hiddenPlayers)); }catch(e){} bkQueue(); }
 function isHidden(n){ return !!hiddenPlayers[String(n||'').trim()]; }
-// (11/4, Apple 1.2 / Play UGC) the word filter on NEW player, team and league names — the relay runs the same
-// check (cloud/src/util.js nameOk), copied from Battle Tees' comment filter minus "bitch" (Dart Bitches is a
-// Delta team) and a bare "Dick" (a first name). Names already on this device or in a league are never re-judged.
-var DK_BAD_IN=/(fuck|shit|cunt|nigg|whore|motherf|asshole)/, DK_BAD_WORD=/^(dick(s|head|hole)|cock(s|sucker)?|fag(s|got|gots)?|sluts?|pussy|retard(s|ed)?|bastards?)$/;
-function dkNameOk(t){
-  return !String(t==null?'':t).toLowerCase().split(/\s+/).some(function(w){
-    w=w.replace(/[@4]/g,'a').replace(/[$5]/g,'s').replace(/0/g,'o').replace(/[!1|]/g,'i').replace(/3/g,'e').replace(/[^a-z]/g,'');
-    return DK_BAD_IN.test(w)||DK_BAD_WORD.test(w);
-  });
+// (11/4, Apple 1.2 / Play UGC) the word filter on NEW player, team and league names. (11/5) The NAMEFILTER block is a
+// byte copy of cloud/src/namefilter.js (the relay's nameOk; namesweep.mjs checks they agree): words judged whole,
+// look-alike letters, leetspeak and spaced-out letters undone. Dart Keeper keeps "Dart Bitches" and a bare "Dick".
+// Names already on this device or in a league are never re-judged.
+/* NAMEFILTER-BEGIN */
+function makeNameFilter(opts) {
+  opts = opts || {};
+  var allow = {}; (opts.allow || []).forEach(function (w) { allow[String(w).toLowerCase()] = 1; });
+  var set = function (s) { var o = {}; s.split(' ').forEach(function (w) { if (w) o[w] = 1; }); return o; };
+  // whole words (with their common inflections spelled out)
+  var WORD = set('fuq fck fcuk fcuking fukk fukking fvck phuck phuk phucking fucc fukin fuking fking fkn' +   // (bare "Fuk" is a Cantonese name)
+    ' shit shits shitty shittier shittiest shite shiit sht shitter shitters shitting' +
+    ' cunt cunts cunty' +
+    ' ass asses arse arses' +
+    ' bitch bitches bitchy bitchin' +
+    ' dick dicks dickhead dickheads dickhole dickholes' +
+    ' cocksucker cocksuckers cocksucking' +
+    ' pussy pussies' +
+    ' fag fags faggy fagboy faggit' +
+    ' slut sluts slutty sluttier sluttiest' +
+    ' whore whores whorish' +
+    ' twat twats twatty prick pricks bollocks wanker wankers wank wanking tosser tossers bellend bellends knobhead knobheads' +
+    ' tits titties titty boobs boobies penis penises vagina vaginas dildo dildos anal rape rapes raped raping rapist rapists rapey' +
+    ' porn porno pornos porns piss pissed pisser pissing pisshead pissheads pisspot pissflaps douche douches douchebag douchebags' +
+    ' skank skanks skanky thot thots cuck cucks cucked minge clunge jizz' +
+    ' retard retards retarded retardo retardos tard tards' +
+    ' bastard bastards bastardo' +
+    ' kike kikes kyke kykes spic spics spick spicks wetback wetbacks beaner beaners chink chinks gook gooks jap japs' +
+    ' coon coons darkie darkies jigaboo jigaboos raghead ragheads towelhead towelheads tranny trannies shemale shemales' +
+    ' lesbo lesbos poof poofs poofter poofters pikey pikeys wop wops polack polacks injun injuns squaw squaws redskin redskins' +
+    ' honky honkies hymie hymies heeb heebs zipperhead zipperheads mongoloid mongoloids spaz spazz spazzes' +
+    ' nig nigs nigga niggas niggaz niggah nigguh niqqa niqqas niqqer nazi nazis neonazi neonazis nazism kys');
+  // anywhere inside a word: long, with no innocent words or names around them
+  // (a few innocent words that contain one: snigger, niggard)
+  var SUB_OK = /snigger|niggard/;
+  var SUB = ['fuck', 'fukker', 'motherf', 'muthaf', 'mothaf', 'nigger', 'nigga', 'faggot', 'cocksuck', 'dicksuck',
+    'asshole', 'arsehole', 'assclown', 'asshat', 'asswipe', 'bullshit', 'dipshit', 'horseshit', 'batshit', 'apeshit',
+    'shithead', 'shitbag', 'shitface', 'shithole', 'shitshow', 'shitstain', 'dickhead', 'dickface', 'dickweed', 'dickwad',
+    'cockface', 'cockhead', 'pussyhole', 'cumshot', 'cumdump', 'cumslut', 'cumbucket', 'blowjob', 'handjob', 'rimjob',
+    'whorehouse', 'jizz', 'hitler', 'kkk', 'wetback', 'jigaboo', 'zipperhead', 'towelhead', 'raghead', 'sandnig',
+    'porchmonk', 'chingchong', 'cameljock', 'whitepower', 'whitepride', 'siegheil', 'heilhit', 'killyourself', 'killurself'];
+  // short roots: refused whole (WORD) and as a clear compound with one of these prefix / suffix words
+  var ROOT = ['shit', 'cunt', 'dick', 'cock', 'ass', 'arse', 'piss', 'cum', 'twat', 'slut', 'whore', 'fag', 'tit', 'prick', 'bitch', 'pussy', 'porn', 'fuk', 'retard', 'nazi'];
+  var PRE = set('big fat small tiny huge giant mega super lil little my ur your yo his her suck eat lick limp hard soft wet dumb' +
+    ' stupid bull dip horse bat ape chicken holy dog cow pig bird deep hot no piece pieceof son sonofa motha mutha mother' +
+    ' ass cock dick shit fuck cum twat slut whore cunt pussy gay crazy sick ugly stinky smelly sweaty hairy nasty dirty' +
+    ' sloppy sexy horny lard smart wank');
+  var SUF = set('s es head heads hole holes bag bags face faces wad wads weed weeds' +
+    ' wit wits stain stains show shows load loads storm pile box house sucker suckers suck sucking lick licker lickers' +
+    ' munch muncher eater eating fest fart rag rags burger nose ring block blocker tease teaser bite less hat hats wipe' +
+    ' wipes clown clowns kisser kissing breath brain brains stick sticks monkey monkeys lord lords star stars hound hounds' +
+    ' fuck fucker shit cock dick ass cunt slut whore pussy twat bucket dump dumpster shot slut');
+  var PHRASE = ['white power', 'white pride', 'sieg heil', 'heil hitler', 'kill yourself', 'kill urself', 'porch monkey',
+    'camel jockey', 'ching chong', 'sand nigger', 'gas the jews', 'white supremacy'];
+  var SAFE = [/\bpussy\s*(willow|cat)s?\b/g];
+  var HOMO = { 'а': 'a', 'в': 'b', 'е': 'e', 'ё': 'e', 'к': 'k', 'м': 'm', 'н': 'h', 'о': 'o', 'р': 'p', 'с': 'c', 'т': 't', 'у': 'y', 'х': 'x',
+    'і': 'i', 'ї': 'i', 'ј': 'j', 'ѕ': 's', 'ԁ': 'd', 'ɡ': 'g', 'α': 'a', 'β': 'b', 'ε': 'e', 'η': 'n', 'ι': 'i', 'κ': 'k', 'ν': 'v',
+    'ο': 'o', 'ρ': 'p', 'τ': 't', 'υ': 'u', 'χ': 'x', 'ı': 'i', 'ſ': 's', 'ƒ': 'f', 'ս': 'u', 'օ': 'o', 'հ': 'h', 'ց': 'g', 'ք': 'p',
+    'ɑ': 'a', 'ʀ': 'r', 'ʜ': 'h', 'ɪ': 'i', 'ᴄ': 'c', 'ᴋ': 'k', 'ᴜ': 'u', 'ꜰ': 'f', 'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'đ': 'd', 'ł': 'l' };
+  var LEET = { '0': 'o', '1': 'i', '!': 'i', '|': 'i', '3': 'e', '4': 'a', '@': 'a', '$': 's', '5': 's', '7': 't', '+': 't', '9': 'g', '6': 'g', '8': 'b' };
+  var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+  function fold(t) {
+    t = String(t == null ? '' : t);
+    try { t = t.normalize('NFKC'); } catch (e) {}
+    t = t.replace(/[\u00ad\u200b-\u200d\u2060\ufeff\u034f\u180e]/g, '');                 // invisible joiners: the word stays one
+    t = t.replace(/[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/g, ' ');       // odd spaces: a space
+    t = t.replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'");
+    var o = ''; for (var i = 0; i < t.length; i++) { var c = t[i], l = c.toLowerCase(); o += HOMO[l] ? (c === l ? HOMO[l] : HOMO[l].toUpperCase()) : c; }
+    try { o = o.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) {}
+    return o;
+  }
+  // one word -> its spellings to judge (leet undone, "*" kept as a wildcard, long runs shrunk)
+  function spellings(w) {
+    var out = {};
+    var base = w.toLowerCase().replace(/'s$/, '').replace(/'/g, '');
+    [LEET, Object.assign({}, LEET, { '1': 'l' })].forEach(function (map, k) {
+      if (k && base.indexOf('1') < 0) return;
+      var s = ''; for (var i = 0; i < base.length; i++) { var c = base[i]; s += /[a-z*]/.test(c) ? c : (map[c] || ''); }
+      if (!s) return;
+      out[s] = 1; out[s.replace(/([a-z])\1{2,}/g, '$1')] = 1; out[s.replace(/([a-z])\1{2,}/g, '$1$1')] = 1;
+    });
+    return Object.keys(out);
+  }
+  function badWord(v) {
+    if (v.indexOf('*') >= 0) {                                       // f*ck, sh*t, f**k: a hidden letter or three
+      if (!/[a-z]/.test(v)) return false;
+      var re = new RegExp('^' + v.split(/\*+/).map(esc).join('[a-z]{1,3}') + '$');
+      for (var w in WORD) if (!allow[w] && re.test(w)) return true;
+      for (var i = 0; i < SUB.length; i++) if (re.test(SUB[i])) return true;
+      var plain = v.replace(/\*+/g, ''), fills = 'aeiou';                // motherf***er; f*cker (each hidden run as one vowel)
+      for (var q = 0; q < SUB.length; q++) if (plain.indexOf(SUB[q]) >= 0) return true;
+      if ((v.match(/\*+/g) || []).length <= 2) for (var x = 0; x < 5; x++) for (var y = 0; y < 5; y++) { var c = 0; if (badWord(v.replace(/\*+/g, function () { return fills[c++ ? y : x]; }))) return true; }
+      return false;
+    }
+    if (WORD[v] && !allow[v]) return true;
+    for (var j = 0; j < SUB.length; j++) if (v.indexOf(SUB[j]) >= 0 && !SUB_OK.test(v)) return true;
+    for (var k = 0; k < ROOT.length; k++) {
+      var r = ROOT[k]; if (v === r || v.length <= r.length) continue;
+      var rest = v.slice(r.length), bareBad = WORD[r] && !allow[r];
+      if (v.indexOf(r) === 0 && (SUF[rest] || WORD[rest]) && (bareBad || !/^e?s$/.test(rest))) return true;   // a plural is only as bad as the word
+      var tail = v.slice(-r.length) === r ? r : (v.slice(-r.length - 1) === r + 's' ? r + 's' : (v.slice(-r.length - 2) === r + 'es' ? r + 'es' : ''));
+      if (tail && PRE[v.slice(0, v.length - tail.length)]) return true;
+    }
+    return false;
+  }
+  return function nameOk(text) {
+    var t = fold(text);
+    if (/(^|[^0-9])14\W{0,2}88([^0-9]|$)/.test(t)) return false;                            // 1488, 14/88
+    var low = t.toLowerCase();
+    SAFE.forEach(function (re) { low = low.replace(re, ' '); });
+    var flat = ' ' + low.replace(/[^a-z0-9*@$!|+]+/g, ' ').trim() + ' ';
+    for (var p = 0; p < PHRASE.length; p++) if (flat.indexOf(' ' + PHRASE[p] + ' ') >= 0) return false;
+    // words: split at spaces and punctuation; camelCase humps give extra words (BigCock -> Big, Cock)
+    var safeT = t; SAFE.forEach(function (re) { safeT = safeT.replace(new RegExp(re.source, 'gi'), ' '); });
+    var raw = safeT.split(/[\s\-_.,\/\\&:;()\[\]{}"<>~^=]+/).filter(Boolean);
+    var words = [];
+    raw.forEach(function (w) {
+      words.push(w);
+      var hump = w.replace(/([a-z])([A-Z])/g, '$1 $2').split(' ');
+      if (hump.length > 1) { hump.forEach(function (h) { words.push(h); }); for (var i = 0; i + 1 < hump.length; i++) words.push(hump[i] + hump[i + 1]); }
+    });
+    // spelled out (f u c k, s.h.i.t) and split short pieces (Fu ck, Sh it): joined and judged too
+    var run = '';
+    raw.concat(['']).forEach(function (w) {
+      var s = spellings(w)[0] || '';
+      if (s.length === 1) { run += s; return; }
+      if (run.length >= 3) words.push(run);
+      run = '';
+    });
+    for (var i = 0; i + 1 < raw.length; i++) {
+      var a = spellings(raw[i])[0] || '', b = spellings(raw[i + 1])[0] || '';
+      if (a && b.length >= 2 && a.length <= 3 && b.length <= 3) { /* f uck, Fu ck, Sh it -- not Fuk K. */ var ab = a + b; if (WORD[ab] && !allow[ab] || SUB.indexOf(ab) >= 0) return false; }
+    }
+    for (var n = 0; n < words.length; n++) { var sp = spellings(words[n]); for (var m = 0; m < sp.length; m++) if (badWord(sp[m])) return false; }
+    return true;
+  };
 }
+/* NAMEFILTER-END */
+var _dkNF=null;
+// "Former player N" is what a deleted account becomes on the relay: no NEW name may look like one (same as util.js nameOk)
+function dkNameOk(t){ if(!_dkNF) _dkNF=makeNameFilter({allow:['bitch','bitches','dick','dicks']}); return !/^\s*former\s+player\s*\d*\s*$/i.test(String(t==null?'':t)) && _dkNF(t); }
 // a refused name: the box empties, turns red and says why for a moment (flashToast is silent on purpose)
 function dkNameRefuse(inp){
   if(!inp) return;
@@ -2713,7 +2844,12 @@ function renameInResults(m,from,into){
 }
 function renameInMatches(from,into){
   var n=0, sides=function(m){ (m&&m.sides||[]).forEach(function(sd){
-    if(sd&&sd.members&&sd.members.indexOf(from)>=0){ sd.members=sd.members.map(function(x){ return x===from?into:x; }); if(sd.name===from) sd.name=into; n++; }
+    if(sd&&sd.members&&sd.members.indexOf(from)>=0){
+      // (11/5) a pair with no team is named by its players (lgSidesFor): rebuild that label, so an old name never stays on it
+      var auto=sd.members.length>1&&!(sd.team&&String(sd.team).trim())&&sd.name===sd.members.map(shortName).join(' & ');
+      sd.members=sd.members.map(function(x){ return x===from?into:x; });
+      if(auto) sd.name=sd.members.map(shortName).join(' & '); else if(sd.name===from) sd.name=into;
+      n++; }
   }); renameInResults(m,from,into); };
   var recs=(LG.list||[]).concat([LG.local||{}]);
   recs.forEach(function(rec){ (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(sides); }); }); });
@@ -3561,7 +3697,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.36';
+var DK_VER='3.37';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -7693,6 +7829,9 @@ function lgNameTaken(from,into){
     var t=rec.teams||{}, hit=false;
     Object.keys(t).forEach(function(tm){ Object.keys(t[tm]||{}).forEach(function(p){ if(p!==from&&p.toLowerCase()===lo) hit=true; }); });
     Object.keys(rec.claims||{}).forEach(function(p){ if(p!==from&&p.toLowerCase()===lo) hit=true; });
+    // (11/5) a name with a Player Card or with games (a sub) is a person too: renaming into it would make two people one
+    Object.keys(rec.emails||{}).forEach(function(p){ if(p!==from&&p.toLowerCase()===lo) hit=true; });
+    (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(function(m){ (m.sides||[]).forEach(function(sd){ (sd&&sd.members||[]).forEach(function(p){ if(typeof p==='string'&&p!==from&&p.toLowerCase()===lo) hit=true; }); }); }); }); });
     return hit;
   });
 }
