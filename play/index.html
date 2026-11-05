@@ -1059,6 +1059,17 @@
   #confirmQuit .card{max-width:430px;margin:20px;width:100%;}
   #cqBtns{display:flex;gap:10px;margin-top:16px;}
   #cqBtns button{flex:1;}
+  /* (11/4) Delete account + Report open over the library, the Player Card and the League card (all z300) */
+  #delSplash,#reportSplash{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;background:rgba(4,3,8,.8);padding:16px;}
+  #delSplash.hidden,#reportSplash.hidden{display:none;}
+  #delSplash .card,#reportSplash .card{max-width:430px;width:100%;max-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow-y:auto;}
+  #daCode{letter-spacing:6px;font-size:22px;text-align:center;}
+  #bkLinks{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  #bkLinks button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:14px;padding:7px 6px;letter-spacing:.2px;}
+  #bkLinks #bkDelete{color:#ff9bb0;}
+  #lgPickReport{flex:none;padding:6px 10px;font-size:16px;}
+  #lgPickLeague{min-width:0;}   /* (11/4) leaves room for ⚑ on a phone */
+  input.bad{border-color:#ff6e86 !important;}
 
   /* ===== LEAGUE MODE (2026-08-18) ===== */
   /* menu row: League | Add/Manage Players | Stats. Add/Manage keeps its 20px
@@ -1662,6 +1673,8 @@
        row it costs — so on a phone the address keeps its own line */
     #bkCard #bkEmail{ flex:1 0 100%; }
     #bkCard #bkSaveBtn,#bkCard #bkRestoreBtn{ flex:1 1 0; font-size:13px; padding:9px 6px; margin-top:6px; }
+    #bkLinks{ gap:4px; margin-top:8px; }
+    #bkLinks button{ font-size:11px; letter-spacing:0; padding:7px 2px; }   /* (11/4) three across a 390px phone */
     #library h2{ font-size:14px; margin:0 0 3px; }
     #library .card{ padding:1px 8px 5px; margin-bottom:5px; }
     #library .librow .lname{ font-size:19px; }
@@ -2040,7 +2053,7 @@
       <div class="pcMail"><span class="pcMailIco">✉</span><input type="email" id="pcEmail" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e-mail address"><button class="ghost" id="pcEmailSave">Save</button></div>
       <div class="pcMailNote">League reports are e-mailed to this address.</div>
       <div id="pcBody"></div>
-      <div class="row" id="pcBtns"><button class="ghost" id="pcRename">✎ Rename</button><button class="primary grow" id="pcDone">Done</button></div>
+      <div class="row" id="pcBtns"><button class="ghost" id="pcRename">✎ Rename</button><button class="ghost" id="pcReport" style="display:none;">⚑ Report</button><button class="primary grow" id="pcDone">Done</button></div>
     </div>
   </div>
 
@@ -2130,7 +2143,7 @@
         <div class="row" id="lgAskRow"><button class="primary grow" id="lgWayJoin">I have a code</button><button class="accent grow" id="lgWayNew">Start a new league</button></div>
         <div class="row" id="lgEmailRow" style="display:none;margin-top:8px;"><input type="text" id="lgEmail" class="grow" placeholder="Your e-mail" autocomplete="email" inputmode="email"></div>
         <div id="lgJoinWay" style="display:none;">
-          <div class="row lgMeRow" style="margin-top:8px;"><span class="lgMeLbl">League</span><select id="lgPickLeague" class="grow"><option value="">— pick your league —</option></select></div>
+          <div class="row lgMeRow" style="margin-top:8px;"><span class="lgMeLbl">League</span><select id="lgPickLeague" class="grow"><option value="">— pick your league —</option></select><button class="ghost" id="lgPickReport" title="Report this league’s name" aria-label="Report this league’s name" style="display:none;">⚑</button></div>
           <div class="row" style="margin-top:8px;"><input type="text" id="lgJoinCode" class="grow" placeholder="6-digit code from a member" inputmode="numeric" maxlength="7"><button class="accent" id="lgJoin">Join</button></div>
         </div>
         <div class="row" id="lgCreateRow" style="display:none;margin-top:8px;"><input type="text" id="lgName" class="grow" placeholder="League name" autocomplete="off" maxlength="40"><button class="primary" id="lgCreate">Create</button></div>
@@ -2188,6 +2201,30 @@
         <button class="ghost" id="cqCancel">Keep Playing</button>
         <button class="confirm-btn" id="cqQuit">🗑 Quit Game</button>
       </div>
+    </div>
+  </div>
+
+  <!-- (11/4) Delete my account: it starts here, in the app (Apple 5.1.1(v), Google Play). A code goes to the
+       backup e-mail first; then the relay erases and this device is cleared. -->
+  <div id="delSplash" class="hidden">
+    <div class="card">
+      <h2>🗑 Delete your account?</h2>
+      <p class="small" id="daLine" style="margin:4px 0 0;"></p>
+      <div class="row" id="daCodeRow" style="display:none;margin-top:10px;"><input type="text" id="daCode" class="grow" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"></div>
+      <p class="small" id="daMsg" style="margin:8px 0 0;min-height:1.2em;"></p>
+      <button class="confirm-btn" id="daGo" style="width:100%;margin-top:6px;">Delete my account</button>
+      <button class="ghost" id="daCancel" style="width:100%;margin-top:8px;">Cancel</button>
+    </div>
+  </div>
+  <!-- (11/4) Report a player's or a league's name (Apple 1.2, Play UGC). Block = hide it on this device. -->
+  <div id="reportSplash" class="hidden">
+    <div class="card">
+      <h2>⚑ Report this name?</h2>
+      <p class="small" id="rpWho" style="margin:4px 0 0;"></p>
+      <p class="small" id="rpMsg" style="margin:8px 0 0;min-height:1.2em;"></p>
+      <button class="warn" id="rpGo" style="width:100%;margin-top:6px;">Report</button>
+      <button class="confirm-btn" id="rpBlock" style="width:100%;margin-top:8px;">Report &amp; Block</button>
+      <button class="ghost" id="rpCancel" style="width:100%;margin-top:8px;">Cancel</button>
     </div>
   </div>
 
@@ -2272,6 +2309,14 @@
           Sends finished games and your general area to Dart Keeper. Off keeps them on this device; league play still syncs.
         </span>
       </label>
+      <!-- (11/4, store review: Apple 5.1.1 + 1.2, Google Play) the privacy policy, a way to reach us and deleting
+           the account all sit with the account they're about. Terms stays hidden until /terms/ is live (DK_TERMS_LIVE). -->
+      <div class="row" id="bkLinks">
+        <button class="ghost" id="bkPrivacy">Privacy policy</button>
+        <button class="ghost" id="bkTerms" style="display:none;">Terms</button>
+        <button class="ghost" id="bkContact">Contact us</button>
+        <button class="ghost" id="bkDelete">Delete account</button>
+      </div>
     </div>
     <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 45 45" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m1 0h2m1 0h1m1 0h4m1 0h1m1 0h4m1 0h4m1 0h7m-37 1h1m5 0h1m4 0h3m2 0h5m3 0h1m1 0h2m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h8m3 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h4m2 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m3 0h6m1 0h1m6 0h1m1 0h3m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-26 1h1m6 0h2m3 0h2m3 0h1m-27 1h1m1 0h3m1 0h4m2 0h5m1 0h2m2 0h1m2 0h3m3 0h1m2 0h1m-37 1h2m1 0h3m2 0h1m4 0h6m3 0h2m3 0h1m2 0h1m2 0h1m1 0h2m-35 1h2m2 0h1m1 0h4m1 0h5m2 0h2m1 0h1m1 0h1m2 0h1m1 0h5m1 0h1m-35 1h4m2 0h1m1 0h1m1 0h1m3 0h4m1 0h1m2 0h4m1 0h1m1 0h1m3 0h1m-36 1h3m3 0h2m1 0h1m1 0h2m4 0h3m3 0h3m3 0h2m2 0h1m1 0h2m-35 1h1m4 0h1m4 0h1m1 0h2m2 0h7m5 0h1m2 0h2m1 0h1m-36 1h1m4 0h1m4 0h1m2 0h1m1 0h5m1 0h1m2 0h1m3 0h2m1 0h1m1 0h3m-37 1h1m3 0h1m5 0h3m3 0h2m3 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-37 1h2m2 0h3m4 0h4m3 0h1m2 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h1m-36 1h5m2 0h1m4 0h1m4 0h2m1 0h1m3 0h1m2 0h1m1 0h1m4 0h2m-36 1h2m1 0h3m1 0h2m2 0h4m2 0h3m4 0h2m3 0h3m1 0h3m-35 1h2m3 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m7 0h1m-37 1h9m2 0h1m1 0h1m1 0h5m1 0h2m2 0h1m2 0h4m3 0h2m-37 1h1m3 0h1m2 0h1m1 0h5m2 0h1m1 0h3m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m-34 1h2m1 0h2m2 0h2m2 0h2m1 0h2m4 0h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m3 0h1m4 0h1m2 0h1m1 0h1m1 0h1m3 0h4m1 0h2m2 0h1m-29 1h1m1 0h1m2 0h1m2 0h1m1 0h5m4 0h1m2 0h1m2 0h5m2 0h1m1 0h1m-35 1h2m2 0h1m1 0h2m2 0h3m1 0h1m3 0h5m1 0h3m2 0h1m2 0h1m2 0h1m-37 1h1m3 0h4m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m6 0h1m1 0h2m3 0h2m-36 1h1m3 0h1m3 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h1m3 0h4m3 0h2m2 0h4m2 0h1m3 0h1m2 0h9m-29 1h1m4 0h1m1 0h2m1 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-37 1h7m2 0h1m3 0h1m1 0h3m1 0h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h4m2 0h2m2 0h6m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m3 0h1m4 0h1m3 0h4m3 0h1m1 0h6m-37 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m3 0h2m2 0h4m2 0h1m1 0h3m2 0h1m-37 1h1m5 0h1m2 0h1m2 0h1m2 0h1m1 0h4m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m-36 1h7m3 0h4m2 0h2m1 0h1m1 0h5m1 0h2m1 0h1m1 0h1m2 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
@@ -2394,6 +2439,8 @@
 
 <script>
 //============================ STATE ============================
+// (11/4) Delete account cleared this device just before this launch: anything a late timer wrote goes too
+try{ if(localStorage.getItem('dk_wiped_v1')) localStorage.clear(); }catch(e){}
 const LS_PLAYERS='darts_players_v1';
 const LS_TEAMS='darts_teams_v1';
 const LS_PTEAMS='darts_player_teams_v1';
@@ -2405,6 +2452,23 @@ const LS_HIDDEN='darts_hidden_players_v1';
 let hiddenPlayers=(function(){ try{ const v=JSON.parse(localStorage.getItem(LS_HIDDEN)); return (v&&typeof v==='object'&&!Array.isArray(v))?v:{}; }catch(e){ return {}; } })();
 function saveHidden(){ try{ localStorage.setItem(LS_HIDDEN,JSON.stringify(hiddenPlayers)); }catch(e){} bkQueue(); }
 function isHidden(n){ return !!hiddenPlayers[String(n||'').trim()]; }
+// (11/4, Apple 1.2 / Play UGC) the word filter on NEW player, team and league names — the relay runs the same
+// check (cloud/src/util.js nameOk), copied from Battle Tees' comment filter minus "bitch" (Dart Bitches is a
+// Delta team) and a bare "Dick" (a first name). Names already on this device or in a league are never re-judged.
+var DK_BAD_IN=/(fuck|shit|cunt|nigg|whore|motherf|asshole)/, DK_BAD_WORD=/^(dick(s|head|hole)|cock(s|sucker)?|fag(s|got|gots)?|sluts?|pussy|retard(s|ed)?|bastards?)$/;
+function dkNameOk(t){
+  return !String(t==null?'':t).toLowerCase().split(/\s+/).some(function(w){
+    w=w.replace(/[@4]/g,'a').replace(/[$5]/g,'s').replace(/0/g,'o').replace(/[!1|]/g,'i').replace(/3/g,'e').replace(/[^a-z]/g,'');
+    return DK_BAD_IN.test(w)||DK_BAD_WORD.test(w);
+  });
+}
+// a refused name: the box empties, turns red and says why for a moment (flashToast is silent on purpose)
+function dkNameRefuse(inp){
+  if(!inp) return;
+  if(inp._ph==null) inp._ph=inp.placeholder;
+  inp.value=''; inp.classList.add('bad'); inp.placeholder='Pick a different name';
+  clearTimeout(inp._rt); inp._rt=setTimeout(function(){ inp.classList.remove('bad'); inp.placeholder=inp._ph; },2600);
+}
 let roster=loadRoster();            // array of names
 let teamLib=loadTeams();             // array of team names
 let playerTeams=loadPlayerTeams();   // { playerName: teamName }
@@ -2602,6 +2666,7 @@ function renamePlayer(oldName,newName){
     return false;
   }
   if(roster.some(n=>n!==oldName && n.trim().toLowerCase()===newName.toLowerCase())){ flashToast('That name is already in the library'); return false; }
+  if(!dkNameOk(newName)) return false;               // (11/4) the word filter: the row flashes and keeps its name
   if(lgNameTaken(oldName,newName)){ flashToast('That name is already in the league'); return false; }
   if(!renameCore(oldName,newName)) return false;
   lgQueueRename(oldName,newName);
@@ -2633,10 +2698,23 @@ function renameCore(oldName,newName){
   renderLibrary(); renderColumns(); renderLineup(); updateStart(); renderGroups();
   return true;
 }
+// (11/4) every name field of a game moves, not just the sides: the closer, the best turn's and the 301 in-turn's
+// thrower, and each leg's own-turn numbers (st[i].p) -- a rename used to leave those under the old name, so the
+// player's close-outs, highs and averages fell out of the league tables (the relay's lgMapMatch does the same)
+function renameInResults(m,from,into){
+  (m&&m.results||[]).forEach(function(r){
+    if(!r) return;
+    ['closer','hi3By','hiInBy'].forEach(function(k){ if(r[k]===from) r[k]=into; });
+    if(r.st&&typeof r.st==='object') Object.keys(r.st).forEach(function(i){ var leg=r.st[i], p=leg&&leg.p; if(!p||typeof p!=='object'||!(from in p)) return;
+      var e=p[from]; delete p[from];
+      if(p[into]&&typeof p[into]==='object'){ Object.keys(e||{}).forEach(function(f){ if(typeof e[f]==='number') p[into][f]=(f==='best'||f==='hiOut')?Math.max(p[into][f]||0,e[f]):(p[into][f]||0)+e[f]; }); }
+      else p[into]=e; });
+  });
+}
 function renameInMatches(from,into){
   var n=0, sides=function(m){ (m&&m.sides||[]).forEach(function(sd){
     if(sd&&sd.members&&sd.members.indexOf(from)>=0){ sd.members=sd.members.map(function(x){ return x===from?into:x; }); if(sd.name===from) sd.name=into; n++; }
-  }); };
+  }); renameInResults(m,from,into); };
   var recs=(LG.list||[]).concat([LG.local||{}]);
   recs.forEach(function(rec){ (rec.seasons||[]).forEach(function(se){ (se.tournaments||[]).forEach(function(t){ (t.matches||[]).forEach(sides); }); }); });
   if(LG.me===from) LG.me=into;
@@ -2723,6 +2801,7 @@ function renderTeamLibrary(){
 function addTeam(name){
   name=name.trim(); if(!name)return;
   if(teamLib.some(t=>t.toLowerCase()===name.toLowerCase()))return;
+  if(!dkNameOk(name)) return false;                 // (11/4) the word filter
   teamLib.push(name);saveTeams();renderTeamLibrary();
 }
 function removeTeam(name){
@@ -2746,6 +2825,7 @@ function teamInline(row,name){
     try{ inp.remove(); }catch(e){}
     sel.style.display='';
     if(commit&&v){
+      if(!teamLib.some(t=>t.toLowerCase()===v.toLowerCase())&&!dkNameOk(v)){ row.classList.add('reject'); setTimeout(()=>row.classList.remove('reject'),900); return; }   // (11/4) the word filter
       if(!teamLib.some(t=>t.toLowerCase()===v.toLowerCase())){ teamLib.push(v); saveTeams(); }
       const real=teamLib.filter(t=>t.toLowerCase()===v.toLowerCase())[0]||v;
       setPlayerTeam(name,real); renderLibrary(); renderColumns();
@@ -2762,6 +2842,7 @@ function setPlayerTeam(name,team){
 function addPlayer(name){
   name=name.trim();
   if(!name)return;
+  if(!roster.some(p=>p.toLowerCase()===name.toLowerCase()) && !dkNameOk(name)) return false;   // (11/4) the word filter
   Object.keys(hiddenPlayers).forEach(function(h){ if(h.toLowerCase()===name.toLowerCase()){ delete hiddenPlayers[h]; saveHidden(); } });
   if(roster.some(p=>p.toLowerCase()===name.toLowerCase()))return;
   roster.push(name);saveRoster();renderColumns();renderLibrary();
@@ -2947,7 +3028,7 @@ document.getElementById('extrasSplash').addEventListener('click',function(e){ if
 let lastAdd=0;
 const addFromInput=()=>{
   const inp=document.getElementById('newPlayer');
-  addPlayer(inp.value);
+  if(addPlayer(inp.value)===false){ dkNameRefuse(inp); return; }
   inp.value='';
   inp.focus();
 };
@@ -2977,7 +3058,7 @@ document.getElementById('libDoneBtn').onclick=()=>{
   renderColumns();renderLineup();updateStart();
 };
 document.getElementById('newPlayer').addEventListener('keydown',e=>{
-  if(e.key==='Enter'){addPlayer(e.target.value);e.target.value='';}
+  if(e.key==='Enter'){ if(addPlayer(e.target.value)===false) dkNameRefuse(e.target); else e.target.value=''; }
 });
 document.getElementById('manageTeamsBtn').onclick=()=>{
   document.getElementById('library').classList.add('hidden');
@@ -2991,12 +3072,12 @@ document.getElementById('teamDoneBtn').onclick=()=>{
   renderLibrary();
 };
 let lastAddTeam=0;
-const addTeamFromInput=()=>{ const inp=document.getElementById('newTeam'); addTeam(inp.value); inp.value=''; inp.focus(); };
+const addTeamFromInput=()=>{ const inp=document.getElementById('newTeam'); if(addTeam(inp.value)===false){ dkNameRefuse(inp); return; } inp.value=''; inp.focus(); };
 const fireAddTeam=(e)=>{ if(e)e.preventDefault(); const now=(e&&e.timeStamp)||0; if(now&&now-lastAddTeam<350)return; lastAddTeam=now; addTeamFromInput(); };
 const _addTeamBtn=document.getElementById('addTeam');
 _addTeamBtn.addEventListener('pointerdown',fireAddTeam);
 _addTeamBtn.addEventListener('click',fireAddTeam);
-document.getElementById('newTeam').addEventListener('keydown',e=>{ if(e.key==='Enter'){addTeam(e.target.value);e.target.value='';} });
+document.getElementById('newTeam').addEventListener('keydown',e=>{ if(e.key==='Enter'){ if(addTeam(e.target.value)===false) dkNameRefuse(e.target); else e.target.value=''; } });
 document.getElementById('startBtn').onclick=function(){
   // The engine assumes the Ironman DUO is teamSel[0] (buildTeams, piddle order,
   // labels). Mode is inferred now, so if the solo side was picked on the left,
@@ -3012,8 +3093,9 @@ document.getElementById('startBtn').onclick=function(){
 };
 /* (Pairings UI bindings removed with the card — groupLib data and loadGroup()
    stay in code, dormant, so old backups restore cleanly.) */
-document.getElementById('duoName1').addEventListener('input',e=>{ if(teamSel[0].length===2) setDuoTeamName(teamSel[0],e.target.value); });
-document.getElementById('duoName2').addEventListener('input',e=>{ if(teamSel[1].length===2) setDuoTeamName(teamSel[1],e.target.value); });
+// (11/4) a pair's team name the word filter refuses turns the box red and is not saved
+document.getElementById('duoName1').addEventListener('input',e=>{ e.target.classList.toggle('bad',!dkNameOk(e.target.value)); if(teamSel[0].length===2&&dkNameOk(e.target.value)) setDuoTeamName(teamSel[0],e.target.value); });
+document.getElementById('duoName2').addEventListener('input',e=>{ e.target.classList.toggle('bad',!dkNameOk(e.target.value)); if(teamSel[1].length===2&&dkNameOk(e.target.value)) setDuoTeamName(teamSel[1],e.target.value); });
 renderGroups();refreshDuoCard();
 document.getElementById('bkSaveBtn').onclick=bkSave;
 document.getElementById('bkRestoreBtn').onclick=bkRestore;
@@ -3304,6 +3386,9 @@ function openPlayerCard(name){
   document.getElementById('pcBody').innerHTML=h;
   const hasRow=[...document.querySelectorAll('#libList .librow .lname')].some(sp=>sp.textContent===name) && !document.getElementById('library').classList.contains('hidden');
   document.getElementById('pcRename').style.display=hasRow?'':'none';
+  // (11/4) another player's name that came with a league can be reported (and blocked here); not your own
+  const _mine=name===LG.me||name===myName()||lgClaimOwner(league,name)===lgEmail();
+  document.getElementById('pcReport').style.display=(league&&league.id&&lgKnowsName(league,name)&&!_mine)?'':'none';
   document.getElementById('playerCard').classList.remove('hidden');
   document.getElementById('playerCard').querySelector('.card').scrollTop=0;
 }
@@ -3327,6 +3412,128 @@ document.getElementById('pcRename').onclick=function(){
   // Open it once that click has come and gone.
   if(row&&row._rename) setTimeout(function(){ row._rename(); }, 450);
 };
+
+//============================ ACCOUNT: privacy, contact, delete, report (11/4, store review) ============================
+// Apple 5.1.1(i)/(v) + 1.2 and Google Play: the privacy policy inside the app, a published contact, an account
+// deletion that STARTS in the app, and a way to report and block a name. Battle Tees' Settings carry the same.
+var DK_PRIVACY_URL='https://dartkeeper.net/privacy/', DK_TERMS_URL='https://dartkeeper.net/terms/';
+var DK_CONTACT='hello@dartkeeper.net';      // Contact us (Nathan 11/4: hello@dartkeeper.net, the Dart Keeper alias in Fastmail)
+var DK_TERMS_LIVE=false;                    // the Terms row stays hidden until the marketing session says /terms/ is live
+// a page outside the app: a new tab in a browser, Safari from the iPhone app (Capacitor opens target=_blank there)
+function dkOpenUrl(u){ var a=document.createElement('a'); a.href=u; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove(); }
+document.getElementById('bkPrivacy').onclick=function(){ dkOpenUrl(DK_PRIVACY_URL); };
+document.getElementById('bkTerms').onclick=function(){ dkOpenUrl(DK_TERMS_URL); };
+if(DK_TERMS_LIVE) document.getElementById('bkTerms').style.display='';
+document.getElementById('bkContact').onclick=function(){ location.href='mailto:'+DK_CONTACT+'?subject='+encodeURIComponent('Dart Keeper'); };
+
+// ---- Delete my account. With an e-mail on this device the relay mails a code to it first (proof the inbox
+// is yours); then it erases the backup, everything tied to the address, its usage rows, and its place in every
+// league (the name there becomes "Former player N" so everyone else's numbers stand -- cloud/src/league.js
+// lgErase). Then this device is cleared and opens like a first install. dartkeeper.net/delete/ still works too.
+function relayAccount(msg){
+  return new Promise(function(res,rej){
+    var ws; try{ ws=new WebSocket(DK_RELAY); }catch(e){ rej(e); return; }
+    var rid='a'+Math.random().toString(36).slice(2,8);
+    var to=setTimeout(function(){ try{ws.close();}catch(e){} rej(new Error('timeout')); },15000);
+    ws.onopen=function(){ try{ ws.send(JSON.stringify(Object.assign({t:'account',rid:rid},msg))); }catch(e){ clearTimeout(to); rej(e); } };
+    ws.onmessage=function(e){ try{ var m=JSON.parse(e.data); if(m.t==='accountResult'&&m.rid===rid){ clearTimeout(to); try{ws.close();}catch(_){} res(m); } }catch(_){} };
+    ws.onerror=function(){ clearTimeout(to); rej(new Error('relay offline')); };
+  });
+}
+var _da={step:0,email:''};
+var DA_OFFLINE='Couldn’t reach Dart Keeper. Check your connection and try again.';
+function daMsg(t){ document.getElementById('daMsg').textContent=t||''; }
+function daBusy(on){ ['daGo','daCancel'].forEach(function(id){ document.getElementById(id).disabled=!!on; }); }
+function daOpen(){
+  var em=lgEmail();
+  _da={step:1,email:em};
+  var heads=(LG.list||[]).filter(function(r){ return r&&r.id&&lgIsHead(r); }).map(function(r){ return r.name; });
+  document.getElementById('daLine').innerHTML=em
+    ? 'Your cloud backup, your e-mail and your place in every league are erased, then this device is cleared. League games keep their scores under “Former player”.'
+      +(heads.length?' '+esc(heads.join(', '))+' passes to another member.':'')+' <b>This can’t be undone.</b>'
+    : 'Everything on this device is cleared, with the game records it sent us. <b>This can’t be undone.</b>';
+  document.getElementById('daCodeRow').style.display='none'; document.getElementById('daCode').value='';
+  daMsg(''); daBusy(false);
+  document.getElementById('delSplash').classList.remove('hidden');
+}
+function daClose(){ document.getElementById('delSplash').classList.add('hidden'); _da={step:0,email:''}; }
+async function daStart(){
+  if(_da.step===2){
+    var c=String(document.getElementById('daCode').value||'').replace(/\D/g,'');
+    if(c.length!==6){ daMsg('Enter the 6-digit code from the e-mail.'); return; }
+    return daErase(c);
+  }
+  daBusy(true); daMsg('Contacting Dart Keeper…');
+  try{
+    var r=await relayAccount({op:'delcode',email:_da.email||undefined,dev:dkDev()});
+    if(!r||!r.ok){ daBusy(false); daMsg((r&&r.error)||DA_OFFLINE); return; }
+    if(r.needCode){
+      _da.step=2; daBusy(false); daMsg('');
+      document.getElementById('daLine').innerHTML='Enter the code we sent to <b>'+esc(_da.email)+'</b>.';
+      document.getElementById('daCodeRow').style.display='flex';
+      try{ document.getElementById('daCode').focus(); }catch(e){}
+      return;
+    }
+    await daErase('');
+  }catch(e){ daBusy(false); daMsg(DA_OFFLINE); }
+}
+async function daErase(code){
+  daBusy(true); daMsg('Deleting…');
+  try{
+    var r=await relayAccount({op:'erase',email:_da.email||undefined,dev:dkDev(),code:code||undefined});
+    if(!r||!r.ok||r.testMuted){ daBusy(false); daMsg((r&&r.error)||(r&&r.testMuted?'Preview build — nothing was deleted.':DA_OFFLINE)); return; }
+    daWipe();
+  }catch(e){ daBusy(false); daMsg(DA_OFFLINE); }
+}
+// Everything this app keeps on the device goes; it reopens as a first install. A game on the board is dropped
+// first (pagehide would save it back), and the marker makes the next launch clear anything a late timer wrote.
+function daWipe(){
+  try{ clearTimeout(bkTimer); }catch(e){}
+  try{ G=null; }catch(e){}
+  try{ localStorage.clear(); localStorage.setItem('dk_wiped_v1','1'); }catch(e){}
+  try{ sessionStorage.clear(); }catch(e){}
+  location.replace(location.pathname+(/[?&]src=ios(&|$)/.test(location.search||'')?'?src=ios':''));
+}
+document.getElementById('bkDelete').onclick=daOpen;
+document.getElementById('daGo').onclick=daStart;
+document.getElementById('daCancel').onclick=daClose;
+document.getElementById('daCode').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); daStart(); } });
+
+// ---- Report a name (a player on the Player Card, a league in the pick-a-league list). It goes to the relay
+// for review (cloud/src/league.js reportName). Block hides it here: a player through the same per-device
+// delete that keeps them gone through syncs and restores; a league off this device's list.
+var LS_HIDLG='dk_hidden_leagues_v1';
+function dkLeagueHidden(id){ try{ return !!(JSON.parse(localStorage.getItem(LS_HIDLG)||'{}')||{})[id]; }catch(e){ return false; } }
+function dkHideLeague(id){ try{ var o=JSON.parse(localStorage.getItem(LS_HIDLG)||'{}')||{}; o[id]=Date.now(); localStorage.setItem(LS_HIDLG,JSON.stringify(o)); }catch(e){} }
+var _rp=null;
+function rpMsg(t){ document.getElementById('rpMsg').textContent=t||''; }
+function rpBusy(on){ ['rpGo','rpBlock'].forEach(function(id){ document.getElementById(id).disabled=!!on; }); }
+function rpOpen(kind,name,lid){
+  _rp={kind:kind,name:name,league:lid||''};
+  document.getElementById('rpWho').innerHTML='“'+esc(name)+'” goes to Dart Keeper for review.<br>Block also hides it '+(kind==='league'?'from your list.':'on this device.');
+  rpMsg(''); rpBusy(false);
+  document.getElementById('reportSplash').classList.remove('hidden');
+}
+function rpClose(){ document.getElementById('reportSplash').classList.add('hidden'); _rp=null; }
+function rpSend(block){
+  var r=_rp; if(!r) return;
+  if(block){
+    if(r.kind==='league'){ dkHideLeague(r.league); var sel=document.getElementById('lgPickLeague'); if(sel&&sel.value===r.league) sel.value=''; lgLoadLeagues(); }
+    else { document.getElementById('playerCard').classList.add('hidden'); if(roster.indexOf(r.name)>=0) removePlayer(r.name); }
+  }
+  rpBusy(true); rpMsg('Sending…');
+  relayLeague({op:'report',kind:r.kind,league:r.league,name:r.name,dev:dkDev()}).then(function(x){
+    if(x&&x.ok){ rpMsg('✓ Reported'+(block?' and blocked':'')+'. Thank you.'); setTimeout(function(){ if(_rp===r) rpClose(); },1300); }
+    else { rpBusy(false); rpMsg((x&&x.error)||'Could not send the report.'); }
+  }).catch(function(){ rpBusy(false); rpMsg((block?'Blocked here. ':'')+DA_OFFLINE); });
+}
+document.getElementById('rpGo').onclick=function(){ rpSend(false); };
+document.getElementById('rpBlock').onclick=function(){ rpSend(true); };
+document.getElementById('rpCancel').onclick=rpClose;
+document.getElementById('pcReport').onclick=function(){ if(_pcName) rpOpen('player',_pcName,(league&&league.id)||''); };
+function lgPickReportShow(){ var sel=document.getElementById('lgPickLeague'), b=document.getElementById('lgPickReport'); if(b) b.style.display=(sel&&sel.value)?'':'none'; }
+document.getElementById('lgPickLeague').addEventListener('change',lgPickReportShow);
+document.getElementById('lgPickReport').onclick=function(){ var p=lgPickedLeague(); if(p) rpOpen('league',p.name,p.id); };
 
 //============================ INSTALL SOURCE (sticker / magnet QR) ============================
 // A QR on a sticker or magnet lands STRAIGHT here on /play/?src=<token> — a
@@ -3354,7 +3561,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.35';
+var DK_VER='3.36';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -6666,7 +6873,7 @@ var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
 // leagues this device belongs to, and which one is ACTIVE. `league` is always
 // the active league's record (or LG.local — history kept before joining any
 // league, which Create uploads). Matches, reports and Stats act on `league`.
-function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0,schedule:o.schedule||null}; }   // (11/3) league night survives a relaunch offline
+function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0,schedule:o.schedule||null,gone:o.gone||[]}; }   // (11/3) league night survives a relaunch offline; (11/4) so do former players' locked names
 var LG=(function(){
   var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
   if(!v||typeof v!=='object') v={};
@@ -6891,6 +7098,7 @@ function lgAdopt(Lg, makeActive){
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
   if(Lg.head) rec.head=Lg.head;
   if('schedule' in Lg) rec.schedule=Lg.schedule||null;     // (11/3) the head's league night
+  if(Array.isArray(Lg.gone)) rec.gone=Lg.gone.slice(0,200);  // (11/4) names of deleted accounts: locked
   try{ lgApplyRenames(rec, Lg.renames); }catch(e){}
   if(Array.isArray(Lg.dead)) rec.dead=Lg.dead.slice(0,50);
   lgTeamsIntoLibrary(rec);          // the league's teams belong on this device's list too
@@ -6987,6 +7195,7 @@ function lgClaims(rec){ return (rec&&rec.claims)||{}; }
 function lgClaimOwner(rec,player){ var c=lgClaims(rec)[player]; return (c&&c.st==='ok'&&c.email)||null; }
 function lgMayEditPlayer(rec,player){
   if(!rec||!rec.id) return true;                       // not in a league: your own library, your rules
+  if(rec.gone&&rec.gone.indexOf(player)>=0) return false;   // (11/4) a deleted account's "Former player N" stays as it is
   var o=lgClaimOwner(rec,player);
   return !o || o===lgEmail() || lgEmail()===rec.creator;
 }
@@ -7551,11 +7760,12 @@ var _lgAllLeagues=[];
 function lgLoadLeagues(){
   var sel=document.getElementById('lgPickLeague'); if(!sel) return;
   relayLeague({op:'list'}).then(function(r){
-    _lgAllLeagues=(r&&r.ok&&r.leagues)||[];
+    _lgAllLeagues=((r&&r.ok&&r.leagues)||[]).filter(function(x){ return !dkLeagueHidden(x.id); });   // (11/4) blocked here
     var keep=sel.value;
     sel.innerHTML='<option value="">'+(_lgAllLeagues.length?'— pick your league —':'— no leagues yet —')+'</option>'
       +_lgAllLeagues.map(function(x){ return '<option value="'+esc(x.id)+'">'+esc(x.name)+' · '+x.teams.length+' team'+(x.teams.length===1?'':'s')+'</option>'; }).join('');
     if(keep) sel.value=keep;
+    lgPickReportShow();
   }).catch(function(){});
 }
 function lgPickedLeague(){ var sel=document.getElementById('lgPickLeague'); var id=sel?sel.value:''; return _lgAllLeagues.find(function(x){ return x.id===id; })||null; }
@@ -7792,6 +8002,7 @@ document.getElementById('lgCreate').onclick=function(){
   if(!lgReadEmail()) return;
   var name=(document.getElementById('lgName').value||'').trim();
   if(name.length<2){ lgHint('Give the league a name.'); return; }
+  if(!dkNameOk(name)){ lgHint('Pick a different league name.'); return; }   // (11/4) the word filter (the relay checks too)
   lgHint('Creating…');
   lgCall({op:'create',name:name,data:{seasons:LG.local.seasons}},lgHint).then(function(r){
     if(r&&r.ok&&r.league){ LG.local.seasons=[]; lgAdopt(r.league,true); _lgAddOpen=false; renderLeagueUI(); document.getElementById('lgName').value=''; lgHint('✓ '+r.league.name+' created — you’re its first member. Invite people with a join code.'); }
@@ -8441,8 +8652,12 @@ function welcomeDone(){
 function wcCheck(){
   var n=(document.getElementById('wcName').value||'').trim();
   var e=(document.getElementById('wcEmail').value||'').trim();
-  var ok=!!n && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+  var nameOk=dkNameOk(n);                          // (11/4) the word filter: Continue stays dead and the box says why
+  var ok=!!n && nameOk && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
   var b=document.getElementById('wcGo'); if(b) b.disabled=!ok;
+  var ni=document.getElementById('wcName'), why=document.querySelector('#wcStep1 .why');
+  if(ni) ni.classList.toggle('bad',!nameOk);
+  if(why){ if(why._t==null) why._t=why.textContent; why.textContent=nameOk?why._t:'Pick a different name.'; }
   return ok;
 }
 ['wcName','wcEmail'].forEach(function(id){ var el=document.getElementById(id); if(el) el.addEventListener('input',wcCheck); });
