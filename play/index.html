@@ -20,7 +20,7 @@
      That last one is the point of the thing — this counts how people FIND Dart
      Keeper, and a league's nightly re-opens would bury the handful of arrivals. -->
 <script>try{ var _cfStandalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;
- if(location.hostname==='dartkeeper.net' && !_cfStandalone && localStorage.getItem('darts_share_v1')!=='0'){
+ if(location.hostname==='dartkeeper.net' && !_cfStandalone && !window.Capacitor && !/[?&]src=ios\b/.test(location.search) && localStorage.getItem('darts_share_v1')!=='0'){
   var _cfb=document.createElement('script'); _cfb.defer=true;
   _cfb.src='https://static.cloudflareinsights.com/beacon.min.js';
   _cfb.setAttribute('data-cf-beacon','{"token": "879b14869bc940acbbcb676a0094a26d"}');
@@ -2262,11 +2262,16 @@
         </div>
         <p class="small" id="shareMsg" style="margin:6px 0 0;"></p>
       </div>
-      <!-- The "Share play data" checkbox + wording lived here and Nathan pulled
-           it 2026-08-31 ("for now"). The SWITCH ITSELF still works — dkShareOn()
-           reads darts_share_v1 and collection honours it — there is just nothing
-           on screen driving it, so it sits at its default of on. To put it back,
-           restore this label and the small IIFE next to the Library wiring. -->
+      <!-- Share switch: pulled 2026-08-31 ("for now"), back 2026-11-04 (Nathan: "bring the switch back") so the
+           privacy policy's off switch is real. It drives darts_share_v1: dkStat (game records, Player Card emails,
+           kept games, install) and the Cloudflare page counter all honour it. -->
+      <label id="shareStatRow" style="display:flex;margin-top:12px;align-items:flex-start;gap:10px;cursor:pointer;">
+        <input type="checkbox" id="shareStatChk" style="width:20px;height:20px;flex:none;margin-top:3px;">
+        <span class="small" style="text-align:left;line-height:1.35;">
+          <b style="color:var(--gold-lt);">Share game records</b><br>
+          Sends finished games and your general area to Dart Keeper. Off keeps them on this device; league play still syncs.
+        </span>
+      </label>
     </div>
     <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 45 45" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m1 0h2m1 0h1m1 0h4m1 0h1m1 0h4m1 0h4m1 0h7m-37 1h1m5 0h1m4 0h3m2 0h5m3 0h1m1 0h2m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h8m3 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h4m2 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m3 0h6m1 0h1m6 0h1m1 0h3m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-26 1h1m6 0h2m3 0h2m3 0h1m-27 1h1m1 0h3m1 0h4m2 0h5m1 0h2m2 0h1m2 0h3m3 0h1m2 0h1m-37 1h2m1 0h3m2 0h1m4 0h6m3 0h2m3 0h1m2 0h1m2 0h1m1 0h2m-35 1h2m2 0h1m1 0h4m1 0h5m2 0h2m1 0h1m1 0h1m2 0h1m1 0h5m1 0h1m-35 1h4m2 0h1m1 0h1m1 0h1m3 0h4m1 0h1m2 0h4m1 0h1m1 0h1m3 0h1m-36 1h3m3 0h2m1 0h1m1 0h2m4 0h3m3 0h3m3 0h2m2 0h1m1 0h2m-35 1h1m4 0h1m4 0h1m1 0h2m2 0h7m5 0h1m2 0h2m1 0h1m-36 1h1m4 0h1m4 0h1m2 0h1m1 0h5m1 0h1m2 0h1m3 0h2m1 0h1m1 0h3m-37 1h1m3 0h1m5 0h3m3 0h2m3 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-37 1h2m2 0h3m4 0h4m3 0h1m2 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h1m-36 1h5m2 0h1m4 0h1m4 0h2m1 0h1m3 0h1m2 0h1m1 0h1m4 0h2m-36 1h2m1 0h3m1 0h2m2 0h4m2 0h3m4 0h2m3 0h3m1 0h3m-35 1h2m3 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m7 0h1m-37 1h9m2 0h1m1 0h1m1 0h5m1 0h2m2 0h1m2 0h4m3 0h2m-37 1h1m3 0h1m2 0h1m1 0h5m2 0h1m1 0h3m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m-34 1h2m1 0h2m2 0h2m2 0h2m1 0h2m4 0h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m3 0h1m4 0h1m2 0h1m1 0h1m1 0h1m3 0h4m1 0h2m2 0h1m-29 1h1m1 0h1m2 0h1m2 0h1m1 0h5m4 0h1m2 0h1m2 0h5m2 0h1m1 0h1m-35 1h2m2 0h1m1 0h2m2 0h3m1 0h1m3 0h5m1 0h3m2 0h1m2 0h1m2 0h1m-37 1h1m3 0h4m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m6 0h1m1 0h2m3 0h2m-36 1h1m3 0h1m3 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h1m3 0h4m3 0h2m2 0h4m2 0h1m3 0h1m2 0h9m-29 1h1m4 0h1m1 0h2m1 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-37 1h7m2 0h1m3 0h1m1 0h3m1 0h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h4m2 0h2m2 0h6m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m3 0h1m4 0h1m3 0h4m3 0h1m1 0h6m-37 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m3 0h2m2 0h4m2 0h1m1 0h3m2 0h1m-37 1h1m5 0h1m2 0h1m2 0h1m2 0h1m1 0h4m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m-36 1h7m3 0h4m2 0h2m1 0h1m1 0h5m1 0h2m1 0h1m1 0h1m2 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
@@ -3349,7 +3354,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.34';
+var DK_VER='3.35';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3361,6 +3366,14 @@ function dkDev(){
 }
 function dkShareOn(){ try{ return localStorage.getItem(LS_SHARE)!=='0'; }catch(e){ return false; } }
 function dkShareSet(on){ try{ localStorage.setItem(LS_SHARE,on?'1':'0'); }catch(e){} }
+// The Backup & Share checkbox (back 11/4/2026). Wired HERE, after LS_SHARE is assigned: wired earlier in the file it ran
+// while LS_SHARE was still undefined, read the default and showed the switch on after a reload even when it was off.
+(function(){
+  var c=document.getElementById('shareStatChk');
+  if(!c) return;
+  c.checked=dkShareOn();
+  c.onchange=function(){ dkShareSet(c.checked); };
+})();
 
 // The free half of "where": the phone's own timezone and language. No prompt,
 // no permission, and it beats an IP guess for country. The IP half happens on
