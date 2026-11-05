@@ -3594,7 +3594,7 @@ document.getElementById('pcRename').onclick=function(){
 // deletion that STARTS in the app, and a way to report and block a name. Battle Tees' Settings carry the same.
 var DK_PRIVACY_URL='https://dartkeeper.net/privacy/', DK_TERMS_URL='https://dartkeeper.net/terms/';
 var DK_CONTACT='hello@dartkeeper.net';      // Contact us (Nathan 11/4: hello@dartkeeper.net, the Dart Keeper alias in Fastmail)
-var DK_TERMS_LIVE=false;                    // the Terms row stays hidden until the marketing session says /terms/ is live
+var DK_TERMS_LIVE=true;                     // (11/5 3:46 PM) dartkeeper.net/terms/ is live -- Nathan 'ship it'
 // a page outside the app: a new tab in a browser, Safari from the iPhone app (Capacitor opens target=_blank there)
 function dkOpenUrl(u){ var a=document.createElement('a'); a.href=u; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove(); }
 document.getElementById('bkPrivacy').onclick=function(){ dkOpenUrl(DK_PRIVACY_URL); };
@@ -3825,7 +3825,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.38';
+var DK_VER='3.39';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
