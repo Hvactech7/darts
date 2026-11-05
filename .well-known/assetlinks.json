@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.vexcomllc.dartkeeper",
+      "sha256_cert_fingerprints": ["1B:0A:6F:9F:16:25:94:9A:88:8D:0E:08:2C:B9:2A:8F:3F:20:54:7A:7F:E2:9E:6D:BC:E2:37:E5:A8:EB:F8:1A"]
+    }
+  }
+]
