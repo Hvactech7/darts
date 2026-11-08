@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-fdqTvTsHoWQB4RanO0dblF0HNyjBpL+3WdIFR+8Ge5Q=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -3288,6 +3289,7 @@ function sharePayload(){
 }
 function shareMsg(t){ const el=document.getElementById('shareMsg'); if(el) el.textContent=t; if(typeof fitLibrary==='function') fitLibrary(); }
 function shareMergeIn(d){
+  d=dkScrub(d||{});                              // (11/7) a shared library is another device's data
   let added=0;
   const have=new Set(roster.map(n=>n.toLowerCase()));
   (d.players||[]).forEach(n=>{
@@ -3311,7 +3313,7 @@ async function shareOffer(){
   document.getElementById('shareTakeRow').style.display='none';
   shareMsg('Getting a share code…');
   try{
-    const r=await relayBackup({op:'offer', data:sharePayload()});
+    const r=await relayBackup({op:'offer', email:lgEmail(), data:sharePayload()});
     if(r&&r.ok&&r.code){
       document.getElementById('shareCodeVal').textContent=r.code;
       document.getElementById('shareCodeShow').style.display='flex';
@@ -3440,7 +3442,7 @@ function pcLeagueRows(name){
   recs.forEach(function(rec){
     (rec.seasons||[]).slice().reverse().forEach(function(se){
       var ms=lgSeasonMatches(se); all=all.concat(ms);
-      var r=rowFor((recs.length>2&&rec.name?rec.name+' · ':'')+(se.name||'Season')+(se.dv?' D'+se.dv:''), ms, rec===league&&se===lgSeason());
+      var r=rowFor((recs.length>2&&rec.name?rec.name+' · ':'')+(se.name||'Season')+(se.dv?' D'+dkNum(se.dv):''), ms, rec===league&&se===lgSeason());
       if(r) rows.push(r);
     });
   });
@@ -3521,7 +3523,7 @@ function openPlayerCard(name){
   const _note=document.querySelector('.pcMailNote');
   if(_note) _note.textContent=_own
       ? (_by===lgEmail() ? 'This name is yours. League reports are e-mailed here.' : 'League reports are e-mailed to this address.')
-      : '🔒 '+shortName(name)+' is claimed by '+_by+' — only they (or the league keeper) can change this.';
+      : '🔒 '+shortName(name)+' is claimed by '+dkWhoLabel(_by,'another player')+' — only they (or the league keeper) can change this.';
   document.getElementById('pcEmailSave').textContent='Save';
   let h='';
   var _lgRows=pcLeagueRows(name);
@@ -3825,7 +3827,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.39';
+var DK_VER='3.40';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -3987,12 +3989,16 @@ var DK_RELAY='wss://relay.dartkeeper.net/dartkeeper';   // (9/6) off the Pi: Clo
 // file edit and a deploy — no app build. The constant above is the answer when the file can't be read;
 // the last answer that was read is remembered for offline launches; a manual override in localStorage wins.
 (function(){
-  try{ var o=localStorage.getItem('darts_relay_override_v1'); if(o&&/^wss?:\/\//.test(o)){ DK_RELAY=o; return; } }catch(e){}
-  try{ var last=localStorage.getItem('darts_relay_last_v1'); if(last&&/^wss?:\/\/[^\s]+\/dartkeeper$/.test(last)) DK_RELAY=last; }catch(e){}
+  // (11/7/2026, security) only OUR relay, or a relay on this computer (the test rigs and the Simulator bundle). Before,
+  // any ws(s):// address in storage or relay.json was dialled: one injected script, or a pushed relay.json, sent every
+  // phone's backups and league syncs -- with their keys -- to someone else's server.
+  var ok=function(u){ return typeof u==='string'&&(/^wss:\/\/relay\.dartkeeper\.net\/dartkeeper$/.test(u)||/^wss?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/dartkeeper$/.test(u)); };
+  try{ var o=localStorage.getItem('darts_relay_override_v1'); if(o&&ok(o)){ DK_RELAY=o; return; } }catch(e){}
+  try{ var last=localStorage.getItem('darts_relay_last_v1'); if(last&&ok(last)) DK_RELAY=last; }catch(e){}
   try{
     fetch('relay.json?v='+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
       var u=j&&typeof j.url==='string'?j.url.trim():'';
-      if(/^wss?:\/\/[^\s]+\/dartkeeper$/.test(u)){ DK_RELAY=u; try{ localStorage.setItem('darts_relay_last_v1',u); }catch(e){} }
+      if(ok(u)){ DK_RELAY=u; try{ localStorage.setItem('darts_relay_last_v1',u); }catch(e){} }
     }).catch(function(){});
   }catch(e){}
 })();
@@ -4004,14 +4010,42 @@ function bkPayload(){
           league:{on:!!LG.on, active:LG.active||null, list:LG.list.map(function(x){return {id:x.id,name:x.name};})}, fat6:f6log, v:1};
 }
 function bkFingerprint(){ return JSON.stringify(bkPayload()); }
+// ---- (11/7/2026, security) this device's SESSION KEY ------------------------------------------------------------
+// Proving the inbox (the e-mailed link, a 6-digit code, a restore) hands this device a random key; every backup and
+// league request carries it, and the relay acts for an address only with that address's key (cloud/src/books.js
+// sessState). The link usually opens in a browser, not here, so asking for one parks a random WAIT word too: the
+// "verified?" poll names it, and the answer that says yes carries this device's key.
+var LS_SESS='dk_sess_v1', LS_SESSWAIT='dk_sesswait_v1';
+function dkRand(n){ var a=new Uint8Array(n||24); crypto.getRandomValues(a); return btoa(String.fromCharCode.apply(null,a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function dkSessGet(em){ try{ var o=JSON.parse(localStorage.getItem(LS_SESS)||'null'); return o&&o.e&&o.e===(em||'').trim().toLowerCase()&&o.s?o.s:''; }catch(e){ return ''; } }
+function dkSessSet(em,s){ try{ if(em&&s) localStorage.setItem(LS_SESS,JSON.stringify({e:String(em).trim().toLowerCase(),s:s})); }catch(e){} }
+function dkSessClear(){ try{ localStorage.removeItem(LS_SESS); localStorage.removeItem(LS_SESSWAIT); }catch(e){} }
+function dkSessWait(em,make){
+  em=(em||'').trim().toLowerCase();
+  try{ var o=JSON.parse(localStorage.getItem(LS_SESSWAIT)||'null'); if(o&&o.e===em&&o.w) return o.w; if(!make) return ''; var w=dkRand(24); localStorage.setItem(LS_SESSWAIT,JSON.stringify({e:em,w:w})); return w; }catch(e){ return ''; }
+}
+// every request: the key for its address (and, for a link or the poll, the wait word); every answer: a key it carries
+function dkSessOut(msg){
+  var em=String(msg.email==null?'':msg.email).trim().toLowerCase();
+  msg.sv=1;
+  var k=dkSessGet(em); if(k) msg.sess=k;
+  if(msg.t==='backup'&&(msg.op==='maglink'||msg.op==='verified')){ var w=dkSessWait(em,msg.op==='maglink'); if(w) msg.wait=w; }
+  return msg;
+}
+function dkSessIn(m){
+  if(!m) return m;
+  if(m.sess&&m.sessEmail){ dkSessSet(m.sessEmail,m.sess); try{ var o=JSON.parse(localStorage.getItem(LS_SESSWAIT)||'null'); if(o&&o.e===m.sessEmail) localStorage.removeItem(LS_SESSWAIT); }catch(e){} }
+  if(m.sessBad){ try{ localStorage.removeItem(LS_SESS); }catch(e){} }
+  return m;
+}
 function relayBackup(payload){
   if(dkU13()) return Promise.resolve({ok:false,u13:true,error:dkU13Msg()});   // (11/5, A2) under 13: no online account
   return new Promise((res,rej)=>{
     let ws;
     try{ ws=new WebSocket(DK_RELAY); }catch(e){ return rej(e); }
     const to=setTimeout(()=>{ try{ws.close();}catch(e){} rej(new Error('timeout')); },15000);
-    ws.onopen=()=>{ try{ ws.send(JSON.stringify({t:'backup',rid:'d'+Math.random().toString(36).slice(2,8),app:'darts',...payload})); }catch(e){ clearTimeout(to); rej(e);} };
-    ws.onmessage=e=>{ try{ const m=JSON.parse(e.data); if(m.t==='backupResult'){ clearTimeout(to); try{ws.close();}catch(_){} res(m); } }catch(_){} };
+    ws.onopen=()=>{ try{ ws.send(JSON.stringify(dkSessOut({t:'backup',rid:'d'+Math.random().toString(36).slice(2,8),app:'darts',...payload}))); }catch(e){ clearTimeout(to); rej(e);} };
+    ws.onmessage=e=>{ try{ const m=JSON.parse(e.data); if(m.t==='backupResult'){ clearTimeout(to); try{ws.close();}catch(_){} res(dkSessIn(m)); } }catch(_){} };
     ws.onerror=()=>{ clearTimeout(to); rej(new Error('relay offline')); };
   });
 }
@@ -4025,6 +4059,7 @@ function bkQueue(){                          // silent auto-backup, debounced 8s
     try{
       const r=await relayBackup({op:'save',email:em,data:bkPayload(),quiet:true});
       if(r&&r.ok) localStorage.setItem(LS_BKFP,fp);
+      else if(r&&r.needSess) bkMsg('Auto-backup is paused: tap Back up to confirm '+em+' on this device.');   // (11/7) a key is needed now
     }catch(e){}
   },8000);
 }
@@ -4077,14 +4112,16 @@ var _bkWaitTimer=null;
 function bkWaitStop(){ if(_bkWaitTimer){ clearInterval(_bkWaitTimer); _bkWaitTimer=null; } }
 function bkWaitForLink(em){
   bkWaitStop();
-  var tries=0;
-  _bkWaitTimer=setInterval(function(){
+  var tries=0, done=false;
+  var tick=function(){
     tries++;
     if(tries>100){ bkWaitStop(); bkMsg('Still waiting on that e-mail. Tap Back up again to send a new link.'); return; }
     relayBackup({op:'verified',email:em}).then(function(r){
-      if(r&&r.ok&&r.verified){ bkWaitStop(); bkMsg('✓ Confirmed — backing up…'); bkSave(); }
+      if(r&&r.ok&&r.verified&&!done){ done=true; bkWaitStop(); bkMsg('✓ Confirmed — backing up…'); bkSave(); }
     }).catch(function(){});
-  }, 3000);
+  };
+  _bkWaitTimer=setInterval(tick, 3000);
+  setTimeout(function(){ if(_bkWaitTimer&&!done) tick(); }, 700);   // (11/7) one quick look first
 }
 async function bkRestore(){
   const em=bkEmailVal(); if(!em) return;
@@ -4103,7 +4140,8 @@ async function bkRestore(){
   try{
     const r=await relayBackup({op:'get',email:em,code});
     if(!(r&&r.ok&&r.data)){ bkMsg((r&&r.error)||'Restore failed.'); return; }
-    const d=r.data;
+    const d=dkScrub(r.data);                     // (11/7) a restored library is cleaned like any other device's data
+    (d.groups||[]).forEach(function(g){ if(g) g.id=dkId(g.id)||('g'+Date.now().toString(36)); });
     let added=0;
     Object.keys(d.hidden||{}).forEach(n=>{ if(n&&!hiddenPlayers[n]) hiddenPlayers[n]=+d.hidden[n]||Date.now(); });
     (d.players||[]).forEach(n=>{ if(n&&!isHidden(n)&&!roster.includes(n)){ roster.push(n); added++; } });
@@ -4170,7 +4208,7 @@ function migrateDuosFromLegacy(){    // players sharing an old per-player team l
 }
 function renderGroups(){
   const el=document.getElementById('groupChips'); if(!el)return;
-  let html=groupLib.map(g=>`<button type="button" class="grpchip${grpDelMode?' del':''}" data-gid="${g.id}">${grpDelMode?'✕ ':''}${esc(g.name)} · ${g.members.length}</button>`).join('');
+  let html=groupLib.map(g=>`<button type="button" class="grpchip${grpDelMode?' del':''}" data-gid="${esc(g.id)}">${grpDelMode?'✕ ':''}${esc(g.name)} · ${g.members.length}</button>`).join('');
   if(groupLib.length) html+=`<button type="button" class="ghost grpchip" id="grpDelToggle">${grpDelMode?'Done':'🗑'}</button>`;
   el.innerHTML=html;
 }
@@ -7157,7 +7195,39 @@ var LS_LEAGUE='darts_league_v1', LS_F6LOG='darts_fat6_v1';
 // leagues this device belongs to, and which one is ACTIVE. `league` is always
 // the active league's record (or LG.local — history kept before joining any
 // league, which Create uploads). Matches, reports and Stats act on `league`.
-function lgRec(o){ o=o||{}; return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0,schedule:o.schedule||null,gone:o.gone||[]}; }   // (11/3) league night survives a relaunch offline; (11/4) so do former players' locked names
+// ---- (11/7/2026, security) data from OTHER devices is cleaned before this app keeps or draws it ------------------
+// Names were always escaped, but numbers and ids from a league document (a division, a season id, a leg count, a game,
+// totals added up from match rows) went into the page raw -- one member, or anyone through a kept-game row, could run
+// code on every member's phone. Everything that arrives from the relay, a restore or a shared library goes through
+// dkScrub: no < or > in any string, no __proto__/constructor/prototype keys, bounded depth; ids are plain; the numbers
+// a season/match draws are numbers. (The drawing code escapes those spots too.)
+var DK_BAD_KEY={'__proto__':1,'constructor':1,'prototype':1};
+function dkScrub(x,d){
+  d=d||0; if(d>16||x==null) return x;
+  if(typeof x==='string') return x.replace(/[<>]/g,'');
+  if(typeof x==='number') return isFinite(x)?x:0;
+  if(typeof x!=='object') return x;
+  if(Array.isArray(x)) return x.map(function(v){ return dkScrub(v,d+1); });
+  var o={}; Object.keys(x).forEach(function(k){ if(DK_BAD_KEY[k]) return; o[k.replace(/[<>]/g,'')]=dkScrub(x[k],d+1); }); return o;
+}
+function dkId(v){ return String(v==null?'':v).replace(/[^A-Za-z0-9_.:-]/g,'').slice(0,60); }
+function dkNum(v){ var n=+v; return isFinite(n)?n:0; }
+function dkCleanSeasons(ss){
+  if(!Array.isArray(ss)) return [];
+  return ss.filter(function(se){ return se&&typeof se==='object'&&dkId(se.id); }).map(function(se){
+    se.id=dkId(se.id); if(se.dv!=null) se.dv=Math.max(0,Math.min(99,Math.trunc(dkNum(se.dv))))||null;
+    se.startTs=dkNum(se.startTs); if(se.endTs!=null) se.endTs=dkNum(se.endTs)||null;
+    se.tournaments=(Array.isArray(se.tournaments)?se.tournaments:[]).filter(function(t){ return t&&typeof t==='object'; }).map(function(t){
+      if(t.id!=null) t.id=dkId(t.id); t.ts=dkNum(t.ts); if(t.endTs!=null) t.endTs=dkNum(t.endTs)||null;
+      t.matches=(Array.isArray(t.matches)?t.matches:[]).filter(function(m){ return m&&typeof m==='object'; }).map(function(m){
+        if(m.id!=null) m.id=dkId(m.id); m.ts=dkNum(m.ts); if(m.legs!=null) m.legs=Math.trunc(dkNum(m.legs));
+        if(m.game!=null) m.game=String(m.game).replace(/[^A-Za-z0-9 _-]/g,'').slice(0,20);
+        if(Array.isArray(m.score)) m.score=m.score.slice(0,2).map(function(v){ return Math.trunc(dkNum(v)); });
+        return m; });
+      return t; });
+    return se; });
+}
+function lgRec(o){ o=dkScrub(o||{}); if(o.seasons) o.seasons=dkCleanSeasons(o.seasons); return {id:o.id||null,name:o.name||'',members:o.members||[],creator:o.creator||'',seasons:o.seasons||[],teams:o.teams||{},claims:o.claims||{},lastSync:o.lastSync||0,schedule:o.schedule||null,gone:o.gone||[]}; }   // (11/3) league night survives a relaunch offline; (11/4) so do former players' locked names
 var LG=(function(){
   var v=null; try{ v=JSON.parse(localStorage.getItem(LS_LEAGUE)); }catch(e){}
   if(!v||typeof v!=='object') v={};
@@ -7208,12 +7278,13 @@ function relayLeague(msg){
     var ws, done=false, rid='lg'+Math.random().toString(36).slice(2,8);
     var timer=setTimeout(function(){ if(!done){ done=true; try{ws.close();}catch(e){} reject(new Error('timeout')); } },12000);
     try{ ws=new WebSocket(DK_RELAY); }catch(e){ clearTimeout(timer); reject(e); return; }
-    ws.onopen=function(){ var m=Object.assign({t:'league',email:lgEmail(),rid:rid},msg); try{ ws.send(JSON.stringify(m)); }catch(e){} };
+    ws.onopen=function(){ var m=dkSessOut(Object.assign({t:'league',email:lgEmail(),rid:rid},msg)); try{ ws.send(JSON.stringify(m)); }catch(e){} };
     ws.onmessage=function(ev){ var r=null; try{ r=JSON.parse(ev.data); }catch(e){} if(!r||r.t!=='leagueResult'||r.rid!==rid) return;
-      done=true; clearTimeout(timer); try{ws.close();}catch(e){} resolve(r); };
+      done=true; clearTimeout(timer); try{ws.close();}catch(e){} if(r.needSess) LG_KEY_NEEDED=true; resolve(dkSessIn(r)); };
     ws.onerror=function(){ if(!done){ done=true; clearTimeout(timer); reject(new Error('ws')); } };
   });
 }
+var LG_KEY_NEEDED=false;   // (11/7) a background sync was refused for want of this device's key: the League card asks
 // The relay answers needVerify the first time an address is used: e-mail a
 // code, confirm it, then re-run whatever was being attempted.
 var _lgPendingAction=null;
@@ -7224,19 +7295,21 @@ var _lgWaitTimer=null;
 function lgWaitStop(){ if(_lgWaitTimer){ clearInterval(_lgWaitTimer); _lgWaitTimer=null; } }
 function lgWaitForLink(){
   lgWaitStop();
-  var tries=0;
-  _lgWaitTimer=setInterval(function(){
+  var tries=0, done=false;
+  var tick=function(){
     tries++;
     if(tries>100){ lgWaitStop(); lgHint('Still waiting on that e-mail. Tap Create again to send a new link.'); return; }
     relayBackup({op:'verified',email:lgEmail()}).then(function(r){
-      if(r&&r.ok&&r.verified){
-        lgWaitStop();
+      if(r&&r.ok&&r.verified&&!done){
+        done=true; lgWaitStop();
         document.getElementById('lgVerifyRow').style.display='none';
         lgHint('✓ E-mail confirmed.');
         var a=_lgPendingAction; _lgPendingAction=null; if(a) a();
       }
     }).catch(function(){});
-  }, 3000);
+  };
+  _lgWaitTimer=setInterval(tick, 3000);
+  setTimeout(function(){ if(_lgWaitTimer&&!done) tick(); }, 700);   // (11/7) one quick look first: a link tapped right away carries on at once
 }
 // The link opens the app with ?k=<token>. Redeeming it is what marks the
 // address verified on the Pi. Only ever verifies — it never quietly restores a
@@ -7248,7 +7321,9 @@ function lgRedeemToken(){
   try{ window.history.replaceState(null,'',location.pathname); }catch(e){}   // don't leave a used credential in the bar
   relayBackup({op:'redeem',code:tok}).then(function(r){
     if(r&&r.ok&&r.email){
-      try{ if(!lgEmail()) lgSetEmail(r.email); }catch(e){}
+      // (11/7, security) a link someone ELSE requested must not quietly make their address this device's identity
+      // (the library would then back up into their account): ask first
+      try{ if(!lgEmail()){ if(confirm('Use '+r.email+' for backups and leagues on this device?')) lgSetEmail(r.email); else { dkSessClear(); return; } } }catch(e){}
       flashToast('✓ ' + r.email + ' confirmed — you can set up your league now.');
     }else{
       flashToast((r&&r.error)||'That link did not work — ask for a new one.');
@@ -7277,7 +7352,8 @@ function lgCall(msg, hint){
           }else if(v&&v.ok){
             lgVerifyAsk(false);
             document.getElementById('lgVerifyRow').style.display='flex';
-            hint('First time with this e-mail — we sent a link to '+lgEmail()+'. Tap it and this finishes on its own.');
+            hint(r.needSess?('To keep your league safe, confirm '+lgEmail()+' on this device — we sent a link. Tap it and this finishes on its own.')
+                           :('First time with this e-mail — we sent a link to '+lgEmail()+'. Tap it and this finishes on its own.'));
             lgWaitForLink();                       // no code to type: watch for the tap
           }else{
             _lgPendingAction=null; hint((v&&v.error)||'Could not send the e-mail.'); resolve({ok:false,pending:true});
@@ -7289,6 +7365,18 @@ function lgCall(msg, hint){
     if(r&&r.ok&&LG.pending&&LG.pending.msg&&LG.pending.msg.op===msg.op){ try{ LG.pending=null; saveLeague(); }catch(e){} }
     return r;
   });
+}
+// (11/7, security) this device needs its key (a sync or a queued rename was refused): the same link / code row as
+// lgCall's, then `then` runs once the relay has handed this device its key
+function lgAskKey(then){
+  if(!lgEmail()) return;
+  _lgPendingAction=then;
+  relayBackup({op:'maglink',email:lgEmail()}).then(function(v){
+    if(v&&v.ok&&v.askCode){ lgVerifyAsk(true); lgHint('Enter your 6-digit code for '+lgEmail()+', then tap OK.'); }
+    else if(v&&v.ok){ lgVerifyAsk(false); document.getElementById('lgVerifyRow').style.display='flex';
+      lgHint('To keep your league safe, confirm '+lgEmail()+' on this device — we sent a link. Tap it and syncing picks up on its own.'); lgWaitForLink(); }
+    else { _lgPendingAction=null; lgHint((v&&v.error)||'Could not send the e-mail.'); }
+  }).catch(function(){ _lgPendingAction=null; lgHint('Could not connect — try again.'); });
 }
 // Finish what a confirmation link was holding up, on whatever open comes next.
 function lgResumePending(){
@@ -7382,6 +7470,7 @@ function lgPlayersIntoLibrary(rec){
 }
 function lgAdopt(Lg, makeActive){
   if(!Lg||!Lg.id) return null;
+  Lg=dkScrub(Lg); Lg.id=dkId(Lg.id); if(Lg.seasons) Lg.seasons=dkCleanSeasons(Lg.seasons);   // (11/7) another device's data
   var rec=null; LG.list.forEach(function(x){ if(x.id===Lg.id) rec=x; });
   if(!rec){ rec=lgRec({id:Lg.id}); LG.list.push(rec); }
   rec.name=Lg.name||rec.name; rec.members=Lg.members||[]; rec.creator=Lg.creator||''; if(Lg.teams&&typeof Lg.teams==='object') rec.teams=Lg.teams;
@@ -7481,6 +7570,10 @@ setPlayerTeam=function(name,team){
 };
 // ---- name claims: a roster name belongs to one address once claimed ----
 function lgClaims(rec){ return (rec&&rec.claims)||{}; }
+// (11/7, security) the relay sends this phone its own address and the head's; every other member's is a stand-in
+// (member-<10 hex>), the same one everywhere in the league. Never shown: a name, or "a member", in its place.
+function dkIsStandIn(e){ return /^member-[0-9a-f]{10}$/.test(String(e||'')); }
+function dkWhoLabel(e,fallback){ return dkIsStandIn(e)?(fallback||'a league member'):String(e||''); }
 function lgClaimOwner(rec,player){ var c=lgClaims(rec)[player]; return (c&&c.st==='ok'&&c.email)||null; }
 function lgMayEditPlayer(rec,player){
   if(!rec||!rec.id) return true;                       // not in a league: your own library, your rules
@@ -7499,7 +7592,7 @@ function lgClaimState(player){                          // '', 'ok', 'pending', 
 function lgClaimDecision(player,who,approve){
   return lgCall({op:approve?'claim_approve':'claim_decline',league:league.id,player:player,who:who},lgHint).then(function(r){
     if(r&&r.ok&&r.league){ lgAdopt(r.league);
-      lgHint(approve?('✓ '+shortName(player)+' now belongs to '+who+'.'):('Declined — '+shortName(player)+' stays yours.'));
+      lgHint(approve?('✓ '+shortName(player)+' now belongs to '+dkWhoLabel(who,'them')+'.'):('Declined — '+shortName(player)+' stays yours.'));
       lgSync(); }
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not do that.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
@@ -7717,7 +7810,7 @@ function renderLeagueUI(){
   var ll=document.getElementById('lgLeagueLine');
   if(ll&&inL){ var _lc=lgPeopleCount(league), _ls=lgSeason();
     ll.innerHTML='<b>'+esc(league.name)+'</b> · '+_lc+' member'+(_lc===1?'':'s')
-    +(_ls?' · '+esc(_ls.name)+(_ls.dv?' D'+_ls.dv:''):'')
+    +(_ls?' · '+esc(_ls.name)+(_ls.dv?' D'+dkNum(_ls.dv):''):'')
     +' · synced '+esc(lgAgo(league.lastSync)); }
   // who runs this league, and how to reach them for league trouble
   var hl=document.getElementById('lgHeadLine');
@@ -7756,7 +7849,7 @@ function renderLeagueUI(){
     Object.keys(cl).forEach(function(pl){ var c=cl[pl]; if(!c||!c.req) return;
       Object.keys(c.req).forEach(function(who){
         if(c.email===lgEmail()||lgIsHead(league))
-          rows.push('<div class="lgReq"><span class="who"><b>'+esc(who)+'</b> says they are <b>'+esc(shortName(pl))+'</b></span>'
+          rows.push('<div class="lgReq"><span class="who"><b>'+esc(dkWhoLabel(who,'A member'))+'</b> says they are <b>'+esc(shortName(pl))+'</b></span>'
             +'<button class="primary" data-cok="1" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Approve</button>'
             +'<button class="warn" data-cok="0" data-player="'+esc(pl)+'" data-who="'+esc(who)+'">Decline</button></div>');
         else if(who===lgEmail()) waiting.push('⏳ waiting to be confirmed as '+shortName(pl));
@@ -7771,7 +7864,7 @@ function renderLeagueUI(){
     Object.keys(_cl2).forEach(function(pl){ var c=_cl2[pl]; if(!c||!c.prov||c.email===lgEmail()) return;
       var tm=lgTeamOfRoster(league,pl);
       if(_isHead||(tm&&lgIsOkMember(league,tm,LG.me)))
-        rows.push('<div class="lgReq"><span class="who">📱 A new phone joined as <b>'+esc(shortName(pl))+'</b>'+(tm?' ('+esc(tm)+')':'')+'<br><small>'+esc(c.email)+' · permanent in '+Math.max(1,Math.round((c.prov-Date.now()/1000)/3600))+' h unless booted</small></span>'
+        rows.push('<div class="lgReq"><span class="who">📱 A new phone joined as <b>'+esc(shortName(pl))+'</b>'+(tm?' ('+esc(tm)+')':'')+'<br><small>'+esc(dkWhoLabel(c.email,'another phone'))+' · permanent in '+Math.max(1,Math.round((c.prov-Date.now()/1000)/3600))+' h unless booted</small></span>'
           +'<button class="warn" data-boot="'+esc(c.email)+'" data-player="'+esc(pl)+'">Boot</button></div>'); });
     var held=lgHeldCount(league);
     rq.innerHTML=(rows.length?'<div class="lgListHead">Requests</div>'+rows.join(''):'')+(waiting.length?'<div class="lgWait">'+waiting.map(esc).join('<br>')+(held?'<br>'+held+' match'+(held===1?'':'es')+' held on this device until then':'')+'</div>':'');
@@ -7799,7 +7892,7 @@ function renderLeagueUI(){
     spr.style.display=ss.length>1?'':'none';
     if(ss.length>1&&document.activeElement!==sp){
       sp.innerHTML=ss.slice().sort(function(a,b){return (a.dv||0)-(b.dv||0)||(b.startTs||0)-(a.startTs||0);}).map(function(x){
-        return '<option value="'+x.id+'"'+(s&&x.id===s.id?' selected':'')+'>'+esc(x.name)+(x.dv?' · Division '+x.dv:'')+' · '+lgDay(x.startTs)+' – '+(x.endTs?lgDay(x.endTs):'open')+'</option>'; }).join('');
+        return '<option value="'+esc(x.id)+'"'+(s&&x.id===s.id?' selected':'')+'>'+esc(x.name)+(x.dv?' · Division '+dkNum(x.dv):'')+' · '+lgDay(x.startTs)+' – '+(x.endTs?lgDay(x.endTs):'open')+'</option>'; }).join('');
     }
   }
   var tt=document.getElementById('lgToolsToggle'), tw=document.getElementById('lgTools');
@@ -8003,6 +8096,7 @@ function lgFlushRenames(rec,cb){
   var it=mine[0];
   relayLeague({op:'rename',league:rec.id,from:it.from,into:it.into,me:LG.me||''}).then(function(r){
     if(!r){ cb(false); return; }
+    if(r.needSess){ cb(false); return; }                           // (11/7) kept: it goes once this device confirms its e-mail
     lgRenQSave(lgRenQ().filter(function(x){ return !(x&&x.league===it.league&&x.from===it.from&&x.into===it.into&&x.at===it.at); }));
     if(r.ok){ if(r.league) lgAdopt(r.league); }
     else if(r.taken||/claimed/i.test(r.error||'')){                // the league said no: the old name comes back here too
@@ -8017,7 +8111,7 @@ function lgHeadTools(){
   var box=document.getElementById('lgHeadTools'); if(!box) return;
   var isHead=!!(league&&league.id&&lgIsHead(league));
   box.style.display=isHead?'':'none'; if(!isHead) return;
-  var who=function(em){ var n=''; var cl=lgClaims(league); Object.keys(cl).forEach(function(pn){ if(cl[pn]&&cl[pn].email===em&&cl[pn].st==='ok') n=pn; }); return n?shortName(n)+' · '+em:em; };
+  var who=function(em){ var n=''; var cl=lgClaims(league); Object.keys(cl).forEach(function(pn){ if(cl[pn]&&cl[pn].email===em&&cl[pn].st==='ok') n=pn; }); return n?shortName(n)+(dkIsStandIn(em)?'':' · '+em):dkWhoLabel(em,'A member with no name yet'); };
   var members=(league.members||[]).filter(function(em){ return em!==lgEmail(); });
   document.getElementById('lgHtMembers').innerHTML=members.length?members.map(function(em){ return '<div class="lgReq"><span class="who">'+esc(who(em))+'</span><button class="warn" data-remove="'+esc(em)+'">Remove</button></div>'; }).join(''):'<div class="lgWait">No other devices in the league yet.</div>';
   var names=[]; Object.keys(league.teams||{}).forEach(function(t){ Object.keys(league.teams[t]||{}).forEach(function(p){ names.push(p); }); });
@@ -8080,7 +8174,11 @@ function openLeagueCard(){
   document.getElementById('lgVerifyRow').style.display='none';
   renderLeagueUI();
   document.getElementById('leagueCard').classList.remove('hidden');
-  if(league.id) lgSync(function(){ renderLeagueUI(); });
+  if(league.id) lgSync(function(r){
+    renderLeagueUI();
+    // (11/7) this address has a key on another device (or the league wants one for this): confirm the inbox here
+    if((r&&r.needSess)||LG_KEY_NEEDED){ LG_KEY_NEEDED=false; lgAskKey(function(){ lgSync(function(){ renderLeagueUI(); }); }); }
+  });
 }
 function lgReadEmail(){
   var v=lgSetEmail(document.getElementById('lgEmail').value);
@@ -8219,7 +8317,8 @@ function schedSend(on){
   var sc={on:on,dow:+document.getElementById('schDay').value,start:document.getElementById('schStart').value,end:document.getElementById('schEnd').value};
   if(!/^\d\d:\d\d$/.test(sc.start)||!/^\d\d:\d\d$/.test(sc.end)||sc.start===sc.end){ msg.textContent='Pick a start and an end time.'; return; }
   msg.textContent='Saving…';
-  relayLeague({op:'schedule',league:league.id,schedule:sc}).then(function(r){
+  lgCall({op:'schedule',league:league.id,schedule:sc},function(t){ msg.textContent=t; }).then(function(r){
+    if(r&&r.pending) return;
     if(r&&r.ok&&r.league){ lgAdopt(r.league); document.getElementById('schedSplash').classList.add('hidden'); lgHint(on?'✓ League night: '+lgSchedText(sc)+'.':'✓ League night is off.'); lgSchedTick(); }
     else msg.textContent=(r&&r.error)||'Could not save. Try again.';
   }).catch(function(){ msg.textContent='No connection. Try again with internet.'; });
@@ -8309,7 +8408,8 @@ document.getElementById('lgJoin').onclick=function(){
   lgHint('Joining…');
   // straight to the relay: the code is the validation, the e-mail's
   // confirmation link goes out afterwards and never holds this up
-  relayLeague({op:'join',code:code,league:pick?pick.id:undefined}).then(function(r){
+  lgCall({op:'join',code:code,league:pick?pick.id:undefined},lgHint).then(function(r){
+    if(r&&r.pending) return;
     if(r&&r.ok&&r.league){
       var rec=lgAdopt(r.league,true); _lgAddOpen=false; lgAutoOn(rec); renderLeagueUI(); document.getElementById('lgJoinCode').value='';
       lgHint('✓ You’re in '+r.league.name+'.'+(lgMyOkTeam()?'':' Now pick your team.')+(LG.on?' League is On for tonight.':''));
@@ -8340,10 +8440,11 @@ document.getElementById('lgTeamJoin').onclick=function(){
 };
 document.getElementById('lgHtMembers').addEventListener('click',function(e){
   var b=e.target.closest('button[data-remove]'); if(!b) return;
-  var em=b.dataset.remove; if(!confirm('Remove '+em+' from '+league.name+'? Their games stay; their device drops the league on its next sync.')) return;
+  var em=b.dataset.remove, _row=b.closest('.lgReq'), _lbl=(_row&&_row.querySelector('.who')&&_row.querySelector('.who').textContent)||dkWhoLabel(em);   // (11/7) a name, not a stand-in
+  if(!confirm('Remove '+_lbl+' from '+league.name+'? Their games stay; their device drops the league on its next sync.')) return;
   lgHint('Removing…');
   lgCall({op:'remove',league:league.id,who:em},lgHint).then(function(r){
-    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+em+' is out.'); }
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+_lbl+' is out.'); }
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not remove them.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 });
@@ -8358,11 +8459,12 @@ document.getElementById('lgHtMerge').onclick=function(){
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
 document.getElementById('lgHtHandoff').onclick=function(){
-  var em=document.getElementById('lgHtHead').value; if(!em){ lgHint('Pick who takes over.'); return; }
-  if(!confirm('Hand '+league.name+' to '+em+'? They become the head; you stay a member.')) return;
+  var _hs=document.getElementById('lgHtHead'), em=_hs.value; if(!em){ lgHint('Pick who takes over.'); return; }
+  var _lbl=(_hs.options[_hs.selectedIndex]&&_hs.options[_hs.selectedIndex].text)||dkWhoLabel(em);   // (11/7) a name, not a stand-in
+  if(!confirm('Hand '+league.name+' to '+_lbl+'? They become the head; you stay a member.')) return;
   lgHint('Handing off…');
   lgCall({op:'handoff',league:league.id,who:em},lgHint).then(function(r){
-    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+em+' runs '+league.name+' now.'); }
+    if(r&&r.ok&&r.league){ lgAdopt(r.league,true); renderLeagueUI(); lgHint('✓ '+_lbl+' runs '+league.name+' now.'); }
     else if(r&&!r.pending) lgHint((r&&r.error)||'Could not hand off.');
   }).catch(function(){ lgHint('Could not connect — try again.'); });
 };
@@ -8744,7 +8846,7 @@ function lgHighs(matches){
   return out;
 }
 function lgAvg(e){ return e.dts ? (e.pts*3/e.dts).toFixed(1) : (e.turns ? (e.pts/e.turns).toFixed(1) : '—'); }   // true 3-dart average: points per dart × 3
-function lgGameLabel(g){ return g==='cricket'?'Cricket':g==='fat6'?'Fat 6':g; }
+function lgGameLabel(g){ return g==='cricket'?'Cricket':g==='fat6'?'Fat 6':esc(g); }   // (11/7) escaped
 function lgHighsHTML(h, title){
   var items=[['hiCo','High Close-Out'],['hi3','High 3-dart'],['hiIn','High-In (301)']].filter(function(x){ return h&&h[x[0]]; });
   if(!items.length) return '';
@@ -8765,7 +8867,7 @@ function lgTablesHTML(st, title){
   return html;
 }
 function lgMatchLineHTML(m){
-  return '<div class="stMatch"><span class="when">'+lgDay(m.ts)+' · '+lgGameLabel(m.game)+' · bo'+m.legs+'</span><span class="res">'+esc(lgScoreText(m))+'</span></div>';
+  return '<div class="stMatch"><span class="when">'+lgDay(m.ts)+' · '+lgGameLabel(m.game)+' · bo'+dkNum(m.legs)+'</span><span class="res">'+esc(lgScoreText(m))+'</span></div>';
 }
 var LEAGUE_GAMES=['301','501','cricket'];   // the only games that produce stats (Nathan)
 var _statsTab='league', _statsSeason=null, _statsOpenT={};
@@ -8775,7 +8877,7 @@ function renderStats(tab){
   var mail=document.getElementById('statsMailBtn'); mail.style.display='none';
   if(tab==='league'){
     if(LG.list.length>1){
-      html+='<div class="stPick stLeaguePick">'+LG.list.map(function(x){ return '<button class="'+(x.id===LG.active?'on':'')+'" data-league="'+x.id+'">'+esc(x.name)+'</button>'; }).join('')+'</div>';
+      html+='<div class="stPick stLeaguePick">'+LG.list.map(function(x){ return '<button class="'+(x.id===LG.active?'on':'')+'" data-league="'+esc(x.id)+'">'+esc(x.name)+'</button>'; }).join('')+'</div>';
     }
     var seasons=league.seasons;
     if(!seasons.length){
@@ -8786,7 +8888,7 @@ function renderStats(tab){
       var live=(s===lgSeason());
       // season picker (only when there is something to pick)
       if(seasons.length>1){
-        html+='<div class="stPick">'+seasons.slice().reverse().map(function(x){ return '<button class="'+(x===s?'on':'')+'" data-season="'+x.id+'">'+esc(x.name)+(x.endTs?'':' ·live')+'</button>'; }).join('')+'</div>';
+        html+='<div class="stPick">'+seasons.slice().reverse().map(function(x){ return '<button class="'+(x===s?'on':'')+'" data-season="'+esc(x.id)+'">'+esc(x.name)+(x.endTs?'':' ·live')+'</button>'; }).join('')+'</div>';
       }
       html+='<div class="stSeason">'+esc(s.name)+' <span>'+lgDay(s.startTs)+' – '+(s.endTs?lgDay(s.endTs):'now')+' · '+lgNights(s).length+' night'+(lgNights(s).length===1?'':'s')+'</span></div>';
       var open=lgTourn();
