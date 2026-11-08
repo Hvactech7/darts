@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-fdqTvTsHoWQB4RanO0dblF0HNyjBpL+3WdIFR+8Ge5Q=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-VPGlK/IKLHb+7+ns+PQO8C1cfXhdZfiLKiF1A9n/1O4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -2551,16 +2551,27 @@ function makeNameFilter(opts) {
   var HOMO = { 'а': 'a', 'в': 'b', 'е': 'e', 'ё': 'e', 'к': 'k', 'м': 'm', 'н': 'h', 'о': 'o', 'р': 'p', 'с': 'c', 'т': 't', 'у': 'y', 'х': 'x',
     'і': 'i', 'ї': 'i', 'ј': 'j', 'ѕ': 's', 'ԁ': 'd', 'ɡ': 'g', 'α': 'a', 'β': 'b', 'ε': 'e', 'η': 'n', 'ι': 'i', 'κ': 'k', 'ν': 'v',
     'ο': 'o', 'ρ': 'p', 'τ': 't', 'υ': 'u', 'χ': 'x', 'ı': 'i', 'ſ': 's', 'ƒ': 'f', 'ս': 'u', 'օ': 'o', 'հ': 'h', 'ց': 'g', 'ք': 'p',
-    'ɑ': 'a', 'ʀ': 'r', 'ʜ': 'h', 'ɪ': 'i', 'ᴄ': 'c', 'ᴋ': 'k', 'ᴜ': 'u', 'ꜰ': 'f', 'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'đ': 'd', 'ł': 'l' };
+    'ɑ': 'a', 'ʀ': 'r', 'ʜ': 'h', 'ɪ': 'i', 'ᴄ': 'c', 'ᴋ': 'k', 'ᴜ': 'u', 'ꜰ': 'f', 'ß': 'ss', 'æ': 'ae', 'œ': 'oe', 'ø': 'o', 'đ': 'd', 'ł': 'l',
+    // (11/8, audit) small capitals and a few more look-alikes (Cyrillic shha/qa/we/palochka, Greek lunate sigma/yot, Latin iota)
+    'ᴀ': 'a', 'ʙ': 'b', 'ᴅ': 'd', 'ᴇ': 'e', 'ɢ': 'g', 'ᴊ': 'j', 'ʟ': 'l', 'ᴍ': 'm', 'ɴ': 'n', 'ᴏ': 'o', 'ᴘ': 'p', 'ǫ': 'q', 'ꜱ': 's', 'ᴛ': 't',
+    'ᴠ': 'v', 'ᴡ': 'w', 'ʏ': 'y', 'ᴢ': 'z', 'һ': 'h', 'ԛ': 'q', 'ԝ': 'w', 'ӏ': 'l', 'ϲ': 'c', 'ϳ': 'j', 'ɩ': 'i' };
+  // (11/8, audit) Cherokee letters that are drawn like Latin ones (each checked against its Latin twin on screen). Keyed by
+  // code point and folded through toLowerCase, because a Cherokee capital lowercases to its small form (U+AB70...).
+  var CHER = { 0x13A0: 'd', 0x13A1: 'r', 0x13A2: 't', 0x13A4: 'o', 0x13A5: 'i', 0x13A6: 's', 0x13A9: 'y', 0x13AA: 'a', 0x13AB: 'j', 0x13AC: 'e',
+    0x13B3: 'w', 0x13B7: 'm', 0x13BB: 'h', 0x13BD: 'y', 0x13BE: 'o', 0x13C0: 'g', 0x13C2: 'h', 0x13C3: 'z', 0x13CF: 'b', 0x13D2: 'r', 0x13D4: 'w',
+    0x13D5: 's', 0x13D9: 'v', 0x13DA: 's', 0x13DE: 'l', 0x13DF: 'c', 0x13E2: 'p', 0x13E6: 'k', 0x13E7: 'd', 0x13F3: 'g', 0x13F4: 'b' };
+  for (var cp in CHER) { var ch = String.fromCharCode(+cp); HOMO[ch.toLowerCase()] = CHER[cp]; }
+  // a second reading for letters that pass for two Latin ones (у is y or u; п is n): a name is refused if EITHER reading is
+  var HOMO2 = { 'у': 'u', 'п': 'n', 'г': 'r', 'ш': 'w', 'ь': 'b', 'и': 'u' };
   var LEET = { '0': 'o', '1': 'i', '!': 'i', '|': 'i', '3': 'e', '4': 'a', '@': 'a', '$': 's', '5': 's', '7': 't', '+': 't', '9': 'g', '6': 'g', '8': 'b' };
   var esc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
-  function fold(t) {
+  function fold(t, alt) {
     t = String(t == null ? '' : t);
     try { t = t.normalize('NFKC'); } catch (e) {}
     t = t.replace(/[\u00ad\u200b-\u200d\u2060\ufeff\u034f\u180e]/g, '');                 // invisible joiners: the word stays one
     t = t.replace(/[\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000]/g, ' ');       // odd spaces: a space
     t = t.replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'");
-    var o = ''; for (var i = 0; i < t.length; i++) { var c = t[i], l = c.toLowerCase(); o += HOMO[l] ? (c === l ? HOMO[l] : HOMO[l].toUpperCase()) : c; }
+    var o = ''; for (var i = 0; i < t.length; i++) { var c = t[i], l = c.toLowerCase(), h = (alt && HOMO2[l]) || HOMO[l]; o += h ? (c === l ? h : h.toUpperCase()) : c; }
     try { o = o.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch (e) {}
     return o;
   }
@@ -2574,6 +2585,8 @@ function makeNameFilter(opts) {
       if (!s) return;
       out[s] = 1; out[s.replace(/([a-z])\1{2,}/g, '$1')] = 1; out[s.replace(/([a-z])\1{2,}/g, '$1$1')] = 1;
     });
+    // (11/8, audit) a lowercase l passed off as an i (nlgger, shlt) is judged both ways
+    Object.keys(out).forEach(function (s) { if (s.indexOf('l') >= 0) out[s.replace(/l/g, 'i')] = 1; });
     return Object.keys(out);
   }
   function badWord(v) {
@@ -2599,7 +2612,10 @@ function makeNameFilter(opts) {
     return false;
   }
   return function nameOk(text) {
-    var t = fold(text);
+    var t1 = fold(text), t2 = fold(text, true);
+    return judge(t1) && (t2 === t1 || judge(t2));
+  };
+  function judge(t) {
     if (/(^|[^0-9])14\W{0,2}88([^0-9]|$)/.test(t)) return false;                            // 1488, 14/88
     var low = t.toLowerCase();
     SAFE.forEach(function (re) { low = low.replace(re, ' '); });
@@ -2628,7 +2644,7 @@ function makeNameFilter(opts) {
     }
     for (var n = 0; n < words.length; n++) { var sp = spellings(words[n]); for (var m = 0; m < sp.length; m++) if (badWord(sp[m])) return false; }
     return true;
-  };
+  }
 }
 /* NAMEFILTER-END */
 var _dkNF=null;
@@ -3827,7 +3843,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.40';
+var DK_VER='3.41';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -9168,23 +9184,7 @@ restoreGameState();          // bring back an in-progress game after an app rest
 // Bake the board's sisal texture now, while nothing is happening, so the first
 // Dart Board press of the session paints a bitmap and not five noise filters.
 setTimeout(function(){ try{ bakeBoardTexture(); }catch(e){} }, 350);
-// ONE-TIME WIPE of made-up test games (Nathan, 2026-08-22): "wipe all the
-// current stats of games I have stored." Only on HIS devices (keyed to his
-// backup e-mail), only once per device. Players, teams, pairings and groups
-// are untouched; the emptied ledger backs itself up, so the Pi copy follows.
-(function(){
-  try{
-    var KEY='darts_statsreset_20260822';
-    if(localStorage.getItem(KEY)) return;
-    var em=(localStorage.getItem(LS_BKEMAIL)||'').trim().toLowerCase();
-    if(em!=='nathan@dartkeeper.net' && em!=='hvacbreeding@gmail.com') return;
-    Object.keys(statsLib).forEach(function(k){ delete statsLib[k]; });
-    f6log.length=0;
-    LG.local.seasons=[]; LG.list.forEach(function(rec){ rec.seasons=[]; }); LG.cur=null;
-    localStorage.setItem(KEY, String(Date.now()));
-    saveStats(); saveF6log(); saveLeague();
-  }catch(e){}
-})();
+// (11/8, security audit) the 8/22 one-time stats wipe is gone: it named a personal address in the shipped page.
 renderLeagueUI();
 if(LG.cur && LG.cur.done) lgCommitMatch();   // finished on the winner screen, then the app was killed
 setTimeout(function(){ lgSyncAll(); }, 1500);
