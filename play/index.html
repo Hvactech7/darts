@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-VPGlK/IKLHb+7+ns+PQO8C1cfXhdZfiLKiF1A9n/1O4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1ZSEzzDloXQbLyHfJ5Ev6FroHx4lib42KXBnW80ZSU4=' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -1082,7 +1082,7 @@
   #bkLinks #bkDelete{color:#ff9bb0;}
   @media (max-width:600px){ #bkLinks button{flex:1 1 40%;} }
   /* (11/5, A2) under 13 (the store's age signal): no online account -- the online controls dim and open the 13+ card */
-  body.dk-u13 #wcEmail,body.dk-u13 #bkCodeRow,body.dk-u13 .pcMail,body.dk-u13 .pcMailNote{display:none !important;}
+  body.dk-u13 #wcEmail,body.dk-u13 #bkCodeRow,body.dk-u13 .pcMail,body.dk-u13 .pcMailNote,body.dk-u13 .pcOk{display:none !important;}
   body.dk-u13 #bkEmail,body.dk-u13 #bkSaveBtn,body.dk-u13 #bkRestoreBtn,body.dk-u13 #shareOfferBtn,body.dk-u13 #shareTakeBtn,body.dk-u13 #shareStatRow,body.dk-u13 #statsMailBtn{opacity:.45;}   /* (11/5) four links: two rows of two on a phone, one row on an iPad */
   #lgPickReport{flex:none;padding:6px 10px;font-size:16px;}
   #lgPickLeague{min-width:0;}   /* (11/4) leaves room for ⚑ on a phone */
@@ -1115,6 +1115,10 @@
   .pcMail input.bad{border-color:#ff6e86;}
   .pcMail button{flex:0 0 auto;font-size:14px;padding:9px 12px;white-space:nowrap;background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%);}
   .pcMailNote{flex:0 0 auto;font-size:12px;color:#a3906a;margin:4px 0 8px 26px;}
+  /* (11/8, launch item A3) someone else's e-mail saves only with this ticked */
+  .pcOk{display:flex;align-items:center;gap:8px;flex:0 0 auto;font-size:13px;color:#d9c9a3;margin:6px 0 0 26px;cursor:pointer;}
+  .pcOk input{width:20px;height:20px;margin:0;flex:0 0 auto;accent-color:#e8c876;}
+  .pcOk.need{color:#ff6e86;}
   .pcSec{margin-top:12px;border:1px solid #57451c;border-radius:9px;background:rgba(0,0,0,.25);padding:8px 10px 4px;}
   .pcSecH{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#c9a75a;margin-bottom:4px;}
   .pcSecH .wl{font-family:var(--num);font-size:15px;letter-spacing:0;color:#e9ddc0;}
@@ -2068,6 +2072,7 @@
       <div class="pcHead"><div class="pcName" id="pcName"></div><div class="pcSub" id="pcSub"></div></div>
       <!-- (2026-08-22) the player's own e-mail — League tournament reports go here -->
       <div class="pcMail"><span class="pcMailIco">✉</span><input type="email" id="pcEmail" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="e-mail address"><button class="ghost" id="pcEmailSave">Save</button></div>
+      <label class="pcOk" id="pcOkRow" style="display:none;"><input type="checkbox" id="pcOk"><span>This player said it’s OK to add their email.</span></label>
       <div class="pcMailNote">League reports are e-mailed to this address.</div>
       <div id="pcBody"></div>
       <div class="row" id="pcBtns"><button class="ghost" id="pcRename">✎ Rename</button><button class="ghost" id="pcReport" style="display:none;">⚑ Report</button><button class="primary grow" id="pcDone">Done</button></div>
@@ -3541,6 +3546,10 @@ function openPlayerCard(name){
       ? (_by===lgEmail() ? 'This name is yours. League reports are e-mailed here.' : 'League reports are e-mailed to this address.')
       : '🔒 '+shortName(name)+' is claimed by '+dkWhoLabel(_by,'another player')+' — only they (or the league keeper) can change this.';
   document.getElementById('pcEmailSave').textContent='Save';
+  // (11/8, launch item A3) another player's e-mail needs their OK, ticked here; your own needs none
+  _pcSelf=name===LG.me||name===myName()||(!!_by&&_by===lgEmail());
+  const _okRow=document.getElementById('pcOkRow'); _okRow.style.display=(_own&&!_pcSelf)?'':'none'; _okRow.classList.remove('need');
+  document.getElementById('pcOk').checked=false;
   let h='';
   var _lgRows=pcLeagueRows(name);
   if(_lgRows.length){
@@ -3588,8 +3597,15 @@ function openPlayerCard(name){
 }
 document.getElementById('pcDone').onclick=function(){ document.getElementById('playerCard').classList.add('hidden'); };
 // Save on the button, on Enter, or simply on leaving the field (so Done saves too).
+var _pcSelf=false;
 function pcSaveEmail(){
   const inp=document.getElementById('pcEmail'), b=document.getElementById('pcEmailSave'); if(!_pcName) return;
+  const v=String(inp.value||'').trim().toLowerCase(), okRow=document.getElementById('pcOkRow');
+  if(v && v!==emailOfPlayer(_pcName) && !_pcSelf && !document.getElementById('pcOk').checked){   // not saved without their OK
+    okRow.classList.add('need'); b.textContent='Tick the box';
+    clearTimeout(pcSaveEmail._t); pcSaveEmail._t=setTimeout(function(){ b.textContent='Save'; },1500); return;
+  }
+  okRow.classList.remove('need');
   if(setPlayerEmail(_pcName,inp.value)){ inp.value=emailOfPlayer(_pcName); inp.classList.remove('bad'); b.textContent=inp.value?'✓ Saved':'Cleared'; }
   else { inp.classList.add('bad'); b.textContent='Check it'; }
   clearTimeout(pcSaveEmail._t); pcSaveEmail._t=setTimeout(function(){ b.textContent='Save'; },1500);
@@ -3597,6 +3613,9 @@ function pcSaveEmail(){
 document.getElementById('pcEmailSave').onclick=pcSaveEmail;
 document.getElementById('pcEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); pcSaveEmail(); this.blur(); } });
 document.getElementById('pcEmail').addEventListener('change',pcSaveEmail);
+document.getElementById('pcOk').addEventListener('change',function(){   // ticking saves what's typed
+  if(!this.checked) return; document.getElementById('pcOkRow').classList.remove('need');
+  const v=String(document.getElementById('pcEmail').value||'').trim().toLowerCase(); if(v&&v!==emailOfPlayer(_pcName)) pcSaveEmail(); });
 document.getElementById('playerCard').addEventListener('click',function(e){ if(e.target===this) document.getElementById('pcDone').click(); });
 document.getElementById('pcRename').onclick=function(){
   const name=_pcName; document.getElementById('playerCard').classList.add('hidden');
@@ -3843,7 +3862,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.41';
+var DK_VER='3.42';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
