@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-GAi1m4xT2Kb4STXfWpZB5wvPXRANDRXkj8rJQHVuf4E=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-oIKyvf9cwsq/4yi+SMZ0OUU0cMjfk/vcvP5hzUkGbX4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -1034,13 +1034,13 @@
   #welcome .why,#mergeCard .why{font-size:13.5px;color:var(--muted);margin:10px 0 0;}
   /* (9/16) #wcEmail is type=email, which the global text-box rule does not match —
      on an iPad it rendered as a tiny white system field. Styled like the name box. */
-  #wcName,#wcEmail,#mgPick{width:100%;font-size:21px;padding:13px 14px;border-radius:10px;border:1.5px solid #57451c;
+  #wcName,#wcEmail,#wcRsEmail,#wcRsCode,#mgPick{width:100%;font-size:21px;padding:13px 14px;border-radius:10px;border:1.5px solid #57451c;
     background:linear-gradient(180deg,#151009,#1d150c);color:#e9ddc0;font-family:var(--body);
     box-sizing:border-box;-webkit-appearance:none;appearance:none;}
   #welcome .acts,#mergeCard .acts{margin-top:14px;}
   .wcActs{display:flex;gap:10px;} .wcActs button{flex:1;}
   #welcome .ic{width:74px;height:74px;border-radius:16px;margin:0 auto 8px;display:block;}
-  @media (max-width:600px){ .wcActs{flex-direction:column;} }
+  #welcome .wclink{background:none;border:0;box-shadow:none;color:#ffcf5a;text-decoration:underline;font-size:16px;padding:12px 8px 2px;margin:4px auto 0;display:block;min-height:0;}  @media (max-width:600px){ .wcActs{flex-direction:column;} }
   #a2hs{position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
     background:rgba(3,2,1,.82);padding:16px;overflow-y:auto;}
   #a2hs.hidden{display:none;}
@@ -1939,6 +1939,16 @@
         <input type="email" id="wcEmail" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" style="margin-top:8px;">
         <p class="why">Your name goes on the board. Your e-mail keeps your players, league and stats with you.</p>
         <div class="acts"><button class="primary" id="wcGo" style="width:100%" disabled>Continue</button></div>
+        <button class="wclink" id="wcRsLink">Have a backup? Restore it</button>
+      </div>
+      <!-- (11/10, Nathan) a new phone brings back its players and stats right here, before a name is typed -->
+      <div id="wcStep2" class="hidden">
+        <p class="lead">Restore from a backup</p>
+        <input type="email" id="wcRsEmail" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false">
+        <input type="text" id="wcRsCode" class="hidden" placeholder="6-digit code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="margin-top:8px;">
+        <p class="why" id="wcRsMsg">We'll e-mail you a 6-digit code.</p>
+        <div class="acts"><button class="primary" id="wcRsGo" style="width:100%">Send code</button></div>
+        <button class="wclink" id="wcRsBack">← Back</button>
       </div>
     </div>
   </div>
@@ -3891,7 +3901,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.43';
+var DK_VER='3.44';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -4204,7 +4214,14 @@ async function bkRestore(){
   try{
     const r=await relayBackup({op:'get',email:em,code});
     if(!(r&&r.ok&&r.data)){ bkMsg((r&&r.error)||'Restore failed.'); return; }
-    const d=dkScrub(r.data);                     // (11/7) a restored library is cleaned like any other device's data
+    const added=bkApplyRestore(r.data);
+    bkMode=null; document.getElementById('bkCodeRow').style.display='none';
+    bkMsg('✓ Restored — '+added+' player'+(added===1?'':'s')+' added, teams, pairings and stats merged.');
+  }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+}
+// (11/10) the merge a restore does, shared by Backup & Share and the new-phone welcome screen; returns players added
+function bkApplyRestore(data){
+    const d=dkScrub(data);                       // (11/7) a restored library is cleaned like any other device's data
     (d.groups||[]).forEach(function(g){ if(g) g.id=dkId(g.id)||('g'+Date.now().toString(36)); });
     let added=0;
     Object.keys(d.hidden||{}).forEach(n=>{ if(n&&!hiddenPlayers[n]) hiddenPlayers[n]=+d.hidden[n]||Date.now(); });
@@ -4244,11 +4261,9 @@ async function bkRestore(){
       f6log.sort(function(a,b){ return (a.ts||0)-(b.ts||0); }); saveF6log();
     }
     saveRoster(); saveTeams&&saveTeams(); savePlayerTeams&&savePlayerTeams(); saveDuoTeams(); saveGroups(); saveStats();
-    bkMode=null; document.getElementById('bkCodeRow').style.display='none';
     try{renderLibrary();}catch(e){} renderColumns(); renderLineup(); updateStart(); renderGroups();
     localStorage.setItem(LS_BKFP,bkFingerprint());
-    bkMsg('✓ Restored — '+added+' player'+(added===1?'':'s')+' added, teams, pairings and stats merged.');
-  }catch(e){ bkMsg('Could not connect — check your signal and try again.'); }
+    return added;
 }
 
 //============================ GROUPS + DUO TEAM NAMES ============================
@@ -9134,6 +9149,7 @@ function wcCheck(){
   var u13=dkU13();                                 // (11/5, A2) under 13: no e-mail asked (no online account)
   var ok=!!n && nameOk && (u13 || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e));
   var b=document.getElementById('wcGo'); if(b) b.disabled=!ok;
+  var rl=document.getElementById('wcRsLink'); if(rl) rl.style.display=u13?'none':'';   // under 13: no online account to restore
   var ni=document.getElementById('wcName'), why=document.querySelector('#wcStep1 .why');
   if(ni) ni.classList.toggle('bad',!nameOk);
   if(why){ if(why._t==null) why._t=why.textContent; why.textContent=nameOk?(u13?'Your name goes on the board.':why._t):'Pick a different name.'; }
@@ -9156,6 +9172,65 @@ document.getElementById('wcGo').onclick=function(){
 };
 document.getElementById('wcName').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcEmail').focus(); } });
 document.getElementById('wcEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcGo').click(); } });
+// (11/10, Nathan) "a 'restore' link ... with the 6 digit code and email": a new phone brings its backup back from the
+// welcome screen. Same relay steps as Backup & Share's Restore (code, then get), same merge (bkApplyRestore). The
+// player whose card carries that e-mail becomes this phone's name; if none does (or more than one), step 1 asks.
+var _wcRsState='send';
+function wcRsMsg(t){ document.getElementById('wcRsMsg').textContent=t; }
+function wcRsReset(){
+  _wcRsState='send'; var c=document.getElementById('wcRsCode'); c.value=''; c.classList.add('hidden');
+  var b=document.getElementById('wcRsGo'); b.textContent='Send code'; b.disabled=false;
+  wcRsMsg("We'll e-mail you a 6-digit code.");
+}
+document.getElementById('wcRsLink').onclick=function(){
+  document.getElementById('wcStep1').classList.add('hidden'); document.getElementById('wcStep2').classList.remove('hidden');
+  var e=document.getElementById('wcRsEmail'); if(!e.value) e.value=(document.getElementById('wcEmail').value||'').trim();
+  wcRsReset(); setTimeout(function(){ try{ e.focus(); }catch(_){} }, 50);
+};
+document.getElementById('wcRsBack').onclick=function(){
+  document.getElementById('wcStep2').classList.add('hidden'); document.getElementById('wcStep1').classList.remove('hidden'); wcCheck();
+};
+document.getElementById('wcRsEmail').addEventListener('input',function(){ if(_wcRsState!=='send') wcRsReset(); });
+document.getElementById('wcRsGo').onclick=async function(){
+  var btn=this, em=(document.getElementById('wcRsEmail').value||'').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ wcRsMsg('Enter a valid e-mail address.'); return; }
+  if(_wcRsState==='send'){
+    btn.disabled=true; wcRsMsg('Sending a code…');
+    try{
+      var r=await relayBackup({op:'code',email:em});
+      if(r&&r.ok){
+        _wcRsState='code'; var c=document.getElementById('wcRsCode'); c.classList.remove('hidden'); btn.textContent='Restore';
+        wcRsMsg(r.askCode?'Enter your 6-digit code.':'Enter the 6-digit code we sent to '+em+'.'); setTimeout(function(){ try{ c.focus(); }catch(_){} }, 50);
+      }else wcRsMsg((r&&r.error)||'No backup found for that e-mail.');
+    }catch(e){ wcRsMsg('Could not connect — check your signal and try again.'); }
+    btn.disabled=false; return;
+  }
+  var code=(document.getElementById('wcRsCode').value||'').replace(/\D/g,'');
+  if(code.length!==6){ wcRsMsg('Enter the 6-digit code.'); return; }
+  btn.disabled=true; wcRsMsg('Restoring…');
+  try{
+    var g=await relayBackup({op:'get',email:em,code:code});
+    if(!(g&&g.ok&&g.data)){ wcRsMsg((g&&g.error)||'Restore failed.'); btn.disabled=false; return; }
+    lgSetEmail(em);                                 // auto-backup and the league carry on under this address
+    var added=bkApplyRestore(g.data);
+    var mine=roster.filter(function(n){ return String(emailOfPlayer(n)||'').toLowerCase()===em; });
+    if(mine.length===1){
+      setMyName(mine[0]); LG.me=mine[0];
+      try{ saveLeague(); lgSyncAll(); }catch(e){}
+      welcomeDone();
+      flashToast('✓ Restored '+added+' player'+(added===1?'':'s')+' — welcome back, '+shortName(mine[0])+'!');
+      return;
+    }
+    // the backup doesn't say which player is this phone's: back to step 1, e-mail filled in, to pick a name
+    document.getElementById('wcEmail').value=em;
+    document.getElementById('wcRsBack').click();
+    var why=document.querySelector('#wcStep1 .why'); if(why) why.textContent='✓ Restored '+added+' player'+(added===1?'':'s')+'. Now type your name as it is on your list.';
+    try{ document.getElementById('wcName').focus(); }catch(e){}
+  }catch(e){ wcRsMsg('Could not connect — check your signal and try again.'); }
+  btn.disabled=false;
+};
+document.getElementById('wcRsCode').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcRsGo').click(); } });
+document.getElementById('wcRsEmail').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('wcRsGo').click(); } });
 
 // After taking someone's library: you are probably already in it under their
 // spelling. Offer to fold your own profile into that name.
