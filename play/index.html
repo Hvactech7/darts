@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-1ZSEzzDloXQbLyHfJ5Ev6FroHx4lib42KXBnW80ZSU4=' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-GAi1m4xT2Kb4STXfWpZB5wvPXRANDRXkj8rJQHVuf4E=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -644,7 +644,10 @@
   #qrBig.show{display:flex;}
   #qrBig .tile{background:#fff;border-radius:18px;padding:16px;line-height:0;
     box-shadow:0 18px 50px rgba(0,0,0,.8),0 0 0 2px var(--gold-dk);}
-  #qrBig .tile > div{width:min(72vw,72vh,420px);height:min(72vw,72vh,420px);}
+  #qrBig .tile > div{width:min(72vw,56vh,420px);height:min(72vw,56vh,420px);}
+  #qrBig #qrSendBtn{font-size:22px;padding:15px 26px;}
+  #qrBig #qrSendMsg{margin:-8px 0 0;min-height:1em;}
+  #qrBig #qrCloseBtn{font-size:17px;padding:10px 30px;}
   #qrBig .cap{font-family:var(--display);font-size:20px;letter-spacing:2px;color:var(--gold-lt);
     text-transform:uppercase;text-align:center;}
   #qrBig .sub{font-family:var(--body);font-size:16px;color:var(--muted);margin-top:-8px;}
@@ -906,6 +909,11 @@
     display:flex;align-items:center;justify-content:center;gap:9px;}
   #shareCard .sic{font-size:2.05em;line-height:1;flex:0 0 auto;}
   #shareCard .stx{display:inline-block;}
+  /* (11/10, Nathan: "an obvious button ... that would share the app") replaces the small ghost QR button */
+  #shareCard #qrShowBtn{display:flex;align-items:center;justify-content:center;gap:9px;
+    background-image:linear-gradient(180deg,#2f9a4c,#1d6b33 55%,#114220);background-position:0 0;background-size:auto;
+    border-color:#7fe39a;color:#e6ffec;text-shadow:0 1px 0 #000;
+    box-shadow:0 4px 12px rgba(0,0,0,.6),0 0 20px rgba(39,227,107,.4),inset 0 1px 0 rgba(255,255,255,.3),inset 0 -3px 6px rgba(0,30,0,.5);}
 
   /* library rename */
   .librow .lname{cursor:pointer;}
@@ -1826,7 +1834,7 @@
       white-space:nowrap;letter-spacing:0;flex:1 1 auto;}
     #shareCard .lw{display:inline;}   /* one line on a phone — see the note above */
     #shareCard .sic{font-size:1.05em;}  /* one line of text, so a one-line icon */
-    #shareCard #shareOfferBtn,#shareCard #shareTakeBtn{gap:4px;}
+    #shareCard #shareOfferBtn,#shareCard #shareTakeBtn,#shareCard #qrShowBtn{gap:4px;}
     .f6-who{font-size:18px;}
     .f6-target .val.long{font-size:31px;}
     .f6-phase{font-size:17px;}
@@ -2333,7 +2341,7 @@
         <div class="row">
           <button class="primary grow" id="shareOfferBtn"><span class="sic">📤</span><span class="stx">Share<span class="lw"> Library</span></span></button>
           <button class="accent grow" id="shareTakeBtn"><span class="sic">📥</span><span class="stx">Receive<span class="lw"> Library</span></span></button>
-          <button class="ghost grow" id="qrShowBtn">▦ QR</button>
+          <button class="grow" id="qrShowBtn"><span class="sic">📲</span><span class="stx">Share<span class="lw"> App</span></span></button>
         </div>
         <div class="row" id="shareCodeShow" style="display:none;margin-top:8px;justify-content:center;">
           <span id="shareCodeVal" style="font-family:var(--num);font-size:46px;font-weight:700;letter-spacing:8px;color:var(--gold-lt);text-shadow:0 2px 0 #000,0 0 14px rgba(232,200,118,.45);"></span>
@@ -2366,7 +2374,11 @@
     </div>
     <div id="qrBig"><div class="tile"><div><svg shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 45 45" class="segno"><path class="qrline" stroke="#000" d="M4 4.5h7m1 0h2m1 0h1m1 0h4m1 0h1m1 0h4m1 0h4m1 0h7m-37 1h1m5 0h1m4 0h3m2 0h5m3 0h1m1 0h2m2 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h8m3 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h4m2 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m2 0h2m3 0h1m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m3 0h6m1 0h1m6 0h1m1 0h3m1 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-26 1h1m6 0h2m3 0h2m3 0h1m-27 1h1m1 0h3m1 0h4m2 0h5m1 0h2m2 0h1m2 0h3m3 0h1m2 0h1m-37 1h2m1 0h3m2 0h1m4 0h6m3 0h2m3 0h1m2 0h1m2 0h1m1 0h2m-35 1h2m2 0h1m1 0h4m1 0h5m2 0h2m1 0h1m1 0h1m2 0h1m1 0h5m1 0h1m-35 1h4m2 0h1m1 0h1m1 0h1m3 0h4m1 0h1m2 0h4m1 0h1m1 0h1m3 0h1m-36 1h3m3 0h2m1 0h1m1 0h2m4 0h3m3 0h3m3 0h2m2 0h1m1 0h2m-35 1h1m4 0h1m4 0h1m1 0h2m2 0h7m5 0h1m2 0h2m1 0h1m-36 1h1m4 0h1m4 0h1m2 0h1m1 0h5m1 0h1m2 0h1m3 0h2m1 0h1m1 0h3m-37 1h1m3 0h1m5 0h3m3 0h2m3 0h2m1 0h2m2 0h1m3 0h1m2 0h2m-37 1h2m2 0h3m4 0h4m3 0h1m2 0h1m2 0h2m1 0h1m1 0h2m2 0h1m2 0h1m-36 1h5m2 0h1m4 0h1m4 0h2m1 0h1m3 0h1m2 0h1m1 0h1m4 0h2m-36 1h2m1 0h3m1 0h2m2 0h4m2 0h3m4 0h2m3 0h3m1 0h3m-35 1h2m3 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h5m7 0h1m-37 1h9m2 0h1m1 0h1m1 0h5m1 0h2m2 0h1m2 0h4m3 0h2m-37 1h1m3 0h1m2 0h1m1 0h5m2 0h1m1 0h3m1 0h2m1 0h2m3 0h1m3 0h1m1 0h1m-34 1h2m1 0h2m2 0h2m2 0h2m1 0h2m4 0h2m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m-37 1h1m3 0h1m4 0h1m2 0h1m1 0h1m1 0h1m3 0h4m1 0h2m2 0h1m-29 1h1m1 0h1m2 0h1m2 0h1m1 0h5m4 0h1m2 0h1m2 0h5m2 0h1m1 0h1m-35 1h2m2 0h1m1 0h2m2 0h3m1 0h1m3 0h5m1 0h3m2 0h1m2 0h1m2 0h1m-37 1h1m3 0h4m2 0h2m1 0h1m1 0h1m1 0h2m2 0h1m6 0h1m1 0h2m3 0h2m-36 1h1m3 0h1m3 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m-33 1h1m3 0h4m3 0h2m2 0h4m2 0h1m3 0h1m2 0h9m-29 1h1m4 0h1m1 0h2m1 0h1m2 0h1m5 0h2m3 0h1m3 0h1m-37 1h7m2 0h1m3 0h1m1 0h3m1 0h1m5 0h1m1 0h2m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h3m1 0h1m2 0h1m1 0h2m3 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m2 0h4m2 0h2m2 0h6m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h1m3 0h1m4 0h1m3 0h4m3 0h1m1 0h6m-37 1h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m3 0h2m2 0h4m2 0h1m1 0h3m2 0h1m-37 1h1m5 0h1m2 0h1m2 0h1m2 0h1m1 0h4m1 0h1m1 0h2m1 0h3m1 0h1m3 0h1m-36 1h7m3 0h4m2 0h2m1 0h1m1 0h5m1 0h2m1 0h1m1 0h1m2 0h2"/></svg></div></div>
       <div class="cap">Scan to get Dart Keeper</div>
-      <div class="sub">dartkeeper.net</div></div>
+      <div class="sub">dartkeeper.net</div>
+      <!-- (11/10, Nathan) the QR for someone standing next to you, the link for everyone else -->
+      <button class="primary" id="qrSendBtn">📤 Send to a friend</button>
+      <p class="sub" id="qrSendMsg"></p>
+      <button class="ghost" id="qrCloseBtn">Close</button></div>
     <button class="primary" id="libDoneBtn" style="width:100%;font-size:22px;padding:15px;">Done</button>
   </div>
 
@@ -3398,8 +3410,25 @@ async function shareGo(){
 }
 // The install QR lives behind a button now — full screen is what a friend
 // actually scans off your phone or tablet anyway.
-document.getElementById('qrShowBtn').onclick=function(){ document.getElementById('qrBig').classList.add('show'); };
-document.getElementById('qrBig').onclick=function(){ this.classList.remove('show'); };
+// (11/10, Nathan) "Share App": the QR plus "Send to a friend", which shares the app's link -- the Android app's own
+// share sheet (DKNative.share), the iPhone app's (Capacitor Share), the browser's, or a copied link as the last resort.
+// ?src=share_app counts the arrivals the way the QR's ?src=qr_app does.
+var DK_SHARE_URL='https://dartkeeper.net/play/?src=share_app';
+function qrMsg(t){ document.getElementById('qrSendMsg').textContent=t||''; }
+document.getElementById('qrShowBtn').onclick=function(){ qrMsg(''); document.getElementById('qrBig').classList.add('show'); };
+document.getElementById('qrBig').onclick=function(e){ if(e.target.closest&&e.target.closest('#qrSendBtn,#qrSendMsg')) return; this.classList.remove('show'); };
+document.getElementById('qrSendBtn').onclick=function(){
+  var text='Keep score with Dart Keeper:', all=text+' '+DK_SHARE_URL;
+  qrMsg('');
+  try{
+    if(window.DKNative&&DKNative.platform==='android'&&DKNative.share){ DKNative.share(all); return; }
+    var cs=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Share;
+    if(cs&&cs.share){ cs.share({title:'Dart Keeper',text:text,url:DK_SHARE_URL}).catch(function(){}); return; }
+    if(navigator.share){ navigator.share({title:'Dart Keeper',text:text,url:DK_SHARE_URL}).catch(function(){}); return; }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(all).then(function(){ qrMsg('✓ Link copied — paste it into a text.'); },function(){ qrMsg('dartkeeper.net/play'); }); return; }
+  }catch(e){}
+  qrMsg('dartkeeper.net/play');
+};
 document.getElementById('shareOfferBtn').onclick=shareOffer;
 document.getElementById('shareTakeBtn').onclick=shareTakeToggle;
 document.getElementById('shareGoBtn').onclick=shareGo;
@@ -3862,7 +3891,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.42';
+var DK_VER='3.43';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
