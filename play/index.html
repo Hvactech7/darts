@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-oIKyvf9cwsq/4yi+SMZ0OUU0cMjfk/vcvP5hzUkGbX4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Dg3MnaUx6kRG+12qaJ/KNMA9ZEpS3++7l3wEwV3/wOc=' 'sha256-DuM1DK4zXOEzwYCaSoG0X6iX19rWeLK3b7SDqopG2w8=' 'sha256-O36A9uxuYotCa8jkEj+0PBaKCAc77POQetIjOSovlqA=' 'sha256-T1cd20HJUCeZQzKwasI54viv8q3dfd5R6GnBqEFDxA4=' 'sha256-pKPMFeBLMXapbSl0awI0isr/uOd7zLSI4QuqZIzNRSs=' 'sha256-z5TQqXm3WyIzKU3KB1ApkY0ApqMT5AxKKWz765RSlFE=' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' wss://relay.dartkeeper.net https://dartkeeper.net https://cloudflareinsights.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Dart Keeper</title>
@@ -1794,6 +1794,15 @@
     #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
     #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{padding:12px 8px;flex:0 1 auto;min-width:0;white-space:nowrap;}
     #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:0 1 auto;min-width:0;}
+    /* (11/16, Nathan: "why do you let the words for Dartboard always run out of the button?") Rules joined this
+       row keeping its 110px tablet width, so on a 390px phone Dart Board got ~78px for ~123px of words and was cut
+       off. Quit and Rules now take their words' width, Undo/Redo stay 44px arrows, Dart Board gets the rest, and
+       dkFitText shrinks any label that still doesn't fit (a longer word in another language) instead of cutting it. */
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #quitBtn,
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #rulesBtn{width:auto;flex:0 0 auto;padding:0 9px;font-size:13px;letter-spacing:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #undoBtn,
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #redoBtn{flex:0 0 44px;width:44px;padding:0;}
+    #game:not(.cricket):not(.fat6) #playArea .turnbar #inputToggle{flex:1 1 auto;min-width:0;overflow:hidden;}
     /* calculator */
     .kpSide{flex:0 0 56px;gap:8px;}
     .kpSide button{font-size:26px;}
@@ -3901,7 +3910,7 @@ try{
 //      IP the connection already carries and keeps only region + a venue
 //      fingerprint. The GPS API is never called, so no player ever sees a prompt.
 var LS_DEV='darts_dev_v1', LS_SHARE='darts_share_v1', LS_INST='darts_install_v1';
-var DK_VER='3.44';
+var DK_VER='3.45';
 
 // One id per install now, not just for the devices that arrived by QR — the old
 // id was created INSIDE the QR ping, so a phone that typed the URL had none.
@@ -5754,7 +5763,17 @@ function fitScreen(){
       _bsvg.style.marginLeft=Math.round(parseFloat(_bsvg.style.marginLeft||'0')+_dV/s)+'px';
     }
   }
+  dkFitTurnbar();
 }
+// (11/16) a bottom-row label that doesn't fit its button gets a smaller font, never cut off (Nathan: Dart Board ran
+// out of its box). Starts from the stylesheet size each time, so a wider screen gets the full size back.
+function dkFitText(el, min){
+  if(!el || !el.offsetParent) return;
+  el.style.fontSize='';
+  var fs=parseFloat(getComputedStyle(el).fontSize)||0, lo=min||10, n=0;
+  while(fs>lo && el.scrollWidth>el.clientWidth+1 && n++<30){ fs-=0.5; el.style.fontSize=fs+'px'; }
+}
+function dkFitTurnbar(){ ['quitBtn','rulesBtn','inputToggle'].forEach(function(id){ dkFitText(document.getElementById(id), 10); }); }
 window.addEventListener('resize', function(){ fitScreen(); bgFit(); });
 window.addEventListener('orientationchange', function(){ setTimeout(function(){ fitScreen(); bgFit(); },250); });
 
